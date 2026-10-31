@@ -1,6 +1,6 @@
 # Shared application contract
 
-Owner: root integrates server/shared/schema; ui owns src and design context; verification owns tests and evidence. Coordinate changes to shared types before editing. Current implementation is P0–P1 only; later endpoints below remain planned.
+Owner: root integrates shared persistence/domain contracts; catalog owns P2 catalog schema/routes; ui owns src/design context/browser journeys; independent review verifies boundaries. Coordinate active files. P0–P1 are verified; P2 is in progress.
 
 Adopt D-01–D-10 as implementation defaults under the current instruction to execute the roadmap. They remain team policies, not organizer requirements. Currency is INR with 100 minor units. Business date is server-owned Asia/Kolkata, timestamps are UTC, periods are half-open and derived from original anchors. No client date override. Public roles, ownership, price and totals are never accepted from the browser.
 
@@ -24,4 +24,12 @@ P0–P1 implemented route targets:
 
 Email: `MAIL_MODE=outbox` proves generation only. SMTP requires configuration and an exact approved-recipient allowlist. User authorized the test account and entered settings locally. Controlled reset delivery (P1) was accepted by SMTP and confirmed received in the actual inbox; see evidence/P1_DELIVERY.md. Invoice delivery remains a separate P5 witness. Sending, acceptance, failure and uncertain interrupted outcomes remain distinct; uncertain messages are not silently resent. The optional OpenAI key is reserved in ignored `.env`; no model code/calls or credential provisioning are enabled.
 
-Later roadmap contracts will be added at their gates: catalog/plans/taxes/templates → subscriptions/lifecycle → logical charges/invoice revisions/discount reservations → payments → finance. Do not build them before the preceding gate passes.
+## P2 configuration contract (in progress)
+
+`shared/catalog.ts` owns strict input schemas and DTOs. Admin alone writes products, variants, plans, taxes and templates. Internal staff may read necessary operational configuration without product costs; customer-published catalog omits cost and notes. Archived records retain identity. No delete endpoint is planned. Full PUT includes the last-read `version`; stale updates conflict and preserve the newer record.
+
+`/products`, `/plans`, `/taxes`, `/quotation-templates`: GET paginated lists, GET `/:id`, admin POST and PUT `/:id`. Lists use `q`, `page`, `pageSize` (1–100). Product variants belong to their product. Plans identify one primary product, replacement unit price, cadence, minimum primary quantity, inclusive availability and accepted-policy capability flags. Templates carry plan, copied line selections and positive validity days. Exactly one primary-product line is required.
+
+`POST /catalog/preview` accepts plan ID and product/variant IDs with whole quantities; it returns a server-priced breakdown. Plan price replaces the primary catalog price, then the selected variant adjustment applies; add-ons use catalog price. Automatic tax selects one active rule per line by ascending priority, product scope ahead of global at a tie, then stable ID. Tax is exclusive, half-up per line; fictional rule labels make no statutory claim. Eligibility uses the server's Asia/Kolkata date. No browser totals are trusted.
+
+`server/money.ts` owns exact bounded BigInt arithmetic (INR scale two); `shared/money.ts` owns exact decimal entry/display conversion. `server/calendar.ts` owns original-anchor calendar/date arithmetic. Later contracts are added at their gates: subscriptions/lifecycle → logical charges/invoice revisions/discount reservations → payments → finance. No P3+ workflow is implemented yet.
