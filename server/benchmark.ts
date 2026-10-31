@@ -17,6 +17,10 @@ const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as BenchmarkMani
 if (!manifest.validation.passed) throw new Error('Refusing to benchmark a dataset that failed validation.');
 const samples = Number(value('samples', '50'));
 if (!Number.isInteger(samples) || samples < 1 || samples > 200) throw new Error('Samples must be 1–200.');
+const coldSamples = Number(value('cold-samples', '1'));
+if (!Number.isInteger(coldSamples) || coldSamples < 1 || coldSamples > 50) throw new Error('Cold samples must be 1–50.');
+const diagnostic = args.includes('--diagnostics');
+const concurrentOnly = args.includes('--concurrent-only');
 const label = value('label', 'baseline').replace(/[^a-z0-9-]/gi, '-');
 const only = value('only') ? new RegExp(value('only')) : null;
 const port = Number(value('port', '3004'));
@@ -30,8 +34,9 @@ mkdirSync(directory, { recursive: true });
 const runtimePath = resolve(directory, 'runtime.sqlite');
 copyFileSync(manifest.databasePath, runtimePath);
 const resultPath = resolve(directory, 'results.json');
-interface Observation { id: string; kind: string; role: string; path: string; sample: number; milliseconds: number; error?: string; status?: number; bytes?: number }
+interface Observation { id: string; kind: string; role: string; path: string; sample: number; milliseconds: number; error?: string; status?: number; bytes?: number; phases?: Record<string, unknown> }
 const observations: Observation[] = [];
+const serverJobs: unknown[] = [];
 const snapshot = (path: string) => {
   const db = new DatabaseSync(path, { readOnly: true });
   try {
@@ -39,6 +44,7 @@ const snapshot = (path: string) => {
       counts: Object.fromEntries(['users', 'subscriptions', 'invoices', 'invoice_lines', 'payments', 'logical_charges', 'lifecycle_events'].filter(table => db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(table)).map(table => [table, db.prepare(`SELECT count(*) AS n FROM ${table}`).get()?.n])),
       stages: db.prepare('SELECT stage,count(*) AS n FROM subscriptions GROUP BY stage').all(),
       sqlite: db.prepare('SELECT sqlite_version() AS version').get(),
+      schemaVersion: db.prepare('SELECT max(version) AS version FROM schema_migrations').get()?.version,
       pragmas: { journalMode: db.prepare('PRAGMA journal_mode').get(), synchronous: db.prepare('PRAGMA synchronous').get(), busyTimeout: 'runtime sets 1000 ms', foreignKeys: 'runtime ON' },
       indexes: db.prepare("SELECT name,sql FROM sqlite_master WHERE type='index' AND sql IS NOT NULL ORDER BY name").all(),
     };
@@ -49,7 +55,7 @@ const metadata = {
   worktree: execFileSync('git', ['status', '--short'], { encoding: 'utf8' }).trim(), node: process.version,
   hardware: { cpu: cpus()[0]?.model, logicalCpus: cpus().length, ramBytes: totalmem(), freeRamAtStart: freemem(), platform: platform(), release: release(), arch: arch() },
   origin, viewport, network: 'HTTP loopback; headless Chromium; no network or CPU throttling', samples,
-  selection: { only: only?.source || null, skipApi: args.includes('--skip-api'), skipConcurrent: args.includes('--skip-concurrent'), skipBatch: args.includes('--skip-batch') },
+  selection: { only: only?.source || null, skipApi: args.includes('--skip-api') || concurrentOnly, skipConcurrent: args.includes('--skip-concurrent'), skipBatch: args.includes('--skip-batch') || concurrentOnly, concurrentOnly, coldSamples, diagnostic },
   fixture: { ...manifest, accounts: Object.fromEntries(Object.entries(manifest.accounts).map(([role, account]) => [role, { id: account.id, email: account.email }])) },
   databaseBytes: statSync(runtimePath).size, startSnapshot: snapshot(runtimePath),
   productionAssets: ['index.html', ...readdirSync(resolve('dist/client/assets')).filter(name => /\.(?:js|css)$/.test(name)).map(name => `assets/${name}`)].map(name => ({ name, bytes: statSync(resolve('dist/client', name)).size, sha256: createHash('sha256').update(readFileSync(resolve('dist/client', name))).digest('hex') })),
@@ -58,7 +64,7 @@ const metadata = {
     cold: 'One navigation per destination in a new browser context with only authenticated cookies copied. Browser HTTP cache empty; server and OS filesystem caches are not flushed.',
     api: 'Whole HTTP GET through response-body read. First probe after a fresh server process per endpoint, then warm samples; persisted role cookies/session checks included. Normal startup lifecycle processing retained. OS filesystem caches are not flushed.',
     action: 'Setup outside timer; timer includes user action, debounce if applicable, response and ready result with fonts/two frames.',
-    concurrency: 'Separate five authenticated browser contexts navigate simultaneously through mixed-role destinations; customers use their own workspace where internal finance is denied. Not mixed into single-user samples.',
+    concurrency: 'Separate five authenticated browser contexts. Subscription/invoice workloads use permitted destinations; finance workload includes three internal finance reads and two customer role-denial pages. An explicit mixed operational workload uses queue, finance, staff subscriptions and customer records. Not mixed into single-user samples.',
     target: 'Every observed first-usable page/action below 2000 ms; percentile summaries never hide breaches.',
   },
 };
@@ -67,7 +73,8 @@ const summarize = () => {
   for (const row of observations) { const key = `${row.kind}:${row.id}`; const group = groups.get(key) || []; group.push(row); groups.set(key, group); }
   return [...groups].map(([key, rows]) => {
     const times = rows.map(row => row.milliseconds).sort((a, b) => a - b);
-    return { key, count: rows.length, errors: rows.filter(row => row.error).length, median: times[Math.floor(times.length / 2)], p95: times[Math.max(0, Math.ceil(times.length * .95) - 1)], max: times.at(-1), breaches: rows.filter(row => row.milliseconds >= 2000).length };
+    const middle = Math.floor(times.length / 2);
+    return { key, count: rows.length, errors: rows.filter(row => row.error).length, median: times.length % 2 ? times[middle] : (times[middle - 1] + times[middle]) / 2, p95: times[Math.max(0, Math.ceil(times.length * .95) - 1)], max: times.at(-1), breaches: rows.filter(row => row.milliseconds >= 2000).length };
   });
 };
 let completion: Record<string, unknown> = { state: 'running' };
@@ -75,13 +82,14 @@ const evidenceValue = (key: string, value: unknown) => {
   if (['password', 'csrfToken', 'resetToken'].includes(key)) return '[synthetic credential omitted]';
   return typeof value === 'string' ? value.replace(/([#?&]token=)[a-f0-9]+/gi, '$1[synthetic-token-omitted]') : value;
 };
-const persist = () => writeFileSync(resultPath, JSON.stringify({ metadata, completion, summary: summarize(), breaches: observations.filter(row => row.milliseconds >= 2000), observations }, evidenceValue, 2));
+const persist = () => writeFileSync(resultPath, JSON.stringify({ metadata, completion, summary: summarize(), breaches: observations.filter(row => row.milliseconds >= 2000), observations, serverJobs }, evidenceValue, 2));
 const settle = async (page: Page) => { await page.evaluate(async () => { await document.fonts.ready; await new Promise<void>(done => requestAnimationFrame(() => requestAnimationFrame(() => done()))); }); };
 const startServer = async (databasePath: string) => {
   const child = spawn(process.execPath, ['--import', 'tsx', 'server/benchmark-server.ts', manifestPath, databasePath, String(port)], { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe', 'ipc'], windowsHide: true });
   let output = '';
   child.stdout!.on('data', chunk => { output += String(chunk); });
   child.stderr!.on('data', chunk => { output += String(chunk); });
+  child.on('message', message => { if (message && typeof message === 'object' && 'type' in message && message.type === 'benchmark-job') serverJobs.push(message); });
   const deadline = performance.now() + 30000;
   while (!output.includes('BENCHMARK_READY')) {
     if (child.exitCode !== null || performance.now() > deadline) throw new Error(`Benchmark server did not start: ${output.slice(-2000)}`);
@@ -120,6 +128,21 @@ const observe = async (row: Omit<Observation, 'milliseconds'>, action: () => Pro
   try { await action(); observations.push({ ...row, milliseconds: performance.now() - start }); }
   catch (error) { observations.push({ ...row, milliseconds: performance.now() - start, error: error instanceof Error ? error.message.slice(0, 1500) : String(error) }); }
 };
+const navigateMeasured = async (item: ReturnType<typeof buildBenchmarkPages>[number], page: Page, row: Omit<Observation, 'milliseconds'>) => {
+  const started = performance.now();
+  await page.goto(item.path, { waitUntil: 'domcontentloaded' });
+  const navigationMs = performance.now() - started;
+  await item.ready(page);
+  const dataAndControlsMs = performance.now() - started;
+  if (!diagnostic) { await settle(page); return; }
+  const details = await page.evaluate(async () => {
+    const start = performance.now(); await document.fonts.ready; const fontsMs = performance.now() - start;
+    const first = performance.now(); await new Promise<void>(done => requestAnimationFrame(() => done())); const firstFrameMs = performance.now() - first;
+    const second = performance.now(); await new Promise<void>(done => requestAnimationFrame(() => done())); const secondFrameMs = performance.now() - second;
+    return { fontsMs, firstFrameMs, secondFrameMs, navigation: performance.getEntriesByType('navigation').map(entry => entry.toJSON()), resources: performance.getEntriesByType('resource').map(entry => entry.toJSON()) };
+  });
+  row.phases = { startedAt: new Date(Date.now() - (performance.now() - started)).toISOString(), navigationMs, dataAndControlsMs, ...details };
+};
 try {
   server = await startServer(runtimePath);
   browser = await chromium.launch({ headless: true });
@@ -129,7 +152,7 @@ try {
   Object.assign(metadata, { inventory: pages.map(({ id, role, path, category, readiness, apiPaths }) => ({ id, role, path, category, readiness, apiPaths })), actionInventory: actions.map(({ id, role, path, category, readiness, apiPaths }) => ({ id, role, path, category, readiness, apiPaths })) });
   persist();
   const apiSeen = new Set<string>();
-  for (const item of args.includes('--skip-api') ? [] : [...pages, ...actions]) {
+  for (const item of args.includes('--skip-api') || concurrentOnly ? [] : [...pages, ...actions]) {
     for (const path of item.apiPaths) {
       const key = `${item.role}:${path}`;
       if (apiSeen.has(key)) continue;
@@ -143,24 +166,28 @@ try {
       persist();
     }
   }
-  for (const item of pages) {
-    const cold = await contextFor(item.role, true);
-    const coldPage = await cold.newPage();
-    if (item.prepare) await item.prepare(coldPage);
-    await observe({ id: item.id, kind: 'page-cold-browser', role: item.role, path: item.path, sample: 0 }, async () => { await coldPage.goto(item.path, { waitUntil: 'domcontentloaded' }); await item.ready(coldPage); await settle(coldPage); });
-    await cold.close();
+  for (const item of concurrentOnly ? [] : pages) {
+    for (let sample = 0; sample < coldSamples; sample++) {
+      const cold = await contextFor(item.role, true);
+      const coldPage = await cold.newPage();
+      if (item.prepare) await item.prepare(coldPage);
+      const row: Omit<Observation, 'milliseconds'> = { id: item.id, kind: 'page-cold-browser', role: item.role, path: item.path, sample };
+      await observe(row, () => navigateMeasured(item, coldPage, row));
+      await cold.close();
+    }
     const context = await contextFor(item.role);
     const page = await context.newPage();
     await page.goto(item.path, { waitUntil: 'domcontentloaded' }); await item.ready(page); await settle(page);
     for (let sample = 1; sample <= samples; sample++) {
       if (item.prepare) await item.prepare(page);
-      await observe({ id: item.id, kind: 'page-warm', role: item.role, path: item.path, sample }, async () => { await page.goto(item.path, { waitUntil: 'domcontentloaded' }); await item.ready(page); await settle(page); });
+      const row: Omit<Observation, 'milliseconds'> = { id: item.id, kind: 'page-warm', role: item.role, path: item.path, sample };
+      await observe(row, () => navigateMeasured(item, page, row));
       if (observations.slice(-3).every(row => row.id === item.id && !!row.error)) throw new Error(`Repeated readiness failure: ${item.id}`);
     }
     await page.close(); persist();
     console.log(`Measured ${item.id}: ${samples} warm + cold browser navigation.`);
   }
-  for (const item of actions) {
+  for (const item of concurrentOnly ? [] : actions) {
     const page = await (await contextFor(item.role)).newPage();
     for (let sample = 1; sample <= samples; sample++) {
       await page.goto(item.path, { waitUntil: 'domcontentloaded' });
@@ -170,12 +197,13 @@ try {
     }
     await page.close(); persist(); console.log(`Measured action ${item.id}: ${samples} samples.`);
   }
-  if (!args.includes('--skip-concurrent') && !only) {
+  if (!args.includes('--skip-concurrent') && (!only || concurrentOnly)) {
     const selections = ['admin', 'staff', 'customer', 'staff', 'customer'] as BenchmarkRole[];
     const concurrent = await Promise.all(selections.map(async role => ({ role, context: await contextFor(role, true) })));
-    for (const id of ['subscriptions', 'finance', 'invoices']) {
+    for (const id of ['subscriptions', 'finance', 'invoices', 'mixed-operations']) {
       const work = concurrent.map(async ({ role, context }, index) => {
-        const item = pages.find(page => page.role === role && page.id.includes(id)) || pages.find(page => page.role === role && page.category === 'workspace');
+        const mixedIds = ['admin.billing.queue.due', 'staff.finance.overview', 'customer.invoices.list', 'staff.subscriptions.list', 'customer.subscriptions.list'];
+        const item = id === 'mixed-operations' ? pages.find(page => page.id === mixedIds[index]) : pages.find(page => page.role === role && page.id.includes(id)) || pages.find(page => page.role === role && page.category === 'workspace');
         if (!item) return;
         const page = await context.newPage();
         for (let sample = 1; sample <= 10; sample++) await observe({ id: `five-users:${id}:${role}:${index}`, kind: 'page-concurrent', role, path: item.path, sample }, async () => { await page.goto(item.path, { waitUntil: 'domcontentloaded' }); await item.ready(page); await settle(page); });
@@ -188,7 +216,7 @@ try {
   await browser.close(); browser = undefined;
   await stopServer(server); server = undefined;
   Object.assign(metadata, { endSnapshot: snapshot(runtimePath) });
-  if (!args.includes('--skip-batch') && !only) {
+  if (!args.includes('--skip-batch') && !only && !concurrentOnly) {
     const batchPath = resolve(directory, 'batch.sqlite');
     copyFileSync(manifest.databasePath, batchPath);
     server = await startServer(batchPath);

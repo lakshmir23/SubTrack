@@ -4,6 +4,7 @@ import express from 'express';
 import { createApp } from './app.js';
 import { processLifecycleDue } from './lifecycle.js';
 import type { BenchmarkManifest } from './benchmark-data.js';
+import { performance } from 'node:perf_hooks';
 
 // Separate process: synchronous database work cannot share the timing driver's loop.
 const [manifestPath, databasePath, portText] = process.argv.slice(2);
@@ -18,7 +19,12 @@ const app = createApp({ databasePath, clock, appUrl: `http://localhost:${port}`,
 app.use(express.static(assets));
 app.get('/{*path}', (_req, res) => res.sendFile(resolve(assets, 'index.html')));
 let stopping = false;
-const apply = () => { if (!stopping) processLifecycleDue(app.locals.db, clock(), 100); };
+const apply = () => {
+  if (stopping) return;
+  const startedAt = new Date().toISOString(); const start = performance.now();
+  processLifecycleDue(app.locals.db, clock(), 100);
+  process.send?.({ type: 'benchmark-job', kind: 'lifecycle', startedAt, milliseconds: performance.now() - start });
+};
 const timer = setInterval(apply, 10000);
 timer.unref();
 const server = app.listen(port, '127.0.0.1', () => { apply(); console.log('BENCHMARK_READY'); });
