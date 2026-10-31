@@ -4,7 +4,7 @@ Subscription operations for Brightloop Software. Implementation follows [the roa
 
 ## Local setup
 
-Requires Node.js 24+ and npm. Development was started on Windows with Node 26.8.1. SQLite is bundled with Node; no Docker or hosted database is required. Keep the database on a local disk, not a network share. This is a single-machine fallback; multi-worker correctness must be verified before subsequent billing gates.
+Requires Node.js 24+ and npm. Development was started on Windows with Node 26.8.1. SQLite is bundled with Node; no Docker or hosted database is required. Keep the database on a local disk, not a network share. This is a single-machine fallback with WAL and bounded write transactions; tests exercise real independent-process duplicate and discount races. It is not a distributed database deployment.
 
 ```powershell
 npm ci
@@ -26,7 +26,7 @@ npm run build
 npm start
 ```
 
-`npm run check` runs lint, typecheck, domain/integration tests and the production build. `npm run test:e2e` runs browser checks once their fixtures exist; install the matching browser with `npx playwright install chromium`. Exact executed checks are recorded in the implementation ledger; an available command is not a passing result.
+`npm run check` runs lint, typecheck, domain/integration tests and the production build. After building, `npm run test:e2e` runs actual browser journeys against production assets and a fresh isolated SQLite fixture on port 3100; install the matching browser with `npx playwright install chromium`. The browser fixture never uses the local SMTP configuration. Exact executed checks are recorded in the implementation ledger; an available command is not a passing result.
 
 ## Environment and delivery
 
