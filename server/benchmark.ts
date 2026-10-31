@@ -139,7 +139,7 @@ const navigateMeasured = async (item: ReturnType<typeof buildBenchmarkPages>[num
     const start = performance.now(); await document.fonts.ready; const fontsMs = performance.now() - start;
     const first = performance.now(); await new Promise<void>(done => requestAnimationFrame(() => done())); const firstFrameMs = performance.now() - first;
     const second = performance.now(); await new Promise<void>(done => requestAnimationFrame(() => done())); const secondFrameMs = performance.now() - second;
-    return { fontsMs, firstFrameMs, secondFrameMs, navigation: performance.getEntriesByType('navigation').map(entry => entry.toJSON()), resources: performance.getEntriesByType('resource').map(entry => entry.toJSON()) };
+    return { fontsMs, firstFrameMs, secondFrameMs, navigation: window.performance.getEntriesByType('navigation').map(entry => entry.toJSON()), resources: window.performance.getEntriesByType('resource').map(entry => entry.toJSON()) };
   });
   row.phases = { startedAt: new Date(Date.now() - (performance.now() - started)).toISOString(), navigationMs, dataAndControlsMs, ...details };
 };
