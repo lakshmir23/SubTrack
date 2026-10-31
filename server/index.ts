@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { config } from './config.js';
 import { createApp } from './app.js';
 import express from 'express';
+import { processLifecycleDue } from './lifecycle.js';
 
 const settings = config();
 const production = process.env.NODE_ENV === 'production' || process.argv.includes('--production');
@@ -23,10 +24,19 @@ const server = app.listen(settings.port, '127.0.0.1', () => {
 const mailTimer = setInterval(() => { void app.locals.deliverPending().catch(() => console.error('Email worker interrupted. Check delivery status before requesting another message.')); }, 1000);
 mailTimer.unref();
 let stopping = false;
+const processServiceChanges = () => {
+  if (stopping) return;
+  try { processLifecycleDue(app.locals.db, new Date(), 100); }
+  catch { console.error('Service processing interrupted. Persisted service history is preserved; review due changes before retrying.'); }
+};
+const lifecycleTimer = setInterval(processServiceChanges, 10_000);
+lifecycleTimer.unref();
+setImmediate(processServiceChanges);
 const shutdown = () => {
   if (stopping) return;
   stopping = true;
   clearInterval(mailTimer);
+  clearInterval(lifecycleTimer);
   server.close(() => {
     void Promise.allSettled([
       Promise.resolve().then(() => app.locals.deliverPending.stop()),

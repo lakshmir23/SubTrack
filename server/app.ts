@@ -11,6 +11,8 @@ import { subscriptionRoutes } from './subscriptions.js';
 import { billingRoutes } from './billing.js';
 import { invoiceOutputRoutes } from './invoice-output.js';
 import { createBillingWorker, billingWorkbenchRoutes, type BillingWorkerOptions } from './billing-workbench.js';
+import { paymentRoutes } from './payments.js';
+import { lifecycleRoutes } from './lifecycle.js';
 
 export interface AppOptions { databasePath: string; clock?: () => Date; appUrl?: string; mailMode?: 'outbox' | 'smtp'; mailConfig?: MailConfig; production?: boolean; billingWorkerOptions?: BillingWorkerOptions }
 export function createApp(options: AppOptions) {
@@ -48,6 +50,8 @@ export function createApp(options: AppOptions) {
   app.use('/api', billingRoutes(db, clock));
   app.use('/api', invoiceOutputRoutes(db, clock));
   app.use('/api', billingWorkbenchRoutes(db, clock, app.locals.billingWorker));
+  app.use('/api', paymentRoutes(db, clock));
+  app.use('/api', lifecycleRoutes(db, clock));
   app.use('/api', (_req, res) => res.status(404).json({ error: { code: 'NOT_FOUND', message: 'This operation is not available.', requestId: res.locals.requestId } }));
   app.use(errorHandler);
   return app;

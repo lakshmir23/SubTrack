@@ -151,6 +151,12 @@ function claimItem(db: DatabaseSync, run: RunRow, token: string, now: Date): Ite
 }
 function recordGeneration(db: DatabaseSync, item: ItemRow, token: string, result: GenerationResult, now: Date) {
   if (!owns(db, item.run_id, token)) throw new DomainError(409, 'RUN_LEASE_LOST', 'Another worker resumed this billing run.');
+  if (result.invoiceId === null) {
+    db.prepare("UPDATE billing_run_items SET outcome='nonbillable',invoice_id=NULL,logical_charge_id=?,reason=?,retryable=0,updated_at=? WHERE id=?")
+      .run(result.logicalChargeId, result.reason, now.toISOString(), item.id);
+    refreshCounts(db, item.run_id, token, now);
+    return;
+  }
   const invoice = db.prepare('SELECT status FROM invoices WHERE id=?').get(result.invoiceId);
   const reason = result.created ? 'Invoice created from accepted terms.' : invoice?.status === 'Canceled' ? 'This period has a Canceled invoice. Review its explicit replacement action; ordinary replay does not rebill it.' : 'The period already has its current invoice.';
   db.prepare('UPDATE billing_run_items SET outcome=?,invoice_id=?,logical_charge_id=?,reason=?,retryable=0,updated_at=? WHERE id=?')

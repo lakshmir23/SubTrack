@@ -183,7 +183,7 @@ test('SUB-03: ended confirmed terms are explicitly blocked and cannot starve a b
   assert.equal(processed.status, 200); assert.equal(processed.body.activated, 1); assert.equal(processed.body.blocked, 1); assert.equal(processed.body.remaining, 0);
   assert.ok(processed.body.items.some((item: { id: string; outcome: string }) => item.id === old.id && item.outcome === 'blocked'));
   assert.equal((await current.admin.agent.get(`/api/subscriptions/${valid.id}`)).body.stage, 'Active');
-  const blocked = await current.admin.agent.get(`/api/subscriptions/${old.id}`); assert.equal(blocked.body.stage, 'Confirmed'); assert.ok(blocked.body.activationBlockedReason.includes('ended'));
+  const blocked = await current.admin.agent.get(`/api/subscriptions/${old.id}`); assert.equal(blocked.body.stage, 'Closed'); assert.equal(blocked.body.allowedActions.includes('activate'), false, 'P6 applies the accepted auto-close policy before showing an expired agreement.');
 });
 
 test('AUTH-04/SUB-04: customers see only their own records and cannot mutate ownership, prices or stages', async t => {

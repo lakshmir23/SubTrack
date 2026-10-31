@@ -15,13 +15,14 @@ import { transaction } from './database.js';
 import { DomainError } from './errors.js';
 import { audit, digest, requireRole } from './security.js';
 import { businessDate, addDays, periodBoundary, periodIndex } from './calendar.js';
+import { applyLifecycleDueForSubscription } from './lifecycle.js';
 
 interface SubscriptionRow {
   id: string; number: string; customer_id: string; customer_name: string; customer_email: string; plan_id: string;
   template_id: string | null; template_name: string | null; start_date: string; expiry_date: string; term_periods: number;
   payment_term_days: number; valid_days: number; stage: SubscriptionStage; service_state: SubscriptionServiceState; version: number;
   terms_json: string; offered_terms_json: string | null; accepted_terms_json: string | null;
-  issued_date: string | null; valid_until: string | null; accepted_at: string | null; next_period_index: number; created_at: string; updated_at: string;
+  issued_date: string | null; valid_until: string | null; accepted_at: string | null; next_period_index: number; next_billing_date: string | null; created_at: string; updated_at: string;
 }
 interface CurrentPlan {
   id: string; name: string; version: number; primary_product_id: string; price: number; interval: PlanInput['interval']; min_quantity: number;
@@ -138,11 +139,7 @@ function history(db: DatabaseSync, row: SubscriptionRow, actorId: string | null,
 }
 function summary(row: SubscriptionRow): SubscriptionSummary {
   const terms = termsOf(row);
-  let nextBillingDate: string | null = null;
-  if (row.stage === 'Confirmed' || row.stage === 'Active') {
-    const boundary = periodBoundary(row.start_date, terms.plan.interval, row.next_period_index);
-    if (boundary < row.expiry_date) nextBillingDate = boundary;
-  }
+  const nextBillingDate = row.accepted_terms_json ? row.next_billing_date : null;
   return {
     id: row.id, number: row.number, customerId: row.customer_id, customerName: row.customer_name, customerEmail: row.customer_email,
     planId: row.plan_id, planName: terms.plan.name, startDate: row.start_date, expiryDate: row.expiry_date, termPeriods: row.term_periods,
@@ -236,6 +233,11 @@ export function subscriptionRoutes(db: DatabaseSync, clock: () => Date): Router 
   });
   router.get('/subscriptions/:id', requireRole(), (req, res) => {
     const id = recordId.parse(req.params.id); const user = res.locals.user as User;
+    const current = getRow(db, id, user); const date = businessDate(clock());
+    if (current.accepted_terms_json && ((date >= current.expiry_date && current.stage !== 'Closed' && current.service_state !== 'TermEnded')
+      || db.prepare("SELECT 1 FROM lifecycle_events WHERE subscription_id=? AND status='scheduled' AND effective_date<=? LIMIT 1").get(id, date))) {
+      transaction(db, () => applyLifecycleDueForSubscription(db, id, clock()));
+    }
     res.json(transaction(db, () => detail(db, getRow(db, id, user), user, clock()), 'read'));
   });
   router.post('/subscriptions', requireRole('admin', 'staff'), (req, res) => {

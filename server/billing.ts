@@ -16,6 +16,8 @@ import { businessDate, periodBoundary, periodIndex, addDays } from './calendar.j
 import { checkedMinor, multiplyMinor, sumMinor, taxMinor, discountMinor, allocateMinor } from './money.js';
 import { nextReference } from './subscriptions.js';
 import { invoiceReplacementPreviewSchema, invoiceReplacementSchema, type InvoiceReplacementPreview } from '../shared/billing-workbench.js';
+import type { NonbillablePeriod } from '../shared/lifecycle.js';
+import { evaluateLifecyclePeriod, nextLifecycleBillingDate } from './lifecycle.js';
 
 interface DiscountRow {
   id: string; name: string; kind: 'fixed' | 'percentage'; amount_minor: number | null; percent_bps: number | null;
@@ -41,7 +43,8 @@ export interface DiscountSelection {
   rule: DiscountRow | null; snapshot: InvoiceDiscountSnapshot | null; allocations: Map<string, number>;
   decisions: DiscountDecision[]; truncated: boolean; reason: string;
 }
-export interface GenerationResult { invoiceId: string; logicalChargeId: string; created: boolean }
+export interface InvoicedGenerationResult { invoiceId: string; logicalChargeId: string; created: boolean }
+export type GenerationResult = InvoicedGenerationResult | (NonbillablePeriod & { invoiceId: null; logicalChargeId: string; created: boolean });
 export interface GenerationOptions {
   failpoint?: (point: 'after-reservation' | 'before-commit') => void;
   onResult?: (result: GenerationResult) => void;
@@ -147,13 +150,13 @@ function sourcePeriod(db: DatabaseSync, subscriptionId: string, expectedStart: s
   const end = periodBoundary(source.start_date, terms.plan.interval, index + 1);
   const charge = db.prepare("SELECT * FROM logical_charges WHERE subscription_id=? AND period_start=? AND period_end=? AND kind='recurring'").get(source.id, expectedStart, end) as unknown as ChargeRow | undefined;
   if (charge?.current_invoice_id) return { source, terms, index, start: expectedStart, end, charge, existing: rowInvoice(db, charge.current_invoice_id) };
-  if (charge?.outcome === 'nonbillable') throw new DomainError(409, 'NON_BILLABLE_PERIOD', charge.reason || 'This period was explicitly recorded as non-billable.');
+  if (charge?.outcome === 'nonbillable') return { source, terms, index, start: expectedStart, end, charge, existing: null };
   if (index !== source.next_period_index) throw new DomainError(409, 'PERIOD_ORDER', 'Generate the oldest outstanding scheduled period first. Refresh the subscription to see its current next billing date.');
   if (expectedStart >= source.expiry_date || end > source.expiry_date) throw new DomainError(400, 'TERM_ENDED', 'No service period starts at or after the exclusive expiry boundary.');
   if (expectedStart > businessDate(now)) throw new DomainError(400, 'NOT_DUE', `This service period is not due until ${expectedStart}.`);
   return { source, terms, index, start: expectedStart, end, charge, existing: null };
 }
-function makePreview(db: DatabaseSync, period: ReturnType<typeof sourcePeriod>, now: Date): InvoicePreview {
+function makePreview(db: DatabaseSync, period: ReturnType<typeof sourcePeriod>, now: Date, activeLines?: SubscriptionLine[]): InvoicePreview {
   if (period.existing) {
     const row = period.existing;
     return { subscriptionId: row.subscription_id, subscriptionNumber: row.subscription_number, customerId: row.customer_id, customerName: row.customer_name, customerEmail: row.customer_email,
@@ -164,7 +167,9 @@ function makePreview(db: DatabaseSync, period: ReturnType<typeof sourcePeriod>, 
       existingInvoiceId: row.id, existingInvoiceNumber: row.number, previewOnly: true };
   }
   const date = businessDate(now);
-  const pricing: PriceLine[] = period.terms.lines.map(source => {
+  const selection = activeLines ? { billable: true, reason: null, lines: activeLines } : evaluateLifecyclePeriod(db, period.source.id, period.start, period.end);
+  if (!selection.billable) throw new DomainError(409, 'NON_BILLABLE_PERIOD', selection.reason || 'This period is explicitly non-billable.');
+  const pricing: PriceLine[] = selection.lines.map(source => {
     if (checkedMinor(BigInt(source.baseUnitPrice) + BigInt(source.variantAdjustment)) !== source.unitPrice) throw new DomainError(400, 'INVALID_ACCEPTED_TERMS', 'The accepted price snapshot is inconsistent. Review this agreement before billing.');
     return { source, base: multiplyMinor(source.unitPrice, source.quantity) };
   });
@@ -185,8 +190,15 @@ function makePreview(db: DatabaseSync, period: ReturnType<typeof sourcePeriod>, 
     discountSnapshot: selected.snapshot, discountReason: selected.reason, discountDecisions: selected.decisions, discountDecisionsTruncated: selected.truncated,
     existingInvoiceId: null, existingInvoiceNumber: null, previewOnly: true };
 }
-export function previewInvoice(db: DatabaseSync, subscriptionId: string, expectedPeriodStart: string, now: Date): InvoicePreview {
-  return transaction(db, () => makePreview(db, sourcePeriod(db, subscriptionId, expectedPeriodStart, now), now), 'read');
+export function previewInvoice(db: DatabaseSync, subscriptionId: string, expectedPeriodStart: string, now: Date): InvoicePreview | NonbillablePeriod {
+  return transaction(db, () => {
+    const period = sourcePeriod(db, subscriptionId, expectedPeriodStart, now);
+    if (period.existing) return makePreview(db, period, now);
+    const selection = evaluateLifecyclePeriod(db, subscriptionId, period.start, period.end);
+    const reason = period.charge?.outcome === 'nonbillable' ? period.charge.reason || 'This period was explicitly recorded as non-billable.' : selection.billable ? null : selection.reason || 'This period is explicitly non-billable.';
+    if (reason) return { outcome: 'nonbillable', subscriptionId, logicalChargeId: null, periodStart: period.start, periodEnd: period.end, reason, previewOnly: true };
+    return makePreview(db, period, now, selection.lines);
+  }, 'read');
 }
 function invoiceLines(db: DatabaseSync, invoiceId: string): InvoiceLine[] {
   return db.prepare(`SELECT id,subscription_line_id AS subscriptionLineId,product_id AS productId,product_name AS productName,variant_id AS variantId,variant_name AS variantName,
@@ -210,6 +222,7 @@ export function serializeInvoice(db: DatabaseSync, id: string, user: User, now: 
     FROM invoice_history h LEFT JOIN users u ON u.id=h.actor_id WHERE invoice_id=? ORDER BY h.rowid`).all(id) as unknown as Invoice['history'];
   const allowedActions: Invoice['allowedActions'] = [];
   if (user.role !== 'customer') {
+    if (current.id === row.id && row.status === 'Confirmed' && row.amount_paid < row.total) allowedActions.push('recordPayment');
     if (row.status === 'Draft') allowedActions.push('confirm', 'cancel');
     else if (row.status === 'Confirmed' && !row.payment_count && !row.amount_paid) allowedActions.push('cancel');
     else if (row.status === 'Canceled' && current.id === row.id && !row.payment_count && !row.amount_paid) allowedActions.push('replace');
@@ -251,7 +264,9 @@ export function generateInvoice(db: DatabaseSync, subscriptionId: string, input:
     const receipt = db.prepare('SELECT actor_id,payload_hash,logical_charge_id FROM invoice_generation_requests WHERE idempotency_key=?').get(validated.idempotencyKey) as { actor_id: string; payload_hash: string; logical_charge_id: string } | undefined;
     if (receipt) {
       if (receipt.actor_id !== actorId || receipt.payload_hash !== payloadHash) throw new DomainError(409, 'IDEMPOTENCY_CONFLICT', 'This submission key was already used for a different invoice request. Review the current period before starting a new request.');
-      const charge = db.prepare('SELECT current_invoice_id FROM logical_charges WHERE id=?').get(receipt.logical_charge_id);
+      const charge = db.prepare('SELECT * FROM logical_charges WHERE id=?').get(receipt.logical_charge_id) as unknown as ChargeRow | undefined;
+      if (charge?.outcome === 'nonbillable') return finish({ outcome: 'nonbillable', invoiceId: null, logicalChargeId: charge.id, subscriptionId: charge.subscription_id,
+        periodStart: charge.period_start, periodEnd: charge.period_end, reason: charge.reason || 'This period was explicitly recorded as non-billable.', created: false });
       if (!charge?.current_invoice_id) throw new DomainError(409, 'CHARGE_EXCEPTION', 'This charge has no current invoice. Review its billing outcome before retrying.');
       return finish({ invoiceId: String(charge.current_invoice_id), logicalChargeId: receipt.logical_charge_id, created: false });
     }
@@ -260,14 +275,31 @@ export function generateInvoice(db: DatabaseSync, subscriptionId: string, input:
       db.prepare('INSERT INTO invoice_generation_requests(idempotency_key,actor_id,payload_hash,logical_charge_id,created_at) VALUES(?,?,?,?,?)').run(validated.idempotencyKey, actorId, payloadHash, period.existing.logical_charge_id, now.toISOString());
       return finish({ invoiceId: period.existing.id, logicalChargeId: period.existing.logical_charge_id, created: false });
     }
-    const preview = makePreview(db, period, now); const chargeId = period.charge?.id || randomUUID();
+    const selection = evaluateLifecyclePeriod(db, subscriptionId, period.start, period.end);
+    const waiverReason = period.charge?.outcome === 'nonbillable' ? period.charge.reason || 'This period was explicitly recorded as non-billable.' : selection.billable ? null : selection.reason || 'This period is explicitly non-billable.';
+    if (waiverReason) {
+      const chargeId = period.charge?.id || randomUUID();
+      const alreadyRecorded = period.charge?.outcome === 'nonbillable';
+      if (!period.charge) db.prepare("INSERT INTO logical_charges(id,subscription_id,period_start,period_end,kind,outcome,reason,current_invoice_id,created_at,updated_at) VALUES(?,?,?,?,'recurring','nonbillable',?,NULL,?,?)")
+        .run(chargeId, subscriptionId, period.start, period.end, waiverReason, now.toISOString(), now.toISOString());
+      else if (!alreadyRecorded) db.prepare("UPDATE logical_charges SET outcome='nonbillable',reason=?,updated_at=? WHERE id=? AND current_invoice_id IS NULL").run(waiverReason, now.toISOString(), chargeId);
+      if (!alreadyRecorded) {
+        db.prepare('UPDATE subscriptions SET next_period_index=next_period_index+1,version=version+1,updated_at=? WHERE id=?').run(now.toISOString(), subscriptionId);
+        db.prepare('UPDATE subscriptions SET next_billing_date=? WHERE id=?').run(nextLifecycleBillingDate(db, subscriptionId), subscriptionId);
+        audit(db, actorId, 'billing.period_nonbillable', chargeId, now, { subscriptionId, periodStart: period.start, periodEnd: period.end, reason: waiverReason });
+      }
+      db.prepare('INSERT INTO invoice_generation_requests(idempotency_key,actor_id,payload_hash,logical_charge_id,created_at) VALUES(?,?,?,?,?)').run(validated.idempotencyKey, actorId, payloadHash, chargeId, now.toISOString());
+      options.failpoint?.('before-commit');
+      return finish({ outcome: 'nonbillable', invoiceId: null, logicalChargeId: chargeId, subscriptionId, periodStart: period.start, periodEnd: period.end, reason: waiverReason, created: !alreadyRecorded });
+    }
+    const preview = makePreview(db, period, now, selection.lines); const chargeId = period.charge?.id || randomUUID();
     if (!period.charge) db.prepare("INSERT INTO logical_charges(id,subscription_id,period_start,period_end,kind,outcome,reason,current_invoice_id,created_at,updated_at) VALUES(?,?,?,?,'recurring','failed',?,NULL,?,?)")
       .run(chargeId, subscriptionId, period.start, period.end, 'Generation has not committed.', now.toISOString(), now.toISOString());
     const invoiceId = persistDraft(db, period.source, chargeId, preview, actorId, now);
     options.failpoint?.('after-reservation');
     db.prepare("UPDATE logical_charges SET outcome='invoiced',reason=NULL,current_invoice_id=?,updated_at=? WHERE id=?").run(invoiceId, now.toISOString(), chargeId);
-    const nextDate = period.end < period.source.expiry_date ? period.end : null;
-    db.prepare('UPDATE subscriptions SET next_period_index=next_period_index+1,next_billing_date=?,version=version+1,updated_at=? WHERE id=?').run(nextDate, now.toISOString(), subscriptionId);
+    db.prepare('UPDATE subscriptions SET next_period_index=next_period_index+1,version=version+1,updated_at=? WHERE id=?').run(now.toISOString(), subscriptionId);
+    db.prepare('UPDATE subscriptions SET next_billing_date=? WHERE id=?').run(nextLifecycleBillingDate(db, subscriptionId), subscriptionId);
     db.prepare('INSERT INTO invoice_generation_requests(idempotency_key,actor_id,payload_hash,logical_charge_id,created_at) VALUES(?,?,?,?,?)').run(validated.idempotencyKey, actorId, payloadHash, chargeId, now.toISOString());
     options.failpoint?.('before-commit');
     return finish({ invoiceId, logicalChargeId: chargeId, created: true });
@@ -331,7 +363,7 @@ export function previewInvoiceReplacement(db: DatabaseSync, invoiceId: string, v
       logicalChargeId: period.charge.id, previewHash: replacementHash(period.predecessor, preview) };
   }, 'read');
 }
-export function replaceInvoice(db: DatabaseSync, invoiceId: string, input: z.infer<typeof invoiceReplacementSchema>, actorId: string, now: Date): GenerationResult {
+export function replaceInvoice(db: DatabaseSync, invoiceId: string, input: z.infer<typeof invoiceReplacementSchema>, actorId: string, now: Date): InvoicedGenerationResult {
   const validated = invoiceReplacementSchema.parse(input); internalActor(db, actorId);
   const payloadHash = digest(JSON.stringify([invoiceId, validated.version, validated.previewHash]));
   return transaction(db, () => {
@@ -409,6 +441,10 @@ export function billingRoutes(db: DatabaseSync, clock: () => Date): Router {
   router.post('/subscriptions/:id/invoices', requireRole('admin', 'staff'), (req, res) => {
     const id = idSchema.parse(req.params.id); const input = invoiceGenerateSchema.parse(req.body); const user = res.locals.user as User;
     const result = generateInvoice(db, id, input, user.id, clock());
+    if (result.invoiceId === null) {
+      res.status(result.created ? 201 : 200).json({ outcome: result.outcome, subscriptionId: result.subscriptionId, logicalChargeId: result.logicalChargeId, periodStart: result.periodStart, periodEnd: result.periodEnd, reason: result.reason });
+      return;
+    }
     res.status(result.created ? 201 : 200).json(transaction(db, () => serializeInvoice(db, result.invoiceId, user, clock()), 'read'));
   });
   router.get('/invoices', requireRole(), (req, res) => {
