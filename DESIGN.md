@@ -147,6 +147,8 @@ Plain sentence case, specific errors and action verbs. Do not claim email arriva
 
 Finance is one linked working sheet: invoiced amount and money received receive the strongest number hierarchy, followed by active agreements, outstanding and overdue. Thin rules keep these related figures together; there are no decorative charts or five separate metric cards. Record drill-downs lead with one compact amount/count for that view and its matching records, with Back to finance preserving the applied scope. Descriptions explain date scope and current balances. Product copy names the business consequence—saved prices, billing dates and previous invoices staying unchanged—rather than implementation mechanisms. The synthetic-demo banner is restrained, uses the existing attention palette and appears consistently through authentication.
 
+Optional offering assistance lives in one quiet native disclosure inside New subscription, after the ordinary customer selector. It uses the existing field, feedback and calculation grammar, with no chat surface or financial figures presented as model output. Suggested catalog selections stay separate until Apply; the normal calculated estimate then requires explicit review before Save draft. Failure and disabled states keep the manual form usable.
+
 ## Do's and Don'ts
 
 - Do show who can act and what happened, using persisted data.
