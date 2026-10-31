@@ -1,0 +1,32 @@
+{
+  "findings": [
+    {
+      "category": "violation",
+      "file": "premium-ui.json",
+      "line": null,
+      "message": "Declared CRUD full-flow evidence is missing.",
+      "remediation": "Point evidence.crudFullFlow to an existing project-owned test or report and run its command separately.",
+      "ruleId": "evidence.crud-flow-missing",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "premium-ui.json",
+      "line": null,
+      "message": "Declared failure-path evidence is missing.",
+      "remediation": "Point evidence.failurePaths to an existing project-owned test or report and run its command separately.",
+      "ruleId": "evidence.failure-path-missing",
+      "severity": "error"
+    }
+  ],
+  "mode": "strict",
+  "projectRoot": "C:\\Github\\odoo",
+  "schemaVersion": 1,
+  "summary": {
+    "errors": 2,
+    "total": 2,
+    "unresolved": 0,
+    "violations": 2,
+    "warnings": 0
+  }
+}
