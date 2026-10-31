@@ -60,7 +60,7 @@ Read root `AGENTS.md`, [REQUIREMENTS.md](REQUIREMENTS.md), [HACKATHON_CONSTRAINT
 
 **Depends on:** P3 active agreement and P2 rule configuration. **Coverage:** BILL-02, DISC-01, DISC-02, DISC-03, DISC-04; first BILL-01/BILL-04 witness.
 
-- [ ] Generate one Draft invoice automatically from accepted subscription terms with customer, lines, taxes and totals. Use one server-authoritative fixed-decimal/minor-unit calculator, deterministic allocation and rounding; never trust posted totals.
+- [ ] Generate one Draft invoice automatically from accepted subscription terms with customer, lines, taxes and totals. Use one server-authoritative fixed-decimal/minor-unit calculator, deterministic allocation and rounding; never trust posted totals. Implement its first Confirm transition here, including zero-total settlement; P5 expands this into the full billing workbench.
 - [ ] Implement admin-only fixed/percentage discounts, minimum amount/quantity, inclusive dates, maximum uses, product/subscription scope and deterministic non-stacking selection. Auto-select on the next eligible generated invoice.
 - [ ] Reserve usage atomically at generation; consume once at confirmation; release on Draft cancellation; retain consumed use on Confirmed cancellation. Preserve generated snapshots through later rule expiry or catalog edits.
 - [ ] Display base/variant/discount/tax/total and an understandable ineligibility reason. Do not claim jurisdictional tax compliance from the fictional demo rule.

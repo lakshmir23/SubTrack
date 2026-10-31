@@ -40,11 +40,11 @@ This is a proposed schema, not a claim that the brief prescribes table names. Ev
 | **Subscription** | Unique human-facing number, customer, plan, start date, expiry date, payment terms, quotation-valid-until, stage, operational state, next billing boundary, version | Preserves required commercial fields and separates sales progression from pause/close behavior. |
 | **SubscriptionLine** | Subscription, product/variant, quantity, accepted unit price, tax references/snapshots, computed amount | Snapshot accepted price and terms on confirmation; retain history for later changes. |
 | **TaxRule** | Name, rate, applicable products/type if needed, enabled/effective dates, inclusive/exclusive policy | Admin-managed automatic calculation. Snapshot applied tax on finalized invoice lines. |
-| **Invoice / InvoiceLine** | Number, subscription/customer, charge period, issue/due date, currency, state; copied lines, quantities, prices, tax/discount amounts and totals | Reproducible financial document; historical display must survive catalog edits. |
+| **Invoice / InvoiceLine** | Number, subscription/customer, logical charge, revision number, predecessor if replaced, charge period, issue/due date, currency, state; copied lines, quantities, prices, tax/discount amounts and totals | Reproducible financial document; historical display must survive catalog edits. |
 | **DiscountRule / DiscountTarget** | Fixed/percentage value, min purchase/quantity, start/end, usage limit, enabled flag, target products or subscriptions | Admin-only authoring. Eligibility checked at billing time, not by a stale browser preview. |
 | **DiscountApplication** | Rule, invoice and optional line, calculated amount, usage reservation/consumption state | Evidence of why a bill changed, plus a transactional record for enforcing a global limit. |
 | **Payment** | Invoice, method, positive amount, currency, payment date, note, recorder, unique submission key, optional external reference | Core requirement: manual recording supports partial payment. Payment is a money fact, not just a `paid` checkbox. |
-| **BillingPeriodOutcome** | Subscription, original period boundaries, outcome, invoice reference or non-billable reason | Distinguishes explicitly waived paused periods from failed/owed backlog; unique period identity (D-03/D-05). |
+| **BillingPeriodOutcome / LogicalCharge** | Subscription, original period boundaries, charge kind, outcome, current-invoice reference or non-billable reason | Unique logical period identity; current-invoice pointer selects the sole current revision. Distinguishes waived paused periods from failed/owed backlog (D-03/D-05). |
 | **LifecycleEvent** | Entity references, type, actor, timestamp, correlation key, safe structured details | Append-only application audit trail for actual persisted transitions. |
 | **InvoiceDelivery** (small optional table) | Invoice, destination, delivery status/time, message reference | Useful evidence for Send. If email delivery is unavailable, expose a truthful pending/failed status rather than fake success. |
 
@@ -52,7 +52,7 @@ This is a proposed schema, not a claim that the brief prescribes table names. Ev
 
 A customer has many subscriptions; a subscription has many lines and invoices; an invoice has many lines and payments. A plan has many subscriptions. A rule has many target records and applications.
 
-One invoice per recurring period is the proposed baseline. All lines on a subscription share its plan cadence. Multiple cadences require separate subscriptions unless clarified otherwise. One configured currency simplifies the build; do not silently combine different currencies in finance totals.
+One logical charge per recurring period, with at most one current collectible invoice revision, is the proposed baseline. All lines on a subscription share its plan cadence. Multiple cadences require separate subscriptions unless clarified otherwise. One configured currency simplifies the build; do not silently combine different currencies in finance totals.
 
 Use integer or UUID internal keys consistently; neither is inherently a judging advantage. Customer-facing subscription/invoice numbers must be unique. Opaque IDs do not replace ownership checks.
 
@@ -86,7 +86,7 @@ Use [D-02–D-04](DECISIONS.md#d-02--time-boundaries-and-activation) for exact p
 **Draft → Confirmed → Paid**, with **Canceled** as an explicit cancellation outcome.
 
 - Generated Draft amounts are read-only snapshots and are not collectible. Correct using explicit cancel/replacement, not arbitrary line edits (D-06).
-- Confirm validates calculated totals and freezes the financial snapshot.
+- Confirm validates and preserves the generated financial snapshot and consumes its reserved discount use exactly once.
 - Partial payment leaves invoice **Confirmed**, with a partial-payment label and outstanding balance.
 - Paid is derived from zero outstanding, not manually toggled. Confirming a zero-total invoice settles it immediately without creating a fake payment (D-06).
 - Cancel only Draft/Confirmed invoices with no payment ever recorded; Paid invoices are not cancelable. Draft cancellation releases reserved discount use; Confirmed cancellation does not restore consumed use. Credits/reversals are deferred (D-06–D-08).
@@ -105,11 +105,11 @@ This is an explicit requirement, not an optional showcase.
 5. Persist invoice or explicit non-billable period outcome, discount reservation where applicable, audit event and billing-cursor advancement together.
 6. Commit each subscription independently; report created/already-existing/failed counts with retryable errors. One bad subscription must not silently lose the rest of the batch.
 
-Use a unique key such as `(subscription_id, period_start, period_end, charge_kind)` for recurring charges. Repeated clicks, scheduler retries and two workers must return the same invoice for the same period. A failure before commit cannot advance the cursor. A failure after commit cannot create another invoice on retry.
+Use a unique key such as `(subscription_id, period_start, period_end, charge_kind)` on the logical charge/period-outcome record. Invoice revisions are unique by `(logical_charge_id, revision_number)`; the charge points to the current revision. Repeated clicks, scheduler retries and two workers must return that current invoice/outcome for the same period, not create another revision. A failure before commit cannot advance the cursor. A failure after commit cannot create another invoice on retry.
 
 **Never skip backlog:** if more than one period is due, process due boundaries in order up to a documented batch limit and expose remaining work. Do not set `next_bill = today + interval`, which silently discards missed periods.
 
-**Cancellation nuance:** a canceled invoice still occupies its original charge identity. Do not let a routine rerun recreate it. If replacement is needed, require an explicit linked revision/replacement action. If the intended bill was canceled accidentally, show an exception for staff; “no duplicates” must not hide unbilled debt.
+**Cancellation nuance:** a canceled revision retains its logical charge link; a routine rerun cannot recreate it. Explicit staff/admin replacement locks the charge and verifies the current revision is Canceled with no payment ever recorded, then atomically links a successor and changes the current-invoice pointer. Preserve old revisions; only the current revision can become collectible. Recalculate under D-07 and show a replacement preview before normal confirmation: an exhausted discount retained as consumed on the predecessor can make the new total different. If the intended bill was canceled accidentally, show an exception for staff; “no duplicates” must not hide unbilled debt.
 
 **Expiry default (D-02):** require full-period aligned expiry; reject partial final periods. Historical owed periods remain billable after expiry, but no new period begins at/after expiry. Proration is deferred.
 
@@ -191,7 +191,7 @@ Filters must use consistent date boundaries, customer/status semantics and curre
 | Repeat/concurrent billing | Same due period creates one invoice; customer/products/taxes/totals prefilled. |
 | Failed batch item / backlog | No cursor advance on failure; other items succeed; retry fills failed/missed periods without duplicates. |
 | Discount last use race | Only permitted number of invoices reserve/use rule; next invoice stops applying expired/exhausted rule. |
-| Invoice actions | Confirm freezes amounts; cancel follows rules; send reports true delivery state; print matches persisted totals. |
+| Invoice actions | Generation freezes amounts; confirmation preserves the snapshot and consumes its reserved discount use; cancel follows rules; send reports true delivery state; print matches persisted totals. |
 | Partial payments | 400 + 600 against 1,000 yields 600 then 0 balance; one final Paid status; duplicate click adds no payment; concurrent allocations cannot overpay. |
 | Zero total | Confirm fully discounted invoice: Paid, zero outstanding, no fabricated payment. |
 | Pause / closed backlog | Future paused full periods are explicitly waived; prior owed periods still invoice after closure; resume preserves anchor without back-billing waived periods. |

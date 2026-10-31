@@ -140,7 +140,7 @@ These are design-quality checks supporting the required workflows, not additions
 
 Do not substitute a tiny local seed and a verbal scalability claim for measurement. Suggested verification plan:
 
-1. Seed at least several thousand synthetic subscriptions, with representative customers, lines, invoices, and payments. Record exact counts. A proposed starting dataset is 5,000 subscriptions; this is a test plan, not an achieved result.
+1. Use the canonical proposed dataset in [EXECUTION_BLUEPRINT.md](EXECUTION_BLUEPRINT.md#6-honest-performance-and-reliability-proof): 10,000 synthetic subscriptions with representative customers, lines, invoices and payments. Record exact counts. If the team scales that fixture down, it must still contain thousands of subscriptions as the brief requires, and disclose the actual dataset and limitations. These are test plans, not achieved results.
 2. List every relevant page and operation: operations home, filtered subscription list, subscription detail, invoice list/detail, finance summary, catalog, and customer portal. Include both paginated lists and summary queries.
 3. Measure user-visible page readiness as well as relevant server response times. State the machine, deployment, browser, network conditions, dataset, and cache conditions.
 4. Run repeated measurements. Report median, p95, maximum observed time, and sample size if enough observations exist. A p95 below two seconds alone does not prove the statement's stronger “every page” wording.
