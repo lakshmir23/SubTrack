@@ -8,6 +8,7 @@ import { identityRoutes } from './identity.js';
 import { createMailDelivery, type MailConfig } from './mail.js';
 import { catalogRoutes } from './catalog.js';
 import { subscriptionRoutes } from './subscriptions.js';
+import { billingRoutes } from './billing.js';
 
 export interface AppOptions { databasePath: string; clock?: () => Date; appUrl?: string; mailMode?: 'outbox' | 'smtp'; mailConfig?: MailConfig; production?: boolean }
 export function createApp(options: AppOptions) {
@@ -41,6 +42,7 @@ export function createApp(options: AppOptions) {
   app.use('/api', identityRoutes(db, clock, origin, mailConfig.mode));
   app.use('/api', catalogRoutes(db, clock));
   app.use('/api', subscriptionRoutes(db, clock));
+  app.use('/api', billingRoutes(db, clock));
   app.use('/api', (_req, res) => res.status(404).json({ error: { code: 'NOT_FOUND', message: 'This operation is not available.', requestId: res.locals.requestId } }));
   app.use(errorHandler);
   return app;
