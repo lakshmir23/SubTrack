@@ -18,6 +18,14 @@ Open [SubTrack locally](http://localhost:3000). The server binds to `127.0.0.1`.
 
 Synthetic demo identities use password `Brightloop!2026`: `admin@brightloop.test`, `staff@brightloop.test`, `maya@brightloop.test`, `arun@brightloop.test`. These are local fixtures, not real accounts or customer activity. Seeds are explicitly opt-in; the server never seeds automatically.
 
+## November walkthrough
+
+After `npm run build`, run `npm run demo` and open [the isolated November demo](http://localhost:3003). It creates a fresh synthetic database, fixes the business date to **9 November 2026**, and labels every screen as a demo. It never loads `.env` or sends real email. The normal application continues to use its real business clock and configured database.
+
+Sign in as `admin@brightloop.test` or `staff@brightloop.test`, using `Brightloop!2026`. Portal accounts are `studio@brightloop.test`, `shop@brightloop.test` and `services@brightloop.test` with the same synthetic password. The default settled fixture follows [the proof plan](docs/DEMO_AND_PROOF.md): A is Paid after 1,000 and 2,088.80 payments; B owes 1,100; C has a real paid October period and next bill on November 15. With November invoice/payment ranges, totals are 4,188.80 billed, 3,088.80 collected and 1,100 outstanding/overdue.
+
+For a live collection demonstration, use `npm run demo -- --settlement=unpaid` or `npm run demo -- --settlement=partial`, then record the remaining synthetic payments through the interface. `--port=3004` selects another local port. Every launch creates a new retained `data/november-demo-*.sqlite` file; existing databases are preserved. Stop with Ctrl+C. Demo startup seeds through the same authenticated business routes and persisted batch engine as the application. It is separate from the large-data performance fixture.
+
 ```powershell
 npm run lint
 npm run typecheck

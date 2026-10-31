@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "tsx watch server/index.ts",
+    "demo": "tsx server/demo.ts",
     "db:migrate": "tsx server/cli.ts migrate",
     "db:seed": "tsx server/cli.ts seed",
     "build": "npm run typecheck && vite build && tsc -p tsconfig.server.json",
