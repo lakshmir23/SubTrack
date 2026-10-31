@@ -36,6 +36,8 @@ P2 configuration is staff read-only and admin writable, as defined by D-09. Prod
 
 ## Dataset navigation
 
+P4 invoice and discount surfaces reuse the same list, native filter and form owners. Invoice generation previews the server's next due period, retains one UUID per mounted submission form and offers explicit review before creating the read-only financial snapshot. A lost mutation response directs the user to check actual records; retry retains that UUID. Confirm/cancel dialogs focus their safe Cancel action on entry. Draft totals await confirmation and are not collectible; canceled totals are historical, Paid zero totals explain that no payment was required or recorded. Reservation/consumption and eligibility reasons come from the server, never browser recomputation. Customer detail contains only its own invoice and no global discount decisions or usage. Discount creation/editing uses the shared configuration hook, exact decimal parsing and schemas, version checks, preserved input and unsaved navigation guard. All monetary breakdown figures remain visible; the native pricing-basis disclosure contains explanatory prose only.
+
 Staff/customer/delivery lists are server-paginated, 20 rows per page, with count/range and previous/next buttons. Search state and page live in URL parameters. Search is 300ms debounced, composition-safe, explicitly clearable and ignores superseded responses using AbortController. Changing search resets the page. Empty, no-results, loading and failure states all occupy the list region; errors retain entered search and expose Retry. Lists do not support bulk selection or a misleading sort affordance.
 
 ## Flow ledger
@@ -51,7 +53,7 @@ Staff/customer/delivery lists are server-paginated, 20 rows per page, with count
 
 ## Navigation and responsive behavior
 
-Every route sets document.title and has one h1. App-owned 403/404 states distinguish unavailable access from a missing route and provide a valid return link. Customer navigation omits internal destinations; direct routes still check role and all APIs enforce server permissions. Desktop sidebar becomes a visible wrap-capable navigation row on narrow screens, without a hidden mobile-only control. Main content scrolls naturally. A skip link targets main. Auth forms remain one column. Long emails wrap and action labels stay visible.
+Every route sets document.title and has one h1. App-owned 403/404 states distinguish unavailable access from a missing route and provide a valid return link. Inline configuration denial preserves the owning Configuration heading. Customer navigation omits internal destinations; direct routes still check role and all APIs enforce server permissions. The desktop ink rail becomes one contained horizontally scrollable navigation row on narrow screens, without a hidden mobile-only control; the current link scrolls into view after route changes, and every destination remains reachable by touch and keyboard. Main content scrolls naturally. A skip link targets main. Auth forms remain one column. Long emails wrap and action labels stay visible.
 
 ## Feedback and preservation
 

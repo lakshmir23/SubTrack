@@ -8,7 +8,7 @@ Administrators configure the business and add staff. Internal staff handle agree
 
 ## Current surface
 
-P0 proves reproducible local database startup; P1 establishes identity and authorization. Later workflow pages must wait for their gates. No decorative data, invented revenue, or implied completed billing capability is permitted. Root's current instruction is to execute the roadmap autonomously; all domain defaults come from `docs/DECISIONS.md`.
+P0–P3 establish reproducible local persistence, role-separated identity, configuration and the Draft → Quotation → Confirmed → Active agreement journey. P4 adds first-period invoice preview/generation, frozen commercial detail, confirmation/cancellation and bounded discount configuration. Each gate is verified before the next begins. Batch billing, delivery/print and collection wait for their gates. No decorative data or invented revenue is permitted. Root's instruction is to execute the roadmap autonomously; all domain defaults come from `docs/DECISIONS.md`.
 
 ## Success and constraints
 
@@ -16,4 +16,4 @@ Make the next permitted action clear, explain amounts and states, preserve enter
 
 ## Design brief
 
-Operate mode: clear, deliberate and calm enough for daily financial work. Use restrained cool blue, precise ink typography and white working surfaces. A continuous agreement trail can become the product signature across the accepted-term and billing journey. This direction is inferred from the supplied operational brief; no pre-existing visual identity or customer research is claimed.
+Operate mode: clear, deliberate and calm enough for daily financial work. An ink navigation rail, confident blue action, strong Manrope document references and white commercial sheets give the billing desk its character. The continuous agreement trail connects stage, calculation and dated activity with one shared geometry. This direction follows the operational brief and the user's request for a more distinctive, polished frontend; no pre-existing visual identity or customer research is claimed.

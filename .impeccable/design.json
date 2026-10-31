@@ -1,22 +1,22 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-31T06:26:49.946Z",
+  "generatedAt": "2026-10-31T07:08:41.301Z",
   "title": "SubTrack Design System",
   "extensions": {
     "colorMeta": {
       "primary": {
         "role": "primary",
         "displayName": "Primary",
-        "canonical": "#234A73",
+        "canonical": "#245E98",
         "tonalRamp": [
-          "oklch(15% 0.0825 251.60)",
-          "oklch(25% 0.0825 251.60)",
-          "oklch(35% 0.0825 251.60)",
-          "oklch(45% 0.0825 251.60)",
-          "oklch(55% 0.0825 251.60)",
-          "oklch(65% 0.0825 251.60)",
-          "oklch(80% 0.0825 251.60)",
-          "oklch(95% 0.0825 251.60)"
+          "oklch(15% 0.1114 251.40)",
+          "oklch(25% 0.1114 251.40)",
+          "oklch(35% 0.1114 251.40)",
+          "oklch(45% 0.1114 251.40)",
+          "oklch(55% 0.1114 251.40)",
+          "oklch(65% 0.1114 251.40)",
+          "oklch(80% 0.1114 251.40)",
+          "oklch(95% 0.1114 251.40)"
         ]
       },
       "primary-hover": {
@@ -157,16 +157,91 @@
       "input-hover": {
         "role": "neutral",
         "displayName": "Input Hover",
-        "canonical": "#234A73",
+        "canonical": "#245E98",
         "tonalRamp": [
-          "oklch(15% 0.0825 251.60)",
-          "oklch(25% 0.0825 251.60)",
-          "oklch(35% 0.0825 251.60)",
-          "oklch(45% 0.0825 251.60)",
-          "oklch(55% 0.0825 251.60)",
-          "oklch(65% 0.0825 251.60)",
-          "oklch(80% 0.0825 251.60)",
-          "oklch(95% 0.0825 251.60)"
+          "oklch(15% 0.1114 251.40)",
+          "oklch(25% 0.1114 251.40)",
+          "oklch(35% 0.1114 251.40)",
+          "oklch(45% 0.1114 251.40)",
+          "oklch(55% 0.1114 251.40)",
+          "oklch(65% 0.1114 251.40)",
+          "oklch(80% 0.1114 251.40)",
+          "oklch(95% 0.1114 251.40)"
+        ]
+      },
+      "navigation": {
+        "role": "neutral",
+        "displayName": "Navigation",
+        "canonical": "#192B3D",
+        "tonalRamp": [
+          "oklch(15% 0.0410 249.46)",
+          "oklch(25% 0.0410 249.46)",
+          "oklch(35% 0.0410 249.46)",
+          "oklch(45% 0.0410 249.46)",
+          "oklch(55% 0.0410 249.46)",
+          "oklch(65% 0.0410 249.46)",
+          "oklch(80% 0.0410 249.46)",
+          "oklch(95% 0.0410 249.46)"
+        ]
+      },
+      "navigation-text": {
+        "role": "neutral",
+        "displayName": "Navigation Text",
+        "canonical": "#F2F5F8",
+        "tonalRamp": [
+          "oklch(15% 0.0051 247.88)",
+          "oklch(25% 0.0051 247.88)",
+          "oklch(35% 0.0051 247.88)",
+          "oklch(45% 0.0051 247.88)",
+          "oklch(55% 0.0051 247.88)",
+          "oklch(65% 0.0051 247.88)",
+          "oklch(80% 0.0051 247.88)",
+          "oklch(95% 0.0051 247.88)"
+        ]
+      },
+      "navigation-muted": {
+        "role": "neutral",
+        "displayName": "Navigation Muted",
+        "canonical": "#B9C8D6",
+        "tonalRamp": [
+          "oklch(15% 0.0256 246.26)",
+          "oklch(25% 0.0256 246.26)",
+          "oklch(35% 0.0256 246.26)",
+          "oklch(45% 0.0256 246.26)",
+          "oklch(55% 0.0256 246.26)",
+          "oklch(65% 0.0256 246.26)",
+          "oklch(80% 0.0256 246.26)",
+          "oklch(95% 0.0256 246.26)"
+        ]
+      },
+      "navigation-divider": {
+        "role": "neutral",
+        "displayName": "Navigation Divider",
+        "canonical": "#40566B",
+        "tonalRamp": [
+          "oklch(15% 0.0440 247.67)",
+          "oklch(25% 0.0440 247.67)",
+          "oklch(35% 0.0440 247.67)",
+          "oklch(45% 0.0440 247.67)",
+          "oklch(55% 0.0440 247.67)",
+          "oklch(65% 0.0440 247.67)",
+          "oklch(80% 0.0440 247.67)",
+          "oklch(95% 0.0440 247.67)"
+        ]
+      },
+      "navigation-hover": {
+        "role": "neutral",
+        "displayName": "Navigation Hover",
+        "canonical": "#2B4258",
+        "tonalRamp": [
+          "oklch(15% 0.0478 248.15)",
+          "oklch(25% 0.0478 248.15)",
+          "oklch(35% 0.0478 248.15)",
+          "oklch(45% 0.0478 248.15)",
+          "oklch(55% 0.0478 248.15)",
+          "oklch(65% 0.0478 248.15)",
+          "oklch(80% 0.0478 248.15)",
+          "oklch(95% 0.0478 248.15)"
         ]
       },
       "requirement-pending": {
@@ -257,6 +332,21 @@
           "oklch(65% 0.1532 18.42)",
           "oklch(80% 0.1532 18.42)",
           "oklch(95% 0.1532 18.42)"
+        ]
+      },
+      "danger-hover": {
+        "role": "neutral",
+        "displayName": "Danger Hover",
+        "canonical": "#8D2634",
+        "tonalRamp": [
+          "oklch(15% 0.1375 17.50)",
+          "oklch(25% 0.1375 17.50)",
+          "oklch(35% 0.1375 17.50)",
+          "oklch(45% 0.1375 17.50)",
+          "oklch(55% 0.1375 17.50)",
+          "oklch(65% 0.1375 17.50)",
+          "oklch(80% 0.1375 17.50)",
+          "oklch(95% 0.1375 17.50)"
         ]
       },
       "danger-soft": {
@@ -370,7 +460,7 @@
       "refersTo": "button",
       "description": "The main permitted action for a task.",
       "html": "<button class=\"ds-button\">Save changes</button>",
-      "css": ".ds-button{font:600 14px \"DM Sans\",sans-serif;min-height:44px;padding:10px 16px;border:1px solid var(--color-primary, #234A73);border-radius:8px;background:var(--color-primary, #234A73);color:var(--color-surface, #FFFFFF);cursor:pointer}.ds-button:hover{background:var(--color-primary-hover, #173B60)}.ds-button:focus-visible{outline:3px solid var(--color-focus, #386DA3);outline-offset:3px}.ds-button:active{background:var(--color-ink, #192B3D)}"
+      "css": ".ds-button{font:600 14px \"DM Sans\",sans-serif;min-height:44px;padding:10px 16px;border:1px solid var(--color-primary, #245E98);border-radius:8px;background:var(--color-primary, #245E98);color:var(--color-surface, #FFFFFF);cursor:pointer}.ds-button:hover{background:var(--color-primary-hover, #173B60)}.ds-button:focus-visible{outline:3px solid var(--color-focus, #386DA3);outline-offset:3px}.ds-button:active{background:var(--color-ink, #192B3D)}"
     },
     {
       "name": "Secondary button",
@@ -378,14 +468,14 @@
       "refersTo": "button",
       "description": "A quiet supporting action.",
       "html": "<button class=\"ds-button-secondary\">Cancel</button>",
-      "css": ".ds-button-secondary{font:600 14px \"DM Sans\",sans-serif;min-height:44px;padding:10px 16px;border:1px solid var(--color-border, #D5DFE8);border-radius:8px;background:var(--color-surface, #FFFFFF);color:var(--color-ink, #192B3D);cursor:pointer}.ds-button-secondary:hover{background:var(--color-subtle, #E9F0F7);border-color:var(--color-primary, #234A73)}.ds-button-secondary:focus-visible{outline:3px solid var(--color-focus, #386DA3);outline-offset:3px}"
+      "css": ".ds-button-secondary{font:600 14px \"DM Sans\",sans-serif;min-height:44px;padding:10px 16px;border:1px solid var(--color-border, #D5DFE8);border-radius:8px;background:var(--color-surface, #FFFFFF);color:var(--color-ink, #192B3D);cursor:pointer}.ds-button-secondary:hover{background:var(--color-subtle, #E9F0F7);border-color:var(--color-primary, #245E98)}.ds-button-secondary:focus-visible{outline:3px solid var(--color-focus, #386DA3);outline-offset:3px}"
     },
     {
       "name": "Ghost button",
       "kind": "button",
       "description": "A low-emphasis utility action.",
       "html": "<button class=\"ds-button-ghost\">Sign out</button>",
-      "css": ".ds-button-ghost{font:600 14px \"DM Sans\",sans-serif;min-height:44px;padding:10px 16px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--color-secondary, #566777);cursor:pointer}.ds-button-ghost:hover{background:var(--color-subtle, #E9F0F7);color:var(--color-primary, #234A73)}.ds-button-ghost:focus-visible{outline:3px solid var(--color-focus, #386DA3);outline-offset:3px}"
+      "css": ".ds-button-ghost{font:600 14px \"DM Sans\",sans-serif;min-height:44px;padding:10px 16px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--color-secondary, #566777);cursor:pointer}.ds-button-ghost:hover{background:var(--color-subtle, #E9F0F7);color:var(--color-primary, #245E98)}.ds-button-ghost:focus-visible{outline:3px solid var(--color-focus, #386DA3);outline-offset:3px}"
     },
     {
       "name": "Text field",
@@ -393,14 +483,14 @@
       "refersTo": "input",
       "description": "Labelled fields with a visible control boundary.",
       "html": "<label class=\"ds-field\">Email address<input type=\"email\" autocomplete=\"email\" /></label>",
-      "css": ".ds-field{display:grid;gap:7px;font:500 14px \"DM Sans\",sans-serif;color:var(--color-ink, #192B3D)}.ds-field input{height:46px;padding:10px 13px;border:1px solid var(--color-control-border, #788B9D);border-radius:8px;background:var(--color-surface, #FFFFFF);color:var(--color-ink, #192B3D);font:400 15px \"DM Sans\",sans-serif}.ds-field input:hover{border-color:var(--color-input-hover, #234A73)}.ds-field input:focus-visible{border-color:var(--color-focus, #386DA3);outline:3px solid var(--color-subtle, #E9F0F7);outline-offset:0}"
+      "css": ".ds-field{display:grid;gap:7px;font:500 14px \"DM Sans\",sans-serif;color:var(--color-ink, #192B3D)}.ds-field input{height:46px;padding:10px 13px;border:1px solid var(--color-control-border, #788B9D);border-radius:8px;background:var(--color-surface, #FFFFFF);color:var(--color-ink, #192B3D);font:400 15px \"DM Sans\",sans-serif}.ds-field input:hover{border-color:var(--color-input-hover, #245E98)}.ds-field input:focus-visible{border-color:var(--color-focus, #386DA3);outline:3px solid var(--color-subtle, #E9F0F7);outline-offset:0}"
     },
     {
       "name": "Active navigation",
       "kind": "nav",
-      "description": "Quiet blue selection keeps the current destination clear.",
-      "html": "<a class=\"ds-nav\" href=\"#\" aria-current=\"page\">Workspace</a>",
-      "css": ".ds-nav{display:flex;align-items:center;min-height:45px;padding:10px 13px;border-radius:8px;font:500 13px \"DM Sans\",sans-serif;background:var(--color-subtle, #E9F0F7);color:var(--color-primary, #234A73);text-decoration:none}.ds-nav:hover{background:var(--color-background, #F2F5F8)}.ds-nav:focus-visible{outline:3px solid var(--color-focus, #386DA3);outline-offset:3px}"
+      "description": "A pale active destination within the ink operational rail.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-nav\" href=\"#\" aria-current=\"page\">Workspace</a></nav>",
+      "css": ".ds-rail{background:var(--color-navigation, #192B3D);padding:20px}.ds-nav{display:flex;align-items:center;min-height:45px;padding:10px 13px;border-radius:8px;font:600 13px \"DM Sans\",sans-serif;background:var(--color-subtle, #E9F0F7);color:var(--color-primary, #245E98);text-decoration:none}.ds-nav:hover{background:var(--color-subtle, #E9F0F7)}.ds-nav:focus-visible{outline:3px solid var(--color-navigation-text, #F2F5F8);outline-offset:3px}"
     },
     {
       "name": "Role badge",
@@ -408,15 +498,15 @@
       "refersTo": "info",
       "description": "A readable text label for role and scope.",
       "html": "<span class=\"ds-role\">Administrator</span>",
-      "css": ".ds-role{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font:600 12px \"DM Sans\",sans-serif;background:var(--color-subtle, #E9F0F7);color:var(--color-primary, #234A73)}"
+      "css": ".ds-role{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font:600 12px \"DM Sans\",sans-serif;background:var(--color-subtle, #E9F0F7);color:var(--color-primary, #245E98)}"
     },
     {
       "name": "Working panel",
       "kind": "card",
       "refersTo": "panel",
-      "description": "Flat working surface with a quiet boundary.",
-      "html": "<section class=\"ds-panel\"><h3>Account details</h3><p>Information saved in your workspace.</p></section>",
-      "css": ".ds-panel{padding:30px;border:1px solid var(--color-border, #D5DFE8);border-radius:14px;background:var(--color-surface, #FFFFFF);color:var(--color-ink, #192B3D)}.ds-panel h3{margin:0 0 10px;font:600 16px Manrope,sans-serif}.ds-panel p{margin:0;font:400 14px \"DM Sans\",sans-serif;color:var(--color-secondary, #566777)}"
+      "description": "Flat commercial working sheet with a quiet boundary.",
+      "html": "<section class=\"ds-panel\"><h3>Invoice details</h3><p>Read-only details saved with this invoice.</p></section>",
+      "css": ".ds-panel{padding:30px;border:1px solid var(--color-border, #D5DFE8);border-radius:8px;background:var(--color-surface, #FFFFFF);color:var(--color-ink, #192B3D)}.ds-panel h3{margin:0 0 10px;font:600 16px Manrope,sans-serif}.ds-panel p{margin:0;font:400 14px \"DM Sans\",sans-serif;color:var(--color-secondary, #566777)}"
     },
     {
       "name": "Password requirement",
@@ -427,8 +517,8 @@
     }
   ],
   "narrative": {
-    "northStar": "A signed agreement's traceable trail: calm blue working surfaces, a continuous loop brand, deliberate alignment and clear ownership. This is an operating tool for Brightloop's staff and customers. Information, permissions and the next honest action lead every surface. The category's generic KPI dashboard and a decorative finance terminal are anti-references.",
-    "overview": "A signed agreement's traceable trail: calm blue working surfaces, a continuous loop brand, deliberate alignment and clear ownership. This is an operating tool for Brightloop's staff and customers. Information, permissions and the next honest action lead every surface. The category's generic KPI dashboard and a decorative finance terminal are anti-references.\n\nThe brief supplies English software operations and local resilience; INR and Asia/Kolkata are implementation policy, not a claimed market study. The main usage scene is daily desktop work with a narrow-screen record-check path. Register is product throughout. No Japan-market scope is established.\n\nThe root task authorizes a new product, with no incumbent visual identity. The task-derived direction is the agreement trail; blue, white and precise type carry forward into later gates. One signature, quiet surroundings. Do not build empty navigation for future gates.\n\nToken ownership: this file defines the visual contract; `src/styles.css` maps the named values one-to-one to `--color-*` custom properties. No framework adapter or generated theme exists. Shared components consume these variables. Change both sources together and use the strict premium audit plus browser screenshots to inspect drift.",
+    "northStar": "A signed agreement's traceable trail: an ink navigation rail, clear blue action, white commercial documents and a continuous loop brand. Deliberate alignment and clear ownership give Brightloop's billing desk its character. Real stage, calculation and dated-history connections share the same node-and-line geometry. Information, permissions and the next honest action lead every surface. The category's generic KPI dashboard and a decorative finance terminal are anti-references.",
+    "overview": "A signed agreement's traceable trail: an ink navigation rail, clear blue action, white commercial documents and a continuous loop brand. Deliberate alignment and clear ownership give Brightloop's billing desk its character. Real stage, calculation and dated-history connections share the same node-and-line geometry. Information, permissions and the next honest action lead every surface. The category's generic KPI dashboard and a decorative finance terminal are anti-references.\n\nThe brief supplies English software operations and local resilience; INR and Asia/Kolkata are implementation policy, not a claimed market study. The main usage scene is daily desktop work with a narrow-screen record-check path. Register is product throughout. No Japan-market scope is established.\n\nThe root task authorizes a new product, with no incumbent visual identity. The task-derived direction is the agreement trail; blue, white and precise type carry forward into later gates. One signature, quiet surroundings. Do not build empty navigation for future gates.\n\nToken ownership: this file defines the visual contract; `src/styles.css` maps the named values one-to-one to `--color-*` custom properties. No framework adapter or generated theme exists. Shared components consume these variables. Change both sources together and use the strict premium audit plus browser screenshots to inspect drift.",
     "keyCharacteristics": [
       "One continuous agreement trail",
       "Clear role and ownership",
