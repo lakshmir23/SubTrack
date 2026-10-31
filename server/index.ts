@@ -15,7 +15,7 @@ if (production) {
   app.get('/{*path}', (_req, res) => res.sendFile(resolve(productionAssets, 'index.html')));
 } else {
   const { createServer } = await import('vite');
-  const vite = await createServer({ server: { middlewareMode: true }, appType: 'spa' });
+  const vite = await createServer({ server: { middlewareMode: true, watch: { ignored: ['**/data/**', '**/dist/**', '**/playwright-report/**', '**/test-results/**'] } }, appType: 'spa' });
   app.use(vite.middlewares);
 }
 const server = app.listen(settings.port, '127.0.0.1', () => {
