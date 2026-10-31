@@ -36,3 +36,8 @@ Fetched remote state, confirmed the separate main worktree was clean, fast-forwa
 ## P8: a6d4da8
 
 Fetched remote state, fast-forwarded the clean main worktree and pushed `a6d4da8216f8186445e747b6eb77f2ea4b4f25a0`; the remote ref matched. Complete desktop baseline, corrected affected-route measurements, independent data audit, 170 tests/26 browser journeys and actual clean-checkout startup passed within the documented evidence scope. Failed and interrupted runs remain archived. User canceled further mobile benchmarking. P9 source was left uncommitted during this P8 integration and followed only after separate key/budget approval.
+
+
+## P9 and teammate integration: ec4e10d
+
+The repository was renamed to `lakshmir23/SubTrack`; origin was updated to the new URL. Fresh fetch found teammate commit `25a03bb` adding the study guide. Its identical untracked workspace copy was preserved under ignored data before merging, and the genuine commit/history was retained. Merged main into the feature branch, then fast-forwarded the clean main worktree and pushed `ec4e10d878392a41e0a8b31c9f984255438fd937`; remote main matched. The incoming change was documentation only. P9 had passed aggregate lint/typecheck/181 tests/build,30 browser journeys, three real synthetic provider calls, independent budget/authority review and normal schema12 startup. The later development-watch exclusion passed targeted lint/typecheck/build and actual dev startup. No force push, external deployment or contest submission occurred. The requested README overhaul follows this verified source integration.

@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "command": "npm run dev",
+  "singleOrigin": "http://localhost:3000",
+  "sameProcess": "Express API plus Vite middleware",
+  "automaticMigrations": true,
+  "schemaVersion": 12,
+  "frontendEntryServed": true,
+  "actualBrowserSignInDirectRouteAndReload": true,
+  "providerCallsDuringVerification": 0,
+  "demoStillReconciles": {
+    "active": 3,
+    "billed": "418880",
+    "received": "308880",
+    "outstanding": "110000",
+    "overdue": "110000"
+  }
+}

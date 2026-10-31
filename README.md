@@ -1,78 +1,195 @@
 # SubTrack
 
-Subscription operations for Brightloop Software. Implementation follows [the roadmap](docs/ROADMAP.md) in order; current gate results and outstanding blockers are in [the implementation record](docs/IMPLEMENTATION_STATUS.md). The repository directory may still be named `odoo`.
+**From the first quotation to the final payment, with every agreement accounted for.**
 
-## Local setup
+SubTrack is Brightloop Software’s subscription management system: one connected workspace for catalog configuration, quotations, service changes, recurring invoices, collections and finance. Every amount, record and next action comes from persisted business data.
 
-Requires Node.js 24+ and npm. Development was started on Windows with Node 26.8.1. SQLite is bundled with Node; no Docker or hosted database is required. Keep the database on a local disk, not a network share. This is a single-machine fallback with WAL and bounded write transactions; tests exercise real independent-process duplicate and discount races. It is not a distributed database deployment.
+## Start the application with one command
 
-```powershell
-npm ci
-if (-not (Test-Path -LiteralPath .env)) { Copy-Item -LiteralPath .env.example -Destination .env }
-npm run db:migrate
-npm run db:seed
+Requires **Node.js 24+** and npm; verified on Windows with Node **26.8.1**. After the [one-time setup](#one-time-setup), daily startup is:
+
+```sh
 npm run dev
 ```
 
-Open [SubTrack locally](http://localhost:3000). The server binds to `127.0.0.1`. Database records live in ignored `data/subtrack.sqlite`. Migration and synthetic seed commands are additive and preserve existing users; there is no destructive reset command. Do not overwrite an existing `.env`.
+Open **[localhost:3000](http://localhost:3000)**. One terminal starts the Express backend and the React interface through Vite middleware. Startup opens the local database and applies migrations automatically. No separate frontend/backend command or nodemon process is needed. Stop with **Ctrl+C**.
 
-Synthetic demo identities use password `Brightloop!2026`: `admin@brightloop.test`, `staff@brightloop.test`, `maya@brightloop.test`, `arun@brightloop.test`. These are local fixtures, not real accounts or customer activity. Seeds are explicitly opt-in; the server never seeds automatically.
+## Try the complete local demo
 
-## November walkthrough
+For a populated walkthrough, use this separate, isolated demo. No Docker, hosted database, `.env`, SMTP account or model API is needed.
 
-After `npm run build`, run `npm run demo` and open [the isolated November demo](http://localhost:3003). It creates a fresh synthetic database, fixes the business date to **9 November 2026**, and labels every screen as a demo. It never loads `.env` or sends real email. The normal application continues to use its real business clock and configured database.
+```sh
+npm ci
+npm run build
+npm run demo
+```
 
-Sign in as `admin@brightloop.test` or `staff@brightloop.test`, using `Brightloop!2026`. Portal accounts are `studio@brightloop.test`, `shop@brightloop.test` and `services@brightloop.test` with the same synthetic password. The default settled fixture follows [the proof plan](docs/DEMO_AND_PROOF.md): A is Paid after 1,000 and 2,088.80 payments; B owes 1,100; C has a real paid October period and next bill on November 15. With November invoice/payment ranges, totals are 4,188.80 billed, 3,088.80 collected and 1,100 outstanding/overdue.
+Open **[localhost:3003](http://localhost:3003)**. Sign in with **`Brightloop!2026`**:
 
-For a live collection demonstration, use `npm run demo -- --settlement=unpaid` or `npm run demo -- --settlement=partial`, then record the remaining synthetic payments through the interface. `--port=3004` selects another local port. Every launch creates a new retained `data/november-demo-*.sqlite` file; existing databases are preserved. Stop with Ctrl+C. Demo startup seeds through the same authenticated business routes and persisted batch engine as the application. It is separate from the large-data performance fixture.
+- **Administrator:** `admin@brightloop.test` — configure offerings, manage staff and run the full workflow.
+- **Internal staff:** `staff@brightloop.test` — prepare agreements, bill, record collections and inspect finance.
+- **Customer portals:** `studio@brightloop.test`, `shop@brightloop.test`, `services@brightloop.test` — access each customer’s own agreements, invoices, payments and permitted service changes.
+
+The labelled synthetic demo uses **9 November 2026**. Its default settled scenario shows **3 active agreements**, **₹4,188.80 invoiced**, **₹3,088.80 received** and **₹1,100 outstanding and overdue**, with November invoice/payment filters. The first customer’s two payments reconcile to its Paid invoice; the second remains collectible.
+
+To demonstrate collection yourself:
+
+```sh
+npm run demo -- --settlement=unpaid
+npm run demo -- --settlement=partial
+```
+
+Run one scenario at a time; stop it with **Ctrl+C**. Each launch creates a fresh, retained `data/november-demo-*.sqlite` database. Existing databases stay intact. Use `--port=3004` for another port. The demo never reads `.env`, sends real email or moves money. Follow the [judge walkthrough](docs/JUDGE_WALKTHROUGH.md) for the complete sequence.
+
+## What you can do
+
+- **Configure real offerings.** Products include sales/cost prices, internal notes and variant adjustments. Plans support daily, weekly, monthly and yearly billing, minimum quantities, availability dates and lifecycle permissions.
+- **Quote once, reuse the structure.** Templates carry plans, product lines and validity. Every subscription instance receives its own reference, customer, service term, payment terms and price breakdown.
+- **Keep agreed prices traceable.** Move through Draft → Quotation → Confirmed → Active → Closed. Issuing freezes offered terms; confirmation preserves the accepted agreement through later catalog changes.
+- **Bill the backlog safely.** Persisted, bounded billing runs show progress, created/existing/non-billable/failed outcomes and remaining work. Retry failed periods without duplicating their logical charges.
+- **Calculate money exactly.** Integer minor units, explicit rounding, plan-price substitution and variant adjustments keep totals deterministic. Taxes apply after the selected discount.
+- **Control discount eligibility and usage.** Fixed or percentage rules support product/subscription scope, thresholds, inclusive validity, priority and usage limits. Draft reservations and confirmation consumption are atomic.
+- **Collect partial payments correctly.** Review amount, method, date and internal note before recording. Partial settlement keeps an invoice Confirmed; the balance reaches zero before Paid. Zero-total invoices settle without fake payments. Replays and concurrent allocations cannot double-record or overpay.
+- **Manage service on real billing boundaries.** Plan-permitted pause, resume, renewal, early closure, expiry and optional-line changes preserve dated history and earlier debt. Paused full periods receive explicit non-billable outcomes.
+- **Reconcile finance and customer access.** Separate invoice-issue and payment-received date ranges, current outstanding/overdue balances and whole-filter totals connect to paginated records. Customers see only their own data; internal costs and payment notes stay out of portal payloads.
+- **Finish the invoice workflow.** Confirm, cancel, review a linked replacement, send a controlled email notice, and open an authenticated print/Save as PDF view. Delivery states distinguish local generation, SMTP acceptance, failure and uncertainty.
+- **Use optional AI without handing it authority.** Request catalog-grounded selections, review and Apply them, inspect the normal calculated estimate, then explicitly Save draft. Manual entry remains complete when AI is disabled, unavailable or declines a request.
+
+![SubTrack finance workspace with the labelled synthetic November scenario](docs/evidence/screenshots/finance-desktop.png)
+
+*A working finance sheet, backed by the isolated November demo’s invoices and payment records.*
+
+## Follow an agreement through the business
+
+```mermaid
+flowchart LR
+    A[Configure products and plans] --> B[Prepare a quotation]
+    B --> C[Confirm the agreement]
+    C --> D[Activate service]
+    D --> E[Generate invoices for due periods]
+    E --> F[Confirm and send invoices]
+    F --> G[Record received payments]
+    G --> H[Review finance and overdue debt]
+    D --> I[Pause, resume, renew or close]
+    I --> E
+```
+
+Workflow diagram reused from the [team working guide](docs/working/README.md#1-what-we-built-and-why).
+
+## One-time setup
+
+The normal application uses the real business clock and a persistent local database. Its defaults are **[localhost:3000](http://localhost:3000)** and `data/subtrack.sqlite`.
+
+Install dependencies once after cloning:
+
+```sh
+npm ci
+```
+
+Then use **`npm run dev`** for daily startup. Database creation and migrations are automatic; `npm run db:migrate` remains available as an explicit maintenance command. To add synthetic login accounts, optionally run **`npm run db:seed`** once. The additive seed preserves existing records and is never run automatically.
+
+Default local operation does not need `.env`. If you want to customize settings, this optional PowerShell command creates it only when missing:
 
 ```powershell
-npm run lint
-npm run typecheck
-npm test
+if (-not (Test-Path -LiteralPath .env)) { Copy-Item -LiteralPath .env.example -Destination .env }
+```
+
+The guarded copy preserves an existing `.env`. Keep it private and restart the server after changing settings.
+
+Normal seed accounts are `admin@brightloop.test`, `staff@brightloop.test`, `maya@brightloop.test` and `arun@brightloop.test`, all with `Brightloop!2026`. The studio/shop/services accounts belong to the separate November demo. All seeded identities are synthetic.
+
+For the compiled application, after the database setup above:
+
+```sh
 npm run build
 npm start
 ```
 
-`npm run check` runs lint, typecheck, domain/integration tests and the production build. After building, `npm run test:e2e` runs actual browser journeys against production assets and a fresh isolated SQLite fixture on port 3100; install the matching browser with `npx playwright install chromium`. The browser fixture never uses the local SMTP configuration. Exact executed checks are recorded in the implementation ledger; an available command is not a passing result.
+Both modes bind to `127.0.0.1`. `PORT`, `APP_ORIGIN`, `DATABASE_PATH` and delivery settings are documented in [.env.example](.env.example). Keep the SQLite database on a local persistent disk, with room for its WAL files.
 
-## Large-data verification
+## Verify the build
 
-After building, `npm run benchmark:seed` creates a fresh synthetic database and prints its manifest path. The default fixture contains 10,000 agreements across all four calendar cadences, 30,000 invoices, real positive payment allocations, paused waivers and retryable failures. It refuses to overwrite an existing file and never reads `.env` or sends email. `-- --output=data/my-new-benchmark.sqlite` chooses a new file explicitly.
-
-Run `npm run benchmark -- --manifest=data/<printed-file>.sqlite.manifest.json --samples=50 --label=release`. The runner starts a separate local production server on port 3004, copies the seed into isolated runtime and batch databases, measures all page destinations and interactions, and preserves raw timings in ignored `data/benchmark-*/results.json`. Allow at least 1.5 GB of free disk for the seed and copies. Cold server API, empty browser cache, warm navigation, concurrent users and batch completion are reported separately. `--viewport=390x844` selects a narrow viewport; `--only=pattern` runs a disclosed subset. Smoke runs use fewer samples and never count as the final performance gate. See the implementation ledger for actual measured results.
-
-## Environment and delivery
-
-`.env` is ignored by Git. The optional `OPENAI_API_KEY` entry is server-only; only explicitly enabled quotation suggestions use it. No key or model access is needed for the mandatory product or manual quotation form. Never use a `VITE_` prefix for credentials.
-
-Default `MAIL_MODE=outbox` stores development email locally. It proves message generation, **not delivery to a registered inbox**. Real delivery gates require an approved SMTP test account and controlled recipient. Configure the SMTP fields in `.env` and the exact `MAIL_ALLOWED_RECIPIENTS` allowlist only after authorization. Never commit credentials or paste them into chat. No contest submission, external deployment or money movement is part of local startup.
-
-`npm run mail:check` reports only missing setting names, never credential values. After approving a controlled recipient and starting the app with `MAIL_MODE=smtp`, `npm run verify:email` registers that allowlisted address if necessary and sends one real password-reset email. This explicit side-effect command is excluded from automated tests. SMTP acceptance is recorded separately from observed inbox arrival. Restart the server after changing SMTP settings.
-
-`npm run verify:invoice` is a separate explicit P5 delivery check. It requires the first approved address to be an existing customer and the opt-in synthetic admin seed to be available locally. It creates a clearly labeled synthetic service/agreement/invoice, sends one test invoice to that registered allowlisted address, and reports metadata without credentials or the recipient address. The email requests no real payment. This command is excluded from automated checks; do not use it as a benchmark or bulk-send tool. Actual inbox arrival still needs a separate witness.
-
-`npm run verify:print` creates three real Chromium PDFs from authenticated print routes using an isolated synthetic database: Draft, Confirmed, and 50-line/maximum-amount examples. It does not load `.env` or send email. Outputs are ignored in `output/pdf/`; inspect the rendered PDFs after a print-layout change. See [the communication evidence](docs/evidence/P5_DELIVERY_AND_PRINT.md) for observed rendering and delivery results.
-
-## Optional quotation suggestions
-
-Admin and staff can request a catalog-grounded suggestion from **New quotation** after selecting a customer. Suggestions contain catalog IDs, quantities, an optional start date and clarification questions. Explicit **Apply**, ordinary server preview, review acknowledgement and **Save Draft** remain separate human steps. AI never confirms an agreement, generates an invoice, sends email or records a payment. Continue manually preserves entered fields after any model failure.
-
-The current session explicitly approved reuse of the existing ignored `.env` key and a **$5 USD total allowance**, including live evaluation. No new credential was created. For an authorized setup, keep `OPENAI_API_KEY` server-side and configure:
-
-```dotenv
-AI_QUOTE_ENABLED=true
-AI_QUOTE_BUDGET_USD=4.998925
+```sh
+npm run check
+npx playwright install chromium
+npm run test:e2e
 ```
 
-The current remaining allowance is $4.998925 after three controlled live calls accounted for $0.001075 of the approved $5 total; preserve the existing key and remaining cap. The live known request resolved to a server-calculated 3,120 subtotal, then an explicit Draft save and replay; unsupported/ambiguous requests returned clarification. Restart the normal server after configuration changes. Defaults in `.env.example` keep AI off. Missing key, missing/nonpositive allowance, allowance above $5, or exhausted conservative capacity disables suggestions. `gpt-4.1-mini` is fixed: the official model page marks it deprecated; an authorized model lookup returned HTTP 200 on October 31, 2026. There is no automatic model substitution. A future availability failure leaves manual entry available.
+`check` runs lint, client/server typecheck, domain/integration tests and the production build. Browser tests then use those built assets and a fresh isolated SQLite database on port **3100**, with synthetic email/model transports and no local `.env` credentials.
 
-Budget reservations are persisted and shared across users of **one application database**, rather than across arbitrary databases or the provider project. Each request reserves $0.02 atomically; known token usage reconciles at the documented model prices, while timeout/unknown outcomes retain the full reservation. Do not reset/copy the ledger or enable separate databases to extend the approval. Evaluation usage counts toward the same owner-approved $5 allowance. One request per user may be in flight, and each user may request five per 15 minutes; there is no separate global rate limit.
+The verified release passed **181 domain/integration tests** and **30 production-browser journeys**. Coverage includes role/ownership isolation, date and rounding boundaries, discount races, worker retries, payment allocation, response-loss replay, lifecycle history, finance reconciliation and optional AI fallback/review. See the [implementation record](docs/IMPLEMENTATION_STATUS.md), [AI verification](docs/evidence/P9_VERIFICATION.md) and [main integration record](docs/evidence/MAIN_INTEGRATION.md).
 
-Request text is limited to 1,000 characters. The bounded catalog includes at most 20 active plans, 30 products, 100 variants and 20 templates; truncation can omit valid choices, so use manual selection when needed. Instructions plus request/catalog are limited to 20 KiB UTF-8, the complete JSON request to 24 KiB, and output to 800 tokens. One eight-second deadline covers the provider response; there are no automatic retries. Server-supplied customer identity, emails, prices, costs, notes and payment context are excluded; enter synthetic needs without personal information. `store:false` is used, without a zero-retention claim.
+### Measured performance
 
-The [implemented AI contract and limits](docs/OPTIONAL_AI.md) and [API contract](docs/API_CONTRACT.md#p9-optional-quotation-suggestions-implemented) describe the ownership/expiry and price-change review guards. Stub-only tests exercise failures without loading `.env`; actual live results are recorded separately by the release owner. Optional AI request latency is separate from the mandatory page-performance evidence.
+The dedicated fixture contains **10,000 subscriptions, 30,000 invoices, 60,000 invoice lines and 27,400 positive payments**, with all four calendar cadences.
 
-## Architecture and ownership
+- Complete desktop coverage: **93 destination/role/state variants**, **14 interactions**, and **115 role/API paths**, with **50 warm samples per destination**, plus separate cold and concurrent measurements.
+- The original full run retained a **2.647-second cold workbench breach**. Tracing identified queue SQL; corrected affected paths then passed **20 cold navigations and 50 warm samples per queue variant** without a threshold breach.
+- Failed and interrupted runs remain in the evidence. This combines complete-inventory coverage with corrected affected-path verification; it is not a claim that every original sample was under two seconds.
+- Thousands-row mobile performance was not measured; functional narrow-screen browser tests are separate. Loopback results do not establish production capacity or a universal latency guarantee.
 
-React/TypeScript/Vite client, Express server, SQLite with WAL/foreign keys and immediate write transactions. Root owns integration, migrations and shared contracts; UI and verification agents own their real changes. No teammate authorship is fabricated. See [API contracts](docs/API_CONTRACT.md) and [decisions](docs/DECISIONS.md) for policy and gate limitations.
+Reproduce the benchmark after building:
+
+```sh
+npm run benchmark:seed
+npm run benchmark -- --manifest=data/<printed-file>.sqlite.manifest.json --samples=50 --label=release
+```
+
+The generator refuses to overwrite an existing file. The runner uses a separate server on port **3004**, isolated database copies and no SMTP/model calls. Allow at least **1.5 GB** of free disk. Read [dataset validation](docs/evidence/P8_DATASET.md) and the [full performance report](docs/evidence/P8_PERFORMANCE.md) for hardware, timing boundaries, results and limitations.
+
+## Email and printable invoices
+
+The default **`MAIL_MODE=outbox`** generates local records; it does not prove inbox delivery. SMTP is optional and uses approved test recipients configured through `MAIL_ALLOWED_RECIPIENTS`. Observed reset/invoice delivery and rendered PDFs are recorded in [reset delivery evidence](docs/evidence/P1_DELIVERY.md) and [invoice delivery/print evidence](docs/evidence/P5_DELIVERY_AND_PRINT.md).
+
+- `npm run mail:check` checks configuration without printing credential values.
+- `npm run verify:print` creates three synthetic PDF examples under ignored `output/pdf/`; it does not send email.
+- **Explicit side effects:** `npm run verify:email` can register the approved test address and sends one reset email. `npm run verify:invoice` creates a labelled synthetic agreement/invoice and sends one test notice. Run these only with approved SMTP configuration and recipients; they are excluded from automated checks.
+
+SMTP acceptance and actual inbox receipt are different evidence. Test notices issue no real payment request. The application records payments already received; it does not move money.
+
+## Optional quotation assistance
+
+AI is **off by default** and is not required for any core workflow. Only administrators and staff can request suggestions, after selecting the customer in the ordinary form. Suggestions contain catalog selections, quantities, an optional date and plain clarification questions—not prices, customer identity or financial actions.
+
+Use the configured normal application for live assistance. The isolated November demo intentionally leaves it off and never reads your `.env`.
+
+For a separately authorized setup, configure the server-only `OPENAI_API_KEY`, `AI_QUOTE_ENABLED=true` and a positive `AI_QUOTE_BUDGET_USD` **no greater than $5**, then restart. Never put credentials in a `VITE_` variable, repository, screenshot or chat. Preserve an existing key and remaining allowance rather than resetting them.
+
+The handoff configures a **$4.998925 remaining allowance** after its controlled evaluation; later requests reduce the available amount. Reservations and usage persist in **one application database**; this is not a provider-project or cross-database budget. Do not reset/copy the ledger to extend the allowance. [AI verification and accounting](docs/evidence/P9_VERIFICATION.md) explain the live evaluation, exact usage, model availability and remaining limits.
+
+Requests use a bounded catalog selection, a 1,000-character prompt limit, an eight-second provider deadline and no automatic retries. Enter synthetic product needs without personal information. The fixed model is `gpt-4.1-mini`; availability failures return to manual entry. Applying a suggestion creates no business record. Customer changes invalidate its binding, and changed prices require another explicit estimate review before Save draft. See [the implemented AI contract](docs/OPTIONAL_AI.md) for all limits.
+
+## Architecture and deployment
+
+**React + TypeScript + Vite** provide the interface; **Express + Node’s native SQLite** provide authenticated APIs, persisted records and deterministic business calculations. SQLite uses WAL, foreign keys, constraints and short write transactions. Billing, email delivery and due service processing use persisted state and bounded workers.
+
+The current runtime expects a long-running Node process and writable persistent local storage. It is a single-machine architecture, with real independent-process race tests; it is not a distributed database deployment.
+
+The frontend can be hosted on Vercel with an appropriately configured API backend. Moving this complete runtime to Vercel Functions requires database and worker adaptation; a persistent writable SQLite file cannot be assumed there. [Vercel’s SQLite guidance](https://vercel.com/kb/guide/is-sqlite-supported-in-vercel) explains the storage limitation. No deployment or contest submission is claimed by this repository.
+
+## Project map
+
+- [Requirements](docs/REQUIREMENTS.md), [event constraints](docs/HACKATHON_CONSTRAINTS.md) and [roadmap](docs/ROADMAP.md): scope and gate sequence.
+- [Decisions](docs/DECISIONS.md), [domain rules](docs/DOMAIN_AND_EDGE_CASES.md) and [API contract](docs/API_CONTRACT.md): business behavior and boundaries.
+- [Judge walkthrough](docs/JUDGE_WALKTHROUGH.md) and [proof plan](docs/DEMO_AND_PROOF.md): reproducible demonstration.
+- [Design system](DESIGN.md) and [interaction contract](UX-CONTRACT.md): shared visual and behavioral ownership.
+- `src/`: application UI; `server/`: APIs, migrations, workers and fixtures; `shared/`: validation/contracts/exact-money helpers; `tests/`: domain, integration and browser checks.
+- [Team working guide](docs/working/README.md): the separately maintained project study material.
+
+Known scope limits include payment reversals/refunds, historical as-of accounting and distributed deployment. The shipped paths, exact executed checks and remaining constraints are tracked in the evidence—not replaced with production-readiness claims.
+
+## How one-command startup works
+
+```mermaid
+flowchart LR
+    DEV[npm run dev] --> TS[tsx watches server/index.ts]
+    TS --> EX[Express on localhost:3000]
+    EX --> VM[Vite middleware serves React and updates]
+    EX --> API[Same-origin API routes]
+    EX --> DB[Open SQLite and apply migrations]
+    EX --> JOBS[Billing, lifecycle and mail workers]
+```
+
+Adapted from the working guide’s [development-versus-production diagram](docs/working/README.md#development-versus-production). The [dev script](package.json) runs `tsx watch server/index.ts`. [The server entry](server/index.ts) creates Express and attaches Vite as middleware, so the interface and API share one application URL. [Application setup](server/app.ts) opens SQLite through [the database module](server/database.ts), which applies pending migrations before requests are served. The same process starts the bounded workers; Vite handles browser updates and `tsx` watches server changes.
+
+For compiled serving, `npm run build` produces the client and server output, and `npm start` serves the built client through Express. The database rules, authentication and API paths stay the same.
