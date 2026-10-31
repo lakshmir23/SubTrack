@@ -87,20 +87,13 @@ This does not require a complex event-sourcing platform. Ordinary well-modeled r
 
 Only add a visibly labeled demo clock if every required workflow and performance check is stable. It can demonstrate discount expiration, next billing, and automatic closure. It must exercise the same rules as ordinary processing. It is lower priority than reset-email delivery, print/send actions, daily/weekly intervals, and permissions.
 
-## Modeling decisions that need an explicit policy
+## One canonical policy contract
 
-The brief leaves some semantics open. Choose simple, documented policies rather than secretly hard-code assumptions:
+[DECISIONS.md](DECISIONS.md) contains proposed, internally consistent defaults for semantics the brief leaves open. These are team design choices, not organizer requirements. Use the same version across backend, frontend, tests and demo; if the team changes one, update every affected expectation.
 
-- Is a plan price a base charge, an alternative product price, or additional to product lines? Prevent accidental double counting. The demo uses product-line pricing with a plan's configured price aligned to the base software price; no additional plan fee.
-- Does a variant adjustment apply per unit? The proposed demo says yes and shows it before confirmation.
-- Are taxes calculated after discounts? The demo says yes, using a fictional configurable tax rule, not a legal claim.
-- Can discounts stack? Start with one selected eligible rule per eligible line/subscription unless the organizer says otherwise; document deterministic selection.
-- Does maximum usage mean global uses or uses per customer/subscription? The demo uses one global use for a rule assigned to a specific subscription. Make the policy explicit.
-- How do plan availability dates differ from an existing subscription's start/expiry dates? Availability controls new selection; expiry controls the agreement unless specified otherwise.
-- Does pausing also defer billing, and what happens on resume? Define the effective date and next bill. Avoid promising a pause that merely changes a badge.
-- What happens at a month-end anchor such as January 31? Use a documented calendar rule, not a universal thirty-day month.
-- Which invoice date and payment term determine overdue status? Use a due date and remaining balance; a fully paid invoice is not overdue.
-- What does revenue mean in the finance view? Label invoiced totals and cash collected separately. Do not claim full revenue recognition or accounting compliance.
+Important defaults: the plan price replaces the catalog base price for its primary recurring product, with the selected variant adjustment added per unit; it is not an extra fee. Generated invoices are immutable pricing snapshots. Limited discounts reserve capacity at generation and consume it on confirmation. Zero-total invoices settle without a fabricated payment. Paused full periods are explicitly non-billable, but historical owed periods remain recoverable after closure. Business-date and role conventions also live in DECISIONS.
+
+The demo deliberately keeps plan and catalog base prices equal for simple arithmetic; an additional test must make them different to prove plan price is functional rather than decorative. Optional AI must respect the same deterministic contract and never override prices, eligibility or permissions.
 
 ## Provisional eight-hour prioritization
 

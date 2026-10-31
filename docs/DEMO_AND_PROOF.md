@@ -20,10 +20,10 @@ These are explicit demo policies, not additional requirements or tax advice:
 - Billing date is November 1, 2026, using a clearly labeled synthetic fixture. A and B use seven-day payment terms: invoices issued November 1 are due November 8, with overdue status starting November 9 under this demo policy. The finance snapshot is November 9, before C becomes due on November 15; all three contracts remain unexpired.
 - Product **Business Software** has base sales price ₹1,000 and cost price ₹400. Cost price is internal only.
 - Variant **Odoo** adds ₹560 **per unit**, following the statement's variant example.
-- Monthly plan price is configured consistently with the ₹1,000 base software price. It is not added as a second fee on top of product lines. Confirm the intended plan-price semantics with the organizer if clarification is available.
+- The monthly plan identifies Business Software as its primary product; plan price ₹1,000 replaces that product’s catalog base unit price. Add the chosen variant per unit; never add a separate plan fee. See [DECISIONS.md](DECISIONS.md). A separate unequal-plan/catalog-price test proves this mapping.
 - Demonstration tax is a fictional configurable **10% demo tax**, calculated after discount. It is not described as an applicable statutory rate.
 - Discount **LAUNCH10** is administrator-created: 10%, minimum quantity two, valid November 1–30 inclusive, maximum one use, assigned to subscription A. No stacking.
-- For this example, a discount use is consumed once when its eligible invoice is confirmed, not again on batch replay. The team must document cancellation/release semantics before implementing them.
+- Discount eligibility is frozen at generation business date and its limited use is reserved atomically then. Confirmation consumes the reservation once; replay changes no counters. Canceling a Draft releases it; canceling a zero-payment Confirmed invoice does not restore consumed usage. Generated amounts are read-only snapshots. See [DECISIONS.md](DECISIONS.md).
 - Partial payments reduce the remaining balance; the invoice stays Confirmed until its balance reaches zero, then becomes Paid.
 
 ### Three active subscriptions
@@ -169,3 +169,16 @@ Never invent customers served, revenue saved, delivery success, test coverage, o
 **Reduce optional scope:** Any mandatory gap remains. Cut the clock, fancy timeline effects, and extra analytics before cutting required tax/discount modes, lifecycle capabilities, or security.
 
 **Do not claim complete:** The frontend hides missing persistence, send/print are inert, the billing replay creates duplicates, a due subscription silently disappears, or performance remains unmeasured.
+
+## Additional adversarial gates from policy review
+
+- A due period earned before closure is still found by backlog processing; a complete paused interval is explicitly non-billable rather than silently skipped or later charged.
+- Two workers racing for the final discount capacity cannot both reserve it.
+- A confirmed zero-total invoice becomes Paid with no fabricated payment.
+- Two concurrent partial payments cannot together exceed outstanding balance.
+- Reusing one payment idempotency key with a different payload fails as a conflict.
+- Editing catalog or plan prices leaves accepted contract and invoice snapshots unchanged.
+- Joining two invoice lines with two payments cannot multiply finance aggregates.
+- Portal responses omit internal cost and payment-note fields, not merely hide them visually.
+
+Every check remains unrun until implementation evidence exists.
