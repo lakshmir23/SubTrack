@@ -7,6 +7,7 @@ import { migrateBilling } from './billing-schema.js';
 import { migrateBillingWorkbench } from './billing-workbench-schema.js';
 import { migratePayments, migratePaymentFactsGuard } from './payments-schema.js';
 import { migrateLifecycle } from './lifecycle-schema.js';
+import { migrateMeasuredListIndexes } from './performance-schema.js';
 
 export function openDatabase(path: string): DatabaseSync {
   if (path !== ':memory:') mkdirSync(dirname(resolve(path)), { recursive: true });
@@ -93,6 +94,7 @@ export function openDatabase(path: string): DatabaseSync {
   migratePayments(db);
   migrateLifecycle(db);
   migratePaymentFactsGuard(db);
+  migrateMeasuredListIndexes(db);
   return db;
 }
 
