@@ -19,6 +19,7 @@ import {
   Settings2,
   FileText,
   ReceiptText,
+  BookOpen,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -179,6 +180,12 @@ export function WorkspaceShell() {
             {user.role === "customer" ? "Invoices" : "Billing"}
           </NavLink>
           {user.role !== "customer" && (
+            <NavLink to="/finance">
+              <BookOpen size={19} />
+              Finance
+            </NavLink>
+          )}
+          {user.role !== "customer" && (
             <NavLink to="/customers">
               <UsersRound size={19} />
               Customers
@@ -260,33 +267,48 @@ export function WorkspaceShell() {
   );
 }
 export function useResource<T>(path: string | null) {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(true);
+  const [state, setState] = useState<{
+    path: string | null;
+    data: T | null;
+    error: string;
+    busy: boolean;
+  }>({ path: null, data: null, error: "", busy: false });
   const [revision, setRevision] = useState(0);
   useEffect(() => {
     if (!path) {
-      setData(null);
-      setError("");
-      setBusy(false);
+      setState({ path: null, data: null, error: "", busy: false });
       return;
     }
     const controller = new AbortController();
-    setBusy(true);
-    setError("");
+    setState((previous) => ({
+      path,
+      data: previous.path === path ? previous.data : null,
+      error: "",
+      busy: true,
+    }));
     request<T>(path, { signal: controller.signal })
       .then((value) => {
-        if (!controller.signal.aborted) setData(value);
+        if (!controller.signal.aborted)
+          setState({ path, data: value, error: "", busy: false });
       })
       .catch((reason) => {
-        if (!controller.signal.aborted) setError(errorMessage(reason));
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setBusy(false);
+        if (!controller.signal.aborted)
+          setState((previous) => ({
+            path,
+            data: previous.path === path ? previous.data : null,
+            error: errorMessage(reason),
+            busy: false,
+          }));
       });
     return () => controller.abort();
   }, [path, revision]);
-  return { data, error, busy, reload: () => setRevision((value) => value + 1) };
+  const current = state.path === path;
+  return {
+    data: current ? state.data : null,
+    error: current ? state.error : "",
+    busy: !!path && (!current || state.busy),
+    reload: () => setRevision((value) => value + 1),
+  };
 }
 export function Workspace() {
   const { user } = useSession();
@@ -334,8 +356,8 @@ export function Workspace() {
                 </h2>
                 <p>
                   {user?.role === "customer"
-                    ? "Review the subscriptions linked to your Brightloop account, including their service dates and agreed prices."
-                    : "Prepare a quotation, review the commercial terms and follow each agreement into active service."}
+                    ? "Review your agreements, invoices and payment records, and make the service changes your plan permits."
+                    : "Prepare quotations, manage service and follow each invoice through to payment."}
                 </p>
                 {user?.role !== "customer" ? (
                   <Link className="button" to="/subscriptions/new">
@@ -348,6 +370,17 @@ export function Workspace() {
                     <ArrowRight size={18} />
                   </Link>
                 )}
+                <Link
+                  className="welcome-secondary-link"
+                  to={
+                    user?.role === "customer" ? "/billing/invoices" : "/finance"
+                  }
+                >
+                  {user?.role === "customer"
+                    ? "View invoices and payments"
+                    : "View finance"}
+                  <ArrowRight size={16} />
+                </Link>
               </div>
               <div className="account-sheet">
                 <h3>Account details</h3>

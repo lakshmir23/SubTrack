@@ -236,7 +236,7 @@ test("partial payment remains Confirmed, final settlement is Paid and lost-respo
   await page
     .getByRole("button", { name: "Review payment", exact: true })
     .click();
-  await expect(page.getByText(/last-read outstanding balance/)).toBeVisible();
+  await expect(page.getByText(/current outstanding balance/)).toBeVisible();
   await page
     .getByLabel("Payment amount (INR)", { exact: true })
     .fill("1000.00");

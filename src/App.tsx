@@ -7,6 +7,8 @@ import {
 import { ForgotPassword, Login, ResetPassword, Signup } from "./Auth";
 import { SessionProvider } from "./session";
 import { RouteFocus } from "./ui";
+import { Finance } from "./Finance";
+import { EnvironmentBanner } from "./EnvironmentBanner";
 import { PaymentEditorRoute } from "./Payments";
 import { ServiceDetailRoute, ServiceProcessing } from "./Lifecycle";
 import {
@@ -48,12 +50,15 @@ import {
 
 function Root() {
   return (
-    <SessionProvider>
-      <SessionBoundary>
-        <RouteFocus />
-        <Outlet />
-      </SessionBoundary>
-    </SessionProvider>
+    <>
+      <EnvironmentBanner />
+      <SessionProvider>
+        <SessionBoundary>
+          <RouteFocus />
+          <Outlet />
+        </SessionBoundary>
+      </SessionProvider>
+    </>
   );
 }
 const router = createBrowserRouter([
@@ -87,6 +92,19 @@ const router = createBrowserRouter([
               {
                 element: <RequireSession roles={["admin", "staff"]} />,
                 children: [
+                  { path: "/finance", element: <Finance /> },
+                  {
+                    path: "/finance/agreements",
+                    element: <Finance view="agreements" />,
+                  },
+                  {
+                    path: "/finance/invoices",
+                    element: <Finance view="invoices" />,
+                  },
+                  {
+                    path: "/finance/payments",
+                    element: <Finance view="payments" />,
+                  },
                   { path: "/billing/workbench", element: <BillingWorkbench /> },
                   { path: "/billing/runs", element: <BillingRunList /> },
                   { path: "/billing/runs/:id", element: <BillingRunDetail /> },

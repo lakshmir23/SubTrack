@@ -428,7 +428,8 @@ export function BillingWorkbench() {
         {error && (
           <p className="footnote">
             <Link to="/billing/runs">Check saved runs</Link> before retrying an
-            uncertain response. This review retains the same submission key.
+            unclear result. Retrying this unchanged review returns the same
+            run.
           </p>
         )}
       </ConfirmationDialog>
@@ -698,8 +699,8 @@ function BillingRunRecord({ id }: { id: string }) {
               aria-valuetext={`${run.processed} periods processed, limit ${run.limit}`}
             />
             <p>
-              Processing saved work. This page shows actual server counts and
-              can be reopened while the run continues.
+              Processing saved work. These counts update as periods are handled.
+              You can reopen this page while the run continues.
             </p>
           </div>
         )}
@@ -768,7 +769,7 @@ function BillingRunRecord({ id }: { id: string }) {
                   : "No outcomes in this view."
               }
             >
-              Results appear here after each period transaction.
+              Each period appears here once its result has been saved.
             </EmptyState>
           ) : (
             <table>
@@ -851,7 +852,8 @@ function BillingRunRecord({ id }: { id: string }) {
         {error && (
           <p className="footnote">
             Check <Link to="/billing/runs">saved runs</Link> before retrying an
-            uncertain response. This review retains the same submission key.
+            unclear result. Retrying this unchanged review returns the same
+            run.
           </p>
         )}
       </ConfirmationDialog>

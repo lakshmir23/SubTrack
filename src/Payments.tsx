@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowLeft, RefreshCw, WalletCards } from "lucide-react";
 import type { Page } from "../shared/contracts";
 import type { Invoice } from "../shared/billing";
@@ -45,7 +45,7 @@ export function InvoicePaymentHistory({ invoice }: { invoice: Invoice }) {
         <div>
           <h2 id="payment-history-title">Payment history</h2>
           <p>
-            {invoice.paymentCount} immutable payment{" "}
+            {invoice.paymentCount} payment{" "}
             {invoice.paymentCount === 1 ? "record" : "records"} ·{" "}
             {formatMoney(invoice.amountPaid)} recorded
           </p>
@@ -104,7 +104,7 @@ export function InvoicePaymentHistory({ invoice }: { invoice: Invoice }) {
         />
       )}
       <p className="footnote">
-        Payments cannot be edited or reversed in this baseline.
+        Recorded payments cannot be edited or reversed.
         {internal
           ? " Record only a payment already received; this application does not move money."
           : " Your Brightloop team records payments received."}
@@ -137,6 +137,12 @@ export function PaymentEditorRoute() {
 }
 function PaymentEditor({ invoice }: { invoice: Invoice }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const origin = (location.state as { returnTo?: string } | null)?.returnTo;
+  const invoiceState =
+    origin?.startsWith("/finance") || origin?.startsWith("/billing/invoices")
+      ? { returnTo: origin }
+      : undefined;
   const initial = {
     amount: "",
     method: "bank_transfer",
@@ -181,7 +187,7 @@ function PaymentEditor({ invoice }: { invoice: Invoice }) {
     if (candidate.paymentDate > invoice.businessDate)
       additional.paymentDate = `Use a payment date on or before ${formatBusinessDate(invoice.businessDate)}.`;
     if (amount > invoice.outstanding)
-      additional.amount = `The last-read outstanding balance is ${formatMoney(invoice.outstanding)}. Review the current invoice before recording more.`;
+      additional.amount = `The current outstanding balance is ${formatMoney(invoice.outstanding)}. Review the invoice before recording more.`;
     setFields(additional);
     if (Object.keys(additional).length) {
       event.currentTarget
@@ -214,6 +220,7 @@ function PaymentEditor({ invoice }: { invoice: Invoice }) {
       navigate(`/billing/invoices/${invoice.id}`, {
         replace: true,
         state: {
+          ...invoiceState,
           message: `Payment of ${formatMoney(result.payment.amount)} recorded. ${result.invoice.status === "Paid" ? "The invoice is Paid." : `${formatMoney(result.invoice.outstanding)} remains outstanding.`}`,
         },
       });
@@ -226,7 +233,11 @@ function PaymentEditor({ invoice }: { invoice: Invoice }) {
   }
   return (
     <>
-      <Link className="back-link" to={`/billing/invoices/${invoice.id}`}>
+      <Link
+        className="back-link"
+        to={`/billing/invoices/${invoice.id}`}
+        state={invoiceState}
+      >
         <ArrowLeft size={16} />
         Back to {invoice.number}
       </Link>
@@ -310,6 +321,7 @@ function PaymentEditor({ invoice }: { invoice: Invoice }) {
               <Link
                 className="button secondary"
                 to={`/billing/invoices/${invoice.id}`}
+                state={invoiceState}
               >
                 Cancel
               </Link>
@@ -319,8 +331,8 @@ function PaymentEditor({ invoice }: { invoice: Invoice }) {
               </Button>
             </div>
             <p className="footnote">
-              Payments are immutable. This baseline has no edit, correction or
-              reversal action.
+              Check these details carefully. Recorded payments cannot be edited
+              or reversed.
             </p>
           </form>
           <aside className="payment-balance">
@@ -349,8 +361,8 @@ function PaymentEditor({ invoice }: { invoice: Invoice }) {
               </div>
             </dl>
             <p className="field-help">
-              The server checks the current balance again when you record the
-              payment. Partial payments keep the invoice Confirmed.
+              The remaining balance is checked again when you record the
+              payment. A partial payment keeps the invoice Confirmed.
             </p>
           </aside>
         </div>
@@ -358,7 +370,7 @@ function PaymentEditor({ invoice }: { invoice: Invoice }) {
       <ConfirmationDialog
         open={confirm}
         title="Record this payment?"
-        description="Confirm the amount, method and payment date of the payment already received. This creates an immutable record against this invoice."
+        description="Check the amount, method and date of the payment already received. Saving adds a permanent payment record to this invoice."
         confirmLabel="Record payment"
         busy={busy}
         error={error}
@@ -399,11 +411,11 @@ function PaymentEditor({ invoice }: { invoice: Invoice }) {
         )}
         {error && (
           <p className="footnote">
-            <Link to={`/billing/invoices/${invoice.id}`}>
+            <Link to={`/billing/invoices/${invoice.id}`} state={invoiceState}>
               Check saved payment history and the current balance
             </Link>{" "}
-            before retrying an uncertain response. This unchanged review retains
-            its submission key.
+            if the result is unclear. Retrying the unchanged review returns the
+            same payment record.
           </p>
         )}
       </ConfirmationDialog>

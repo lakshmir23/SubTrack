@@ -1138,7 +1138,7 @@ function PlanForm({ id }: { id?: string }) {
               type="date"
               value={values.availableTo || ""}
               error={fields.availableTo}
-              help="Both boundary dates are inclusive."
+              help="Both selected dates are included."
               onChange={(event) =>
                 setValues({
                   ...values,
@@ -1159,7 +1159,7 @@ function PlanForm({ id }: { id?: string }) {
           />
           <CheckboxField
             label="Allow pause and resume"
-            help="Changes take effect at an eligible billing boundary."
+            help="Changes take effect on an eligible billing date."
             checked={values.allowPause}
             onChange={(event) =>
               setValues({ ...values, allowPause: event.target.checked })
@@ -2117,8 +2117,8 @@ export function CatalogPricePreview() {
             Refresh price
           </Button>
           <p className="footnote">
-            Changing a selection refreshes the server calculation. This preview
-            creates no quotation or charge.
+            Changing a selection updates the price. This preview creates no
+            quotation or charge.
           </p>
         </form>
         <section
@@ -2137,8 +2137,7 @@ export function CatalogPricePreview() {
               icon={<Calculator size={27} />}
               title="Start with a plan."
             >
-              Choose a plan and product lines to see the server-calculated
-              amount.
+              Choose a plan and product lines to see the price breakdown.
             </EmptyState>
           ) : (
             <>

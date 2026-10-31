@@ -118,7 +118,7 @@ function InvoiceBreakdown({ invoice }: { invoice: InvoicePreview | Invoice }) {
       value={invoiceAmounts(invoice)}
       totalLabel="Invoice total"
       baseLabel="Accepted base per unit"
-      note="Read-only invoice amounts. Later catalog, tax or discount edits do not rewrite a generated invoice."
+      note="These saved amounts stay the same when catalog prices, tax or discount rules change."
     />
   );
 }
@@ -586,7 +586,7 @@ export function InvoiceGenerator() {
       navigate(invoicePath(invoice.id), {
         replace: true,
         state: {
-          message: `Invoice ${invoice.number} is ready for review. Its amounts are saved as a read-only snapshot.`,
+          message: `Invoice ${invoice.number} is ready for review. Its amounts have been saved.`,
         },
       });
     } catch (reason) {
@@ -667,7 +667,7 @@ export function InvoiceGenerator() {
               <p className="footnote">
                 Period {formatBusinessDate(preview.periodStart)} to{" "}
                 {formatBusinessDate(preview.periodEnd)}, exclusive. No invoice,
-                payment or historical financial snapshot is changed.
+                payment or previous invoice is changed.
               </p>
             </ConfirmationDialog>
           </section>
@@ -836,19 +836,18 @@ export function InvoiceDetail() {
           ? "Consumed at confirmation"
           : "No usage reservation recorded";
   const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
+  const financeReturn = returnTo?.startsWith("/finance") ? returnTo : undefined;
+  const recordReturn =
+    financeReturn ||
+    (returnTo?.startsWith("/billing/invoices")
+      ? returnTo
+      : "/billing/invoices");
   const savedMessage = (location.state as { message?: string } | null)?.message;
   return (
     <>
-      <Link
-        className="back-link"
-        to={
-          returnTo?.startsWith("/billing/invoices")
-            ? returnTo
-            : "/billing/invoices"
-        }
-      >
+      <Link className="back-link" to={recordReturn}>
         <ArrowLeft size={16} />
-        Back to invoices
+        Back to {financeReturn ? "finance" : "invoices"}
       </Link>
       <PageHeading
         title={invoice.number}
@@ -887,6 +886,7 @@ export function InvoiceDetail() {
               <Link
                 className="button"
                 to={`${invoicePath(invoice.id)}/payments/new`}
+                state={{ returnTo: recordReturn }}
               >
                 Record payment
                 <ArrowRight size={17} />
@@ -1054,7 +1054,7 @@ export function InvoiceDetail() {
           )}
         </section>
         <section className="panel calculation-panel">
-          <h2>Frozen invoice amounts</h2>
+          <h2>Saved invoice amounts</h2>
           <InvoiceBreakdown invoice={invoice} />
         </section>
         <InvoicePaymentHistory key={invoice.id} invoice={invoice} />
@@ -1916,7 +1916,7 @@ function DiscountEditor({ id }: { id?: string }) {
             its consumed use.
           </p>
           <p className="muted">
-            Rule edits affect future generation. Existing invoice snapshots stay
+            Rule edits apply to future invoices. Existing invoices stay
             unchanged.
           </p>
         </aside>

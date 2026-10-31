@@ -427,7 +427,7 @@ export function SubscriptionList() {
       <ConfirmationDialog
         open={confirmDue}
         title="Activate due agreements?"
-        description="Check up to 100 confirmed agreements against the server’s business date. Eligible agreements become Active; future agreements remain Confirmed."
+        description="Check up to 100 confirmed agreements against the business date. Eligible agreements become Active; future agreements remain Confirmed."
         confirmLabel="Activate due agreements"
         busy={processing}
         error={processError}
@@ -715,7 +715,7 @@ function SubscriptionEditor({ id }: { id?: string }) {
       <PageHeading
         title={id ? `Edit ${loaded.data?.number}` : "New subscription"}
         autoFocus
-        description="Choose a customer and offering. The server calculates the term boundary and current commercial estimate."
+        description="Choose a customer and offering to review the service dates and estimated price."
       />
       {error && (
         <Feedback tone="error">
@@ -1052,10 +1052,14 @@ export function SubscriptionDetail() {
     <>
       <Link
         className="back-link"
-        to={back?.startsWith("/subscriptions") ? back : "/subscriptions"}
+        to={
+          back?.startsWith("/subscriptions") || back?.startsWith("/finance")
+            ? back
+            : "/subscriptions"
+        }
       >
         <ArrowLeft size={16} />
-        Back to subscriptions
+        Back to {back?.startsWith("/finance") ? "finance" : "subscriptions"}
       </Link>
       <PageHeading
         title={data.number}
@@ -1100,7 +1104,11 @@ export function SubscriptionDetail() {
               </Button>
             )}
             {!primary && data.acceptedTerms && (
-              <Link className="button" to={`/subscriptions/${data.id}/service`}>
+              <Link
+                className="button"
+                to={`/subscriptions/${data.id}/service`}
+                state={{ returnTo: back }}
+              >
                 Manage service
                 <ArrowRight size={17} />
               </Link>
@@ -1192,8 +1200,8 @@ export function SubscriptionDetail() {
             )}
           </dl>
           <p className="footnote">
-            Service includes its start date and excludes the expiry boundary.
-            Payment is recorded separately from service activation.
+            Service starts on the start date and stops at the beginning of the
+            expiry date. Payment is recorded separately from service activation.
           </p>
         </section>
         <section
@@ -1211,16 +1219,19 @@ export function SubscriptionDetail() {
             note={
               data.acceptedTerms ? (
                 <>
-                  Accepted commercial prices are preserved
+                  The agreed prices are saved
                   {terms.lines.some((line) => !line.isPrimary)
-                    ? " as a full-selection baseline"
+                    ? " for the full product selection"
                     : ""}
                   .{" "}
-                  <Link to={`/subscriptions/${data.id}/service`}>
+                  <Link
+                    to={`/subscriptions/${data.id}/service`}
+                    state={{ returnTo: back }}
+                  >
                     Service schedule
                   </Link>{" "}
-                  shows enabled lines and the next unprocessed accepted base.
-                  Tax and discounts are evaluated at generation.
+                  shows which lines are included in the next billing period. Tax
+                  and discounts are worked out when an invoice is created.
                 </>
               ) : data.offeredTerms ? (
                 "Commercial prices and plan policies were frozen when this quotation was issued. Tax is an estimate until billing."
@@ -1264,7 +1275,7 @@ export function SubscriptionDetail() {
             ? `Issue ${data.number} for ${data.customerName}. This freezes the displayed commercial prices and plan policies for ${data.validDays} calendar days.`
             : action === "confirm"
               ? `Record the agreement for ${data.customerName} at the issued prices shown here. Current product and plan availability will be checked.`
-              : `Start service for ${data.number} under the accepted terms, using the server’s business date.`
+              : `Start service for ${data.number} under the agreed terms, using the business date.`
         }
         confirmLabel={action ? actionLabels[action] : "Continue"}
         busy={busy}

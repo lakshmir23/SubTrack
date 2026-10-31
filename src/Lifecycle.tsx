@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { ArrowLeft, ArrowRight, RefreshCw, Settings2 } from "lucide-react";
 import {
   lifecycleActionSchema,
@@ -50,6 +50,12 @@ export function ServiceDetailRoute() {
   return <ServiceDetail key={id} id={id!} />;
 }
 function ServiceDetail({ id }: { id: string }) {
+  const location = useLocation();
+  const origin = (location.state as { returnTo?: string } | null)?.returnTo;
+  const agreementState =
+    origin?.startsWith("/finance") || origin?.startsWith("/subscriptions")
+      ? { returnTo: origin }
+      : undefined;
   const resource = useResource<LifecycleState>(
     `/api/subscriptions/${id}/lifecycle`,
   );
@@ -205,7 +211,11 @@ function ServiceDetail({ id }: { id: string }) {
   );
   return (
     <>
-      <Link className="back-link" to={`/subscriptions/${id}`}>
+      <Link
+        className="back-link"
+        to={`/subscriptions/${id}`}
+        state={agreementState}
+      >
         <ArrowLeft size={16} />
         Back to {state.number}
       </Link>
@@ -279,7 +289,7 @@ function ServiceDetail({ id }: { id: string }) {
                 action !== "renew" &&
                 state.actionEffectiveDates[action] && (
                   <p className="field-help">
-                    Server-calculated effective boundary:{" "}
+                    Takes effect on{" "}
                     {formatBusinessDate(state.actionEffectiveDates[action]!)}.
                   </p>
                 )}
@@ -290,14 +300,13 @@ function ServiceDetail({ id }: { id: string }) {
                   inputMode="numeric"
                   value={periods}
                   error={fields.periods}
-                  help={`Whole ${state.policies.interval} periods at existing accepted terms. The original schedule and billing cursor are preserved.`}
+                  help={`Add whole ${state.policies.interval} periods at the agreed prices. Billing dates keep the original schedule.`}
                   onChange={(event) => setPeriods(event.target.value)}
                 />
               )}
               <p className="field-help">
-                The server chooses the first eligible original schedule
-                boundary. No client date override, proration, refund or invoice
-                rewrite is applied.
+                Changes start on an eligible billing date. Previously issued
+                invoices stay unchanged.
               </p>
               <Button type="submit" disabled={resource.busy}>
                 <Settings2 size={16} />
@@ -328,7 +337,7 @@ function ServiceDetail({ id }: { id: string }) {
           </details>
         </section>
         <section className="panel service-period">
-          <h2>Next unprocessed period</h2>
+          <h2>Next billing period to review</h2>
           {state.nextPeriod ? (
             <>
               <p className="field-help">
@@ -365,13 +374,10 @@ function ServiceDetail({ id }: { id: string }) {
             </>
           ) : (
             <p className="field-help">
-              No unprocessed service period remains in the current term.
+              All service periods in this term have been handled.
             </p>
           )}
-          <p className="footnote">
-            {state.estimateExplanation} Tax and discount eligibility are
-            determined at invoice generation.
-          </p>
+          <p className="footnote">{state.estimateExplanation}</p>
         </section>
       </div>
       <section
@@ -470,10 +476,10 @@ function ServiceDetail({ id }: { id: string }) {
         title={title}
         description={
           review && "addon" in review
-            ? "Schedule this optional line change at the first eligible original boundary that has not already been invoiced. Earlier owed periods and saved invoices retain their original contents."
+            ? "Schedule this optional line change for an eligible billing date. Earlier invoices and amounts owed stay unchanged."
             : review?.action === "renew"
-              ? "Extend the term by whole accepted-plan periods. This preserves commercial prices and the original billing cursor; a late expired gap cannot be renewed."
-              : "Apply the accepted plan policy at the server-selected original schedule boundary. Existing invoices and older owed periods remain preserved."
+              ? "Extend the term at the agreed prices for the periods shown. Renewals keep the original billing schedule. A term that ended before today needs a new quotation."
+              : "Apply the agreed plan rules from the effective date shown. Existing invoices and earlier amounts owed stay unchanged."
         }
         confirmLabel={
           review && "addon" in review
@@ -505,7 +511,7 @@ function ServiceDetail({ id }: { id: string }) {
           </div>
           {effectiveDate && (
             <div>
-              <dt>Effective boundary</dt>
+              <dt>Effective date</dt>
               <dd>{formatBusinessDate(effectiveDate)}</dd>
             </div>
           )}
@@ -535,15 +541,15 @@ function ServiceDetail({ id }: { id: string }) {
         </dl>
         <p className="footnote">
           {effectiveDate
-            ? "This boundary was calculated by the server from the original schedule."
-            : "The resulting effective date or renewed expiry is returned by the server and shown in the saved request."}{" "}
-          No financial snapshot is edited.
+            ? "This date follows the agreed billing schedule."
+            : "The confirmation will show the effective date or new expiry."}{" "}
+          Earlier invoices stay unchanged.
         </p>
         {error && (
           <p className="footnote">
-            Cancel and refresh service state to check a concurrent or uncertain
-            result before retrying. The unchanged review retains its request
-            key.
+            Cancel and refresh service details if the result is unclear or
+            another change was recorded. Retrying the unchanged review returns
+            the same request.
           </p>
         )}
       </ConfirmationDialog>
@@ -627,7 +633,7 @@ export function ServiceProcessing() {
       </Link>
       <PageHeading
         title="Process service changes"
-        description="Apply due scheduled changes and end-of-term policies using the server’s business date. Historic debt remains recoverable."
+        description="Apply scheduled changes that are due and close ended terms according to each plan. Previous invoices and unbilled periods are kept."
       />
       <form
         className="service-processing-form"
@@ -687,7 +693,7 @@ export function ServiceProcessing() {
       <ConfirmationDialog
         open={confirm}
         title="Process due service changes?"
-        description={`Check up to ${reviewLimit} agreements. Apply only changes due by the server business date and each accepted plan’s expiry policy. No invoice or payment is changed.`}
+        description={`Check up to ${reviewLimit} agreements for changes due by the business date. Each plan’s end-date rules still apply; invoices and payments stay unchanged.`}
         confirmLabel="Process service changes"
         busy={busy}
         error={error}
