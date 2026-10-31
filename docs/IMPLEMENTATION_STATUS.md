@@ -35,7 +35,7 @@ Ownership: **root/core** owns integration, persistence and domain/API behavior; 
 | PAY-01 | root/core; ui; verification | `server/payments.ts`, migrations8/10, `src/Payments.tsx` | 13 payment tests; real two-process overpayment/replay; browser amount/date/note review, concurrent correction and private-note omission passed | Verified | — |
 | PAY-02 | root/core; ui; verification | Invoice balances/list filters, immutable payment facts and own history | A pays 1,000 then 2,088.80: Confirmed/2,088.80→Paid/0; due-today/overdue, own refresh and no cancel after payment passed | Verified | — |
 | FIN-01 | root/core; ui; verification | `server/finance.ts`, `shared/finance.ts`, `src/Finance.tsx` | 8 finance tests, independent November/full-filter/date-domain/exact aggregate probes and final browser filters/pagination/refresh journeys passed | Verified | — |
-| FIN-02 | root/core; ui; verification | Planned — bounded queries/page inventory | Planned — valid thousands-row dataset, every page, cold/warm API and rendered timings | Not started | — |
+| FIN-02 | root/core; ui; verification | Bounded real queries, benchmark fixture/validator, production browser/API runner and page inventory | Validated 10,000 subscriptions / 30,000 invoices / 27,400 payments; full timed run pending | In progress | — |
 
 ## Roadmap gate record
 
@@ -77,6 +77,6 @@ The reusable isolated November launcher reconciles **3 active / 4,188.80 billed 
 
 Review found and fixed filter-return loss, a shared previous-response pagination race, and drilldown metrics pushing the first debt too far below the narrow viewport. The final compact drilldown groups its total/count/scope with the matching rows. Six refreshed captures received **ship for reviewed P7 scope**, with no outstanding material findings. Strict premium audit and official DESIGN lint passed. The **623.51 kB** minified chunk warning (**176.66 kB gzip**) remains for measured P8 work. Organizer checklist is pending; repository and local demo are the authorized handoff.
 
-**P8 — Not started.** Performance still needs the valid large dataset and measured page/API timings. Current test durations, the automatic-job witness and a successful build do not prove FIN-02.
+**P8 — In progress.** The isolated synthetic fixture has passed validation of 10,000 subscriptions, 30,000 invoices, 60,000 lines and 27,400 positive payment records with guards enabled. The production page/API timing inventory is undergoing readiness smoke checks. Full repeated timings, independent raw-fact audit, fresh setup and final regression remain pending. Current test durations, the automatic-job witness and a successful build do not prove FIN-02.
 
 External status: the user instructed **“Prepare repository and local demo; checklist pending.”** Use docs/ as the specification and proof checklist. Organizer submission instructions remain pending; no contest entry is claimed or authorized. Reset and invoice inbox delivery are verified by recipient witnesses. The team reported six hours remaining; no exact event cutoff is independently verified. User-entered SMTP settings stay in ignored `.env`; outbox generation alone is never called delivered.

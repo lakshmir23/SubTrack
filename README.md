@@ -8,7 +8,7 @@ Requires Node.js 24+ and npm. Development was started on Windows with Node 26.8.
 
 ```powershell
 npm ci
-Copy-Item .env.example .env # only if .env does not already exist
+if (-not (Test-Path -LiteralPath .env)) { Copy-Item -LiteralPath .env.example -Destination .env }
 npm run db:migrate
 npm run db:seed
 npm run dev
@@ -35,6 +35,12 @@ npm start
 ```
 
 `npm run check` runs lint, typecheck, domain/integration tests and the production build. After building, `npm run test:e2e` runs actual browser journeys against production assets and a fresh isolated SQLite fixture on port 3100; install the matching browser with `npx playwright install chromium`. The browser fixture never uses the local SMTP configuration. Exact executed checks are recorded in the implementation ledger; an available command is not a passing result.
+
+## Large-data verification
+
+After building, `npm run benchmark:seed` creates a fresh synthetic database and prints its manifest path. The default fixture contains 10,000 agreements across all four calendar cadences, 30,000 invoices, real positive payment allocations, paused waivers and retryable failures. It refuses to overwrite an existing file and never reads `.env` or sends email. `-- --output=data/my-new-benchmark.sqlite` chooses a new file explicitly.
+
+Run `npm run benchmark -- --manifest=data/<printed-file>.sqlite.manifest.json --samples=50 --label=release`. The runner starts a separate local production server on port 3004, copies the seed into isolated runtime and batch databases, measures all page destinations and interactions, and preserves raw timings in ignored `data/benchmark-*/results.json`. Allow at least 1.5 GB of free disk for the seed and copies. Cold server API, empty browser cache, warm navigation, concurrent users and batch completion are reported separately. `--viewport=390x844` selects a narrow viewport; `--only=pattern` runs a disclosed subset. Smoke runs use fewer samples and never count as the final performance gate. See the implementation ledger for actual measured results.
 
 ## Environment and delivery
 
