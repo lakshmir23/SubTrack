@@ -171,7 +171,7 @@ Use database-backed filters and pagination; do not load thousands of records int
 
 Define dashboard labels precisely:
 
-- **Active subscriptions:** current active-stage, running contracts at server business date, excluding closed/expired. Historical as-of reconstruction is not implemented by this proposed baseline (D-10).
+- **Active agreements:** current Active-stage contracts within their service term and before effective early closure, including paused open terms with that subset shown separately. Exclude future, Closed, TermEnded and expired service. Customer filtering applies; invoice/payment date ranges do not reconstruct a historical active count. This follows the adopted P7 clarification in D-10.
 - **Revenue received:** valid payments in selected payment-date range. Label this cash received, not accounting revenue recognition.
 - **Outstanding:** invoice totals less valid payments for included non-canceled confirmed invoices.
 - **Overdue:** positive outstanding with due date before server business date.

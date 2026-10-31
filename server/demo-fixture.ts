@@ -19,7 +19,7 @@ export async function buildNovemberDemo(databasePath: string, options: { settlem
   let current = new Date('2026-10-15T04:00:00.000Z');
   const clock = () => new Date(current);
   const appUrl = options.appUrl || 'http://localhost:3003';
-  const app = createApp({ databasePath, clock, appUrl, mailMode: 'outbox', billingWorkerOptions: { autoStart: false }, demoLabel: 'Synthetic November demo' });
+  const app = createApp({ databasePath, clock, appUrl, production: true, mailMode: 'outbox', billingWorkerOptions: { autoStart: false }, demoLabel: 'Synthetic November demo' });
   const agent = request.agent(app);
   let csrfToken = '';
   let seedClosed = false;
@@ -87,7 +87,7 @@ export async function buildNovemberDemo(databasePath: string, options: { settlem
     await app.locals.deliverPending.stop();
     app.locals.db.close();
     seedClosed = true;
-    const runtimeApp = createApp({ databasePath, clock, appUrl, mailMode: 'outbox', demoLabel: 'Synthetic November demo' });
+    const runtimeApp = createApp({ databasePath, clock, appUrl, production: true, mailMode: 'outbox', demoLabel: 'Synthetic November demo' });
     return { app: runtimeApp, clock, records };
   } catch (error) {
     if (!seedClosed) {

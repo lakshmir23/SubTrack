@@ -57,7 +57,8 @@ export function summarizeFinance(db: DatabaseSync, filters: FinanceFilters, now:
     FROM payments p JOIN invoices i ON i.id=p.invoice_id WHERE ${payment.sql}`).get(...payment.values) as { received: string; count: number };
   const agreements = db.prepare(`SELECT count(*) AS count,sum(CASE WHEN ${effectiveState}='Paused' THEN 1 ELSE 0 END) AS paused
     FROM subscriptions s WHERE ${active.sql}`).get(date, ...active.values) as { count: number; paused: number | null };
-  return { businessDate: date, currency: 'INR', filters, activeAgreements: agreements.count, pausedAgreements: agreements.paused || 0,
+  const customer = filters.customerId ? db.prepare("SELECT name FROM users WHERE id=? AND role='customer'").get(filters.customerId) as { name: string } | undefined : undefined;
+  return { businessDate: date, currency: 'INR', filters, customerName: customer?.name || null, activeAgreements: agreements.count, pausedAgreements: agreements.paused || 0,
     invoicedRevenue: billed.revenue, invoiceCount: billed.count, paymentsReceived: cash.received, paymentCount: cash.count,
     outstanding: billed.outstanding, outstandingInvoiceCount: billed.outstanding_count || 0, overdue: billed.overdue, overdueInvoiceCount: billed.overdue_count || 0,
     definitions: {

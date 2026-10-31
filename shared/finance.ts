@@ -23,7 +23,7 @@ export const financeInvoicePageSchema = filterObject.extend({ ...paging, view: z
 /** Decimal integer INR minor units; aggregates deliberately exceed per-record number limits. */
 export type FinanceMinor = string;
 export interface FinanceSummary {
-  businessDate: string; currency: 'INR'; filters: FinanceFilters;
+  businessDate: string; currency: 'INR'; filters: FinanceFilters; customerName: string | null;
   activeAgreements: number; pausedAgreements: number;
   invoicedRevenue: FinanceMinor; invoiceCount: number;
   paymentsReceived: FinanceMinor; paymentCount: number;
