@@ -23,11 +23,11 @@ Dynamic data does not automatically require external internet APIs or WebSockets
 
 ## Scope and honesty
 
-Current activity is research and documentation only. No application implementation has been authorized in this workstream yet. The selected topic is **Subscription Management System**; detailed domain requirements have not yet been supplied. The screenshot says problem statements are updated at 9 am and only the team leader selects/updates the choice. Do not change the team's selection.
+Current activity is research and documentation only. No application implementation has been authorized in this workstream yet. The selected topic is **Subscription Management System**. The full four-page Brightloop Software brief has now been supplied; [REQUIREMENTS.md](REQUIREMENTS.md) is the authoritative domain checklist. The screenshot says problem statements are updated at 9 am and only the team leader selects/updates the choice. Do not change the team's selection.
 
 The current event page describes an eight-hour virtual round and a separate 24-hour final. Confirm the team's actual timezone, deadline and submission instructions from its event materials. Historical Odoo rubrics and finalist feature lists are context, not current requirements. No numeric scoring weights have been verified for this round.
 
-When the full brief arrives, map every requirement to a screen, server operation, stored record and test/demo proof. Required functionality comes before optional differentiation. Preserve the exact requirement wording in that mapping.
+Use the supplied full brief to map every requirement to a screen, server operation, stored record and test/demo proof. Required functionality comes before optional differentiation. Preserve the exact requirement wording in that mapping.
 
 Do not claim a simulation is a real payment, seeded records are customer activity, a planned benchmark has passed, or team members authored work they did not do. Demo clock and sandbox payment controls must be clearly labelled and call the same domain rules as the normal workflow.
 

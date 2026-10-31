@@ -1,168 +1,171 @@
-# Demo and proof plan
+# Brightloop demo and proof plan
 
-**Status:** Proposed demonstration and acceptance checks, October 31, 2026. Nothing below is a claim that code exists, tests have passed, or payments have been processed. The full problem statement and event rules take precedence.
+**Revised October 31, 2026 against the user's four-page problem-statement screenshot.** This replaces the earlier speculative proration demo. The required story is Brightloop's complete subscription month: configure, quote, activate, batch bill, apply discounts and taxes, record payments, and report the balance.
+
+**Evidence status:** Documentation only. No implementation, delivery, benchmark, or passed test is claimed here. Every proposed check starts as **Not verified**.
 
 ## The demo promise
 
-> We can show not only that a subscription works, but why its bill and access state remain correct when something goes wrong.
+> Brightloop can bill every due subscription once, explain every total, record each payment against the correct invoice, and identify exactly what is still owed.
 
-Demonstrate one coherent customer's journey. Avoid jumping between unrelated seeded dashboards while implying an end-to-end process occurred. Label all seeded records, simulated dates, and gateway outcomes clearly.
+Use synthetic customer records and clearly labeled demo financial data. Do not initiate real money movement. Recording a payment is the required workflow; integrating a live gateway is not required by the supplied statement.
 
-## Primary demonstration: prove recurring billing before plan changes
+## Exact synthetic fixture and calculation
 
-This is the first presentation path, subject to the full statement. Use one synthetic customer, one ₹1,000 monthly plan, INR, no tax/discount unless required, full settlement only, and activation/access after confirmed sandbox payment. Label simulated dates and payments. Do not require a general-purpose time simulator: a protected “process due renewals” action may exercise the same persisted domain checks as the scheduler.
+### Declared choices
 
-| Step | Action | Expected persisted evidence |
+These are explicit demo policies, not additional requirements or tax advice:
+
+- Currency is INR for presentation; single currency throughout.
+- Billing date is November 1, 2026, using a clearly labeled synthetic fixture. A and B use seven-day payment terms: invoices issued November 1 are due November 8, with overdue status starting November 9 under this demo policy. The finance snapshot is November 9, before C becomes due on November 15; all three contracts remain unexpired.
+- Product **Business Software** has base sales price ₹1,000 and cost price ₹400. Cost price is internal only.
+- Variant **Odoo** adds ₹560 **per unit**, following the statement's variant example.
+- Monthly plan price is configured consistently with the ₹1,000 base software price. It is not added as a second fee on top of product lines. Confirm the intended plan-price semantics with the organizer if clarification is available.
+- Demonstration tax is a fictional configurable **10% demo tax**, calculated after discount. It is not described as an applicable statutory rate.
+- Discount **LAUNCH10** is administrator-created: 10%, minimum quantity two, valid November 1–30 inclusive, maximum one use, assigned to subscription A. No stacking.
+- For this example, a discount use is consumed once when its eligible invoice is confirmed, not again on batch replay. The team must document cancellation/release semantics before implementing them.
+- Partial payments reduce the remaining balance; the invoice stays Confirmed until its balance reaches zero, then becomes Paid.
+
+### Three active subscriptions
+
+| Subscription | Customer | Quantity / variant | Billing eligibility |
+|---|---|---|---|
+| A | Sample Studio | Two Business Software units, Odoo variant | Due November 1; eligible for LAUNCH10. |
+| B | Sample Shop | One Business Software unit, base variant | Due November 1; no discount. |
+| C | Sample Services | One Business Software unit, base variant | Active but next billing date November 15; not due in this run. |
+
+All agreements have explicit numbers, customers, plans, start/expiry dates, payment terms, and product lines. Use a quotation template to create A and show **Draft → Quotation → Confirmed → Active** rather than seeding away the entire required workflow.
+
+### Subscription A: explain the invoice
+
+| Component | Calculation | Amount |
 |---|---|---|
-| 1 | Accept the November 1 quotation and settle its ₹1,000 initial invoice in sandbox. | One subscription, one paid invoice, access for November 1–December 1. |
-| 2 | At simulated December 1, process the due renewal. | Exactly one new ₹1,000 invoice covering December 1–January 1; previous invoice unchanged. The invoicing cursor advances, but an open invoice is not collected cash or proof of paid access. |
-| 3 | Repeat processing for the same boundary, then refresh. | Still two invoices total; no additional receivable, settlement, or shifted period. Show actual IDs/counts, not a toast alone. |
-| 4 | Settle the renewal invoice in sandbox. | Two paid invoices, ₹2,000 collected, access through December 31; next boundary January 1. Replay that successful event without changing totals. |
-| 5 | Schedule cancellation for January 1 and process that boundary. | Service ends, no third invoice, previous invoices remain readable. Replace the next-renewal message with the cancellation date. |
+| Variant-adjusted unit price | ₹1,000 + ₹560 | ₹1,560.00 |
+| Subtotal | 2 × ₹1,560 | ₹3,120.00 |
+| Discount | 10% × ₹3,120 | −₹312.00 |
+| Taxable amount under demo policy | ₹3,120 − ₹312 | ₹2,808.00 |
+| Demo tax | 10% × ₹2,808 | ₹280.80 |
+| Invoice total | ₹2,808 + ₹280.80 | **₹3,088.80** |
 
-For this bounded scenario, unpaid renewal does not automatically extend paid access; no grace period is claimed. If the brief requires grace or credit terms, replace this policy explicitly. Show invoice state and service/access state separately during step 2 rather than inventing a universal renewal-failure rule.
+### Subscription B
 
-This path proves **positive renewal and replay safety**, not merely that cancellation suppresses a charge. Optional upgrade math must not displace this evidence.
+₹1,000 subtotal + ₹100 demo tax = **₹1,100.00**.
 
-## Optional separate synthetic example: immediate upgrade
+The batch therefore creates **two invoices totaling ₹4,188.80**. Subscription C is shown as **not due**, not as an unexplained omission or failure.
 
-Reset to a visibly labeled separate November scenario before this example. Do not imply that a canceled January subscription was silently rewound or upgraded in place.
+## End-to-end demonstration
 
-### Declared assumptions
+1. **Administrator setup:** Show product/variant, monthly plan capabilities, tax rule, discount eligibility, and quotation template. Use a prepared synthetic configuration where necessary, but show that these are real editable records.
+2. **Customer and access:** Sign in as a customer, show only their own records. Briefly show that staff creation and discount configuration are administrator-only.
+3. **Quote to activation:** Create A from the quotation template. Confirm validity days, customer, subscription number, dates, terms, and lines. Walk through the required stages.
+4. **Batch preview:** Show A and B due, C not due. The preview exposes prices, discount, tax, and expected totals.
+5. **Generate and confirm invoices:** Generate invoices from subscriptions, preserving the prefilled fields. Explain A's ₹3,088.80. Confirm both invoices under the chosen workflow.
+6. **Replay the same billing run:** It creates **zero new invoices**. A and B are already billed for that period; C remains not due. Total remains ₹4,188.80. Show record-level evidence, not only a success toast.
+7. **Record partial payment:** Add ₹1,000 to A with method, date, and note. A remains Confirmed with **₹2,088.80 outstanding**. Overall outstanding is **₹3,188.80**, including B.
+8. **Complete A's payment:** Record another ₹2,088.80 against A. It becomes Paid; collected total is **₹3,088.80**. B remains outstanding at **₹1,100**.
+9. **Finance drill-down:** At a later synthetic date after B's payment-term due date, show three active subscriptions, two invoices, ₹4,188.80 invoiced, ₹3,088.80 collected, and ₹1,100 outstanding/overdue. A must not appear overdue merely because its original due date has passed.
+10. **Invoice communication:** Demonstrate print output and the approved send path to a controlled test recipient or disclosed development outbox. Do not claim an outbox preview is delivered email.
+11. **Lifecycle policy:** On separate small fixtures, show plan-permitted pause/renew/early close and an automatic-end case. A disallowed action must be rejected, not merely hidden.
 
-- This is a sandbox using synthetic November 2026 dates, not the current real date.
-- Currency: INR. Plan A is ₹1,000 per month; Plan B is ₹1,600 per month.
-- Period: November 1 inclusive to December 1 exclusive, exactly 30 days.
-- Upgrade effective date: November 16, leaving 15 unused days. Decline and successful recovery occur at that same simulated effective instant; this does not demonstrate delayed-payment handling.
-- Proration uses the actual number of days in this period.
-- No tax or discounts in this example. Add them if mandatory, with a separately verified calculation policy.
-- The upgrade takes effect only after its adjustment payment succeeds.
-- Cancellation is effective at period end, not immediately.
+Use a clean reset between demonstrations so previous invoices and discount usage do not contaminate the expected totals. Keep the fixtures distinct from performance-test records.
 
-These are proposed product rules, not a claim that every subscription provider uses them.
+### Discount expiration and limit proof
 
-### Visible journey
+Use a separate test, not a claim bolted onto the main demo:
 
-| Step | Action | Expected persisted result | What the reviewer sees |
-|---|---|---|---|
-| 1 | Customer accepts quotation for A on November 1. | One subscription; initial invoice ₹1,000. | Quote linked to subscription and invoice. |
-| 2 | Simulate successful payment of that invoice. | Invoice paid; A active for the period. | ₹1,000 collected; next boundary December 1. |
-| 3 | Advance sandbox date to November 16 and request B. | Pending plan change with preview; no settled charge yet. | Explicit calculation and next invoice date. |
-| 4 | Simulate a declined adjustment payment. | Adjustment remains unpaid; change pending; A retained. | Recoverable error, not a false success state. |
-| 5 | Successfully pay the same outstanding adjustment. | ₹300 settled; B active; change applied once. | Timeline links payment and entitlement change. |
-| 6 | Redeliver the same successful event. | No additional settlement or upgrade. | Totals and record counts remain unchanged. |
-| 7 | Schedule period-end cancellation. | Cancellation scheduled for December 1. | Access remains through November 30; no next renewal. |
-| 8 | Advance to December 1. | Subscription ended; no renewal invoice. | Final state and complete history. |
+- Retry A's existing batch: no second invoice and no second discount consumption.
+- Isolate the usage-limit test from expiry: on a separate daily-plan fixture still inside the rule validity dates, generate another otherwise eligible invoice after its one-use limit has been consumed. No discount should apply. Do not use a December invoice with the November-only rule as sole proof of the usage limit; it also fails the date condition.
+- Run with a date outside the validity range: no discount.
+- Test quantity one against the minimum of two: no discount.
+- Exercise fixed-amount and product-scoped rules separately; the main percentage/subscription example does not prove those modes.
 
-### The calculation shown before confirmation
+## Complete requirement-to-proof matrix
 
-Unused A credit: **₹1,000 × 15 ÷ 30 = ₹500**.
+Canonical requirement IDs come from [REQUIREMENTS.md](REQUIREMENTS.md). Repeated IDs below identify separate checks for the same requirement, not additional organizer requirements.
 
-Remaining B charge: **₹1,600 × 15 ÷ 30 = ₹800**.
+All entries are **Not verified** until the implemented system supplies evidence. This matrix records obligations, not completed work.
 
-Additional amount: **₹800 − ₹500 = ₹300**.
+| ID | Requirement from the statement | Proof to collect |
+|---|---|---|
+| AUTH-01 | Unique email signup | Register once; duplicate email cannot create a second account. Define normalization. |
+| AUTH-02 | Password longer than eight characters with uppercase, lowercase, special character | Eight-character value rejected; valid nine-or-more accepted; each missing character class rejected. |
+| AUTH-03 | Reset link reaches registered email | Controlled delivery to the registered test address; expiring single-use token; existing password not revealed. A disclosed outbox proves generation only, not this delivery requirement, unless the organizer accepts that fallback. |
+| AUTH-04 | Administrator, limited internal staff, customer portal | Separate identities; test actual allowed and denied requests. |
+| AUTH-05 | Only administrator adds internal staff | Staff/customer direct requests rejected. |
+| AUTH-04 | Customers see only their own subscriptions/invoices | Cross-customer URL/API attempts rejected; own records accessible. |
+| CAT-01 | Product name, type, sales price, cost price | Create/edit valid record; values persist; cost visibility restricted appropriately. |
+| CAT-02 | Variants and price adjustment | Odoo variant adds 560; line unit price and total update consistently. |
+| PLAN-01 | Plan price and daily/weekly/monthly/yearly frequency | Configure each interval; verify actual next billing dates. |
+| PLAN-02 | Minimum quantity and availability dates | Reject below-minimum or unavailable selection; boundary cases recorded. |
+| PLAN-03 | Automatic end and administrator-selected early close/pause/renew choices | Allowed actions operate; forbidden actions fail; automatic-end behavior verified. |
+| QUOTE-01 | Templates with plan, lines, validity days | Create quote from template; correct copied values and validity date. |
+| SUB-01 | Number, customer, plan, start, expiry, payment terms | Persist and display all agreement fields; subscription numbers remain unique. |
+| SUB-02 | Product, quantity, unit price, taxes, amount on lines | Correct populated lines and calculated totals. |
+| SUB-03 | Draft → Quotation → Confirmed → Active | Legal transitions work; invalid/repeated transitions do not duplicate effects. |
+| SUB-04 | Internal team can see where each subscription stands | Separate authorized staff views reflect the same persisted state. |
+| BILL-01 | Batch invoices created from subscriptions | Customer, lines, taxes, totals populated without manual re-entry. |
+| BILL-02 | Automatic administrator-configured tax rules | Eligible tax applied; noneligible tax not applied; rounding policy documented. |
+| BILL-03 | Invoice confirm, cancel, send, print | Each action produces its genuine outcome; delivery status described honestly. |
+| BILL-04 | Invoice Draft → Confirmed → Paid | Payment completion drives Paid; partial balance does not falsely mark Paid. |
+| BILL-05 | Nothing billed twice or skipped | Same-period replay produces no duplicates; every eligible item has an outcome; recoverable failed item can be retried. |
+| DISC-01 | Administrator-only discount creation | Staff/customer attempts rejected by server. |
+| DISC-02 | Fixed or percentage amount | Separate fixtures prove both calculations. |
+| DISC-02 | Minimum purchase or quantity, start/end dates, maximum uses | Boundary tests for amount/quantity, dates, and consumption limits. |
+| DISC-03 | Specific products or whole subscriptions | Product-only and subscription-scoped fixtures prove scope. |
+| DISC-04 | Automatically applies next invoice, stops at expiry/limit | No manual re-entry; future eligibility and replay behavior verified. |
+| PAY-01 | Method, amount, date, note against correct invoice | Payment persists with correct invoice link and complete fields. |
+| PAY-02 | Paid versus outstanding visibility | Partial and final payment update balances and status consistently. |
+| FIN-01 | Active count, revenue, payments, overdue invoices | Each summary reconciles to underlying filtered records; definitions visible. |
+| FIN-01 | Filters and summary view | Filters affect both rows and corresponding totals consistently. |
+| FIN-02 | Thousands of subscriptions; every page under two seconds | Reproducible dataset, page/action inventory, measured elapsed times, and failures disclosed. |
 
-Customer-facing summary:
+## Integrity and security acceptance gates
 
-> Pay ₹300 now to upgrade. Your next full-cycle invoice would be ₹1,600 on December 1 unless you cancel before renewal.
+These are design-quality checks supporting the required workflows, not additions to an alleged organizer rubric:
 
-After both successful payments, the synthetic record contains **two paid invoices and ₹1,300 collected**. The failed attempt is not a successful payment. Replaying a successful event must not add a third invoice or additional collection. This is a simple invoice/payment view, not a claim of full accounting-ledger compliance.
+- One billing identity per subscription and billable period; replay is safe.
+- Batch outcomes reconcile: every candidate is created, already billed, not due/ineligible with reason, or failed with an actionable reason. Never silently skip a due record.
+- Retrying failures does not regenerate invoices for successful records.
+- Discount limits cannot be overspent by simultaneous eligible invoices or consumed twice by a retry.
+- Monetary arithmetic uses exact minor units or appropriate decimal operations and a declared rounding policy.
+- Historical invoice prices/taxes/discounts do not mutate when current catalog rules change.
+- Payment amount cannot be negative or silently overpay without a defined policy. Reject overpayment for the bounded scope unless credit handling is explicitly implemented.
+- Canceling an invoice does not silently delete payment history. Define and restrict cancellation of paid/part-paid invoices.
+- A paused or closed agreement follows the chosen billing policy; it is not just visually relabeled.
+- Authorization is server-enforced for every record and action.
+- Email/reset handling does not leak credentials or expose reusable reset tokens.
+- No live payment or uncontrolled customer-email action is used for the demo.
 
-After cancellation is scheduled, replace the next-invoice promise with the correct cancellation message. Do not leave contradictory UI saying both “renews December 1” and “ends December 1.”
+## Performance evidence: the under-two-second requirement
 
-## Optional safety branch: unknown is not declined
+Do not substitute a tiny local seed and a verbal scalability claim for measurement. Suggested verification plan:
 
-Use a separate resettable scenario if time permits:
+1. Seed at least several thousand synthetic subscriptions, with representative customers, lines, invoices, and payments. Record exact counts. A proposed starting dataset is 5,000 subscriptions; this is a test plan, not an achieved result.
+2. List every relevant page and operation: operations home, filtered subscription list, subscription detail, invoice list/detail, finance summary, catalog, and customer portal. Include both paginated lists and summary queries.
+3. Measure user-visible page readiness as well as relevant server response times. State the machine, deployment, browser, network conditions, dataset, and cache conditions.
+4. Run repeated measurements. Report median, p95, maximum observed time, and sample size if enough observations exist. A p95 below two seconds alone does not prove the statement's stronger “every page” wording.
+5. Test cold and warm cases and filter changes. Report any page exceeding two seconds and fix or disclose it.
+6. Measure batch billing throughput separately. A fast page response or queued-job acknowledgement does not prove all invoices were generated correctly or quickly.
 
-1. Submit a sandbox payment attempt.
-2. Return an unknown/timeout outcome instead of a definite decline.
-3. Show: **Payment outcome unconfirmed. Reconciliation required; automatic retry is blocked.**
-4. Resolve the existing attempt from a verified sandbox status result.
-5. Apply its result once.
+Potential engineering choices such as pagination, indexed access, bounded queries, and precomputed summaries belong in the later implementation plan. Never claim they exist or are effective before verification.
 
-Never assume an unknown outcome means no money moved. Odoo's official automatic-payment documentation describes exception handling intended to avoid duplicate charging. [Odoo automatic payments](https://www.odoo.com/documentation/19.0/applications/sales/subscriptions/automatic_payments.html).
+## Honest category-targeted presentation
 
-A small, explicitly marked simulation clock is an established testing technique, not a world-first claim. [Stripe test clocks](https://stripe.com/blog/test-clocks-how-we-made-it-easier-to-test-stripe-billing-integrations).
+Use the organizer's actual rubric when available. Until then, these are proof themes, not official weights:
 
-## A concise presentation sequence
+- **Functionality:** complete every Brightloop scene, including unglamorous reset, send, print, and rule boundaries.
+- **Data modeling:** stable agreements and invoice snapshots; separate payment records; explicit eligibility and periods.
+- **Technical quality:** duplicate prevention plus completeness, authorization, reliable balances, and measured page speed.
+- **UX:** clear next action, effective dates, explanations, and recoverable billing exceptions.
+- **Originality:** make operational trust tangible with explainable totals and the batch exception view, rather than adding unrelated AI.
+- **Presentation:** show the required workflow, deliberately repeat billing, and reconcile finance totals from records.
 
-Adapt to the actual allotted presentation time. For approximately four minutes:
+Never invent customers served, revenue saved, delivery success, test coverage, or latency numbers. Synthetic collection is not real revenue. Invoiced totals, cash collected, recurring contract value, and recognized revenue are different metrics.
 
-1. **20 seconds:** State the business problem and the mandatory flows covered.
-2. **45 seconds:** Show quotation acceptance, paid activation, and customer-visible persisted records.
-3. **60 seconds:** Process a normal renewal, repeat it, and refresh to prove exactly one invoice for that period.
-4. **35 seconds:** Settle it, show collected cash separately from invoiced amounts, and replay the event safely.
-5. **35 seconds:** Schedule cancellation, process its boundary, and prove there is no next-period invoice.
-6. **45 seconds:** Show requirement coverage, validation/authorization evidence and deliberate scope boundaries.
+## Before submission
 
-Only with extra presentation time and a stable mandatory baseline, show the separately reset ₹300 upgrade example. If there is less time, omit the optional example rather than positive renewal.
+**Ready:** Required flows run end to end; the demo resets predictably; each required action is genuine; totals reconcile; permissions and performance have evidence; the team can explain policies and known gaps.
 
-The presenter should be able to explain the state transitions without relying on an AI assistant or reading raw logs. Keep a small offline capture of the genuine workflow if event rules permit, but do not present a recording as a live interaction.
+**Reduce optional scope:** Any mandatory gap remains. Cut the clock, fancy timeline effects, and extra analytics before cutting required tax/discount modes, lifecycle capabilities, or security.
 
-## Requirement-to-proof matrix
-
-Populate this from the exact statement before implementation. The rows below are proposed examples, not a confirmed event rubric.
-
-| Requirement or quality | Reviewer action | Evidence | Status |
-|---|---|---|---|
-| Quotation workflow | Accept a quote. | Linked subscription and invoice; repeat action has no duplicate. | Not implemented / not verified |
-| Plan management | Create or edit a permitted plan. | Validation; future price change does not alter old invoice. | Not implemented / not verified |
-| Customer self-service | Open own subscription. | Correct records, permitted actions, clear effective dates. | Not implemented / not verified |
-| Normal renewal | Process a due boundary, repeat, then refresh. | Exactly one invoice for the correct period; no duplicate totals. | Not implemented / not verified |
-| Billing adjustment (optional unless required) | Preview the November example. | ₹500 credit, ₹800 charge, ₹300 net. | Not implemented / not verified |
-| Recovery behavior | Decline then pay same invoice. | Pending change becomes active once; coherent access. | Not implemented / not verified |
-| Replay safety | Repeat one successful event. | One settlement for that event; unchanged totals. | Not implemented / not verified |
-| Authorization | Request another customer's invoice. | Server rejects access. | Not implemented / not verified |
-| Cancellation | Cancel at period end and cross boundary. | Access preserved then ended; no renewal invoice. | Not implemented / not verified |
-
-Do not change these status labels to passed merely because a screen exists. Link each passed claim to a repeatable check or captured evidence from the actual system.
-
-## High-value acceptance checks
-
-### Release-blocking for the implemented scope
-
-- [ ] Normal renewal creates one invoice for the correct period; repeated processing creates none extra.
-- [ ] Double-clicking quotation acceptance creates only one subscription.
-- [ ] The demonstrated proration calculation is exact and its assumptions are visible.
-- [ ] Duplicate successful payment delivery cannot create duplicate settlement or entitlement.
-- [ ] A declined upgrade payment does not grant the paid upgrade prematurely.
-- [ ] Unknown payment outcome is not treated as a safe automatic retry.
-- [ ] A customer cannot access another customer's invoice through a direct URL or request.
-- [ ] Customer requests cannot invoke administrator-only price changes.
-- [ ] Period-end cancellation preserves access before its boundary and ends it afterward.
-- [ ] Plan-price edits do not silently change historical invoices.
-- [ ] The demonstration does not trigger real payments or real customer communications.
-
-If a proposed optional feature is not implemented, mark its test **not applicable to current scope**, not passed. If the statement mandates it, mark it an outstanding gap instead.
-
-### Calendar and consistency checks
-
-- [ ] A monthly subscription starting January 31 follows a documented calendar policy rather than blindly adding 30 days.
-- [ ] Leap-year February and differing month lengths are considered if monthly arithmetic is implemented.
-- [ ] Billing timestamps have a defined timezone and are displayed consistently.
-- [ ] An unpaid initial invoice cannot accidentally yield an unsupported unused-time credit.
-- [ ] Concurrent plan changes produce a clear result or conflict rather than silently losing one update.
-- [ ] Subscription, invoice, payment-attempt, and access states remain coherent after refresh.
-- [ ] Data persists across sessions; dashboard values are derived from records, not hard-coded.
-
-For an eight-hour build, prioritize the checks that cover actual mandatory features and the exact live demo. Do not claim all edge cases are solved merely because this checklist mentions them.
-
-## Honest benchmarks
-
-A benchmark must name the workload, environment, measurement, and result. Suggested checks, only reported after execution:
-
-- **Replay correctness:** Deliver the same event 20 times; count actual resulting settlements and plan changes. Target: one of each where appropriate.
-- **Isolation:** Attempt cross-customer record access with separate authenticated identities. Target: denied access, not merely hidden navigation.
-- **Lifecycle correctness:** Run the complete synthetic journey from a clean seed and inspect invoice totals and effective dates.
-- **Workflow usability:** Have a teammate perform a plan change without verbal guidance; record observed confusion and fix it.
-- **Response time, if measured:** State dataset size, machine/environment, request type, and actual measurement. Do not extrapolate a small local test into production-scale claims.
-
-Do not invent success percentages, revenue recovered, customers served, latency numbers, or test counts. Synthetic ₹300 recovered in the demo is **simulated collection**, not real business impact. MRR, invoice totals, and cash collected are different quantities and must not be labeled interchangeably.
-
-## Go / no-go before presentation
-
-**Go:** Required flows work end to end; the demo can be reset; visible totals match records; permissions work; the team knows which integrations are simulated; submission requirements are met.
-
-**Reduce scope:** Mandatory flow is incomplete, hero feature bypasses normal rules, data changes unpredictably, or the presenter cannot explain a calculation. Remove optional complexity and rehearse the smaller genuine system.
-
-**Do not claim ready:** A polished frontend has no working persistence or authorization, the demonstration is scripted around broken workflows, or a live payment integration has not been safely approved.
+**Do not claim complete:** The frontend hides missing persistence, send/print are inert, the billing replay creates duplicates, a due subscription silently disappears, or performance remains unmeasured.

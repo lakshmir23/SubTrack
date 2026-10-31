@@ -1,28 +1,30 @@
-# Subscription Management System — research and ideation
+# Brightloop Software — Subscription Management System
 
-Planning-only documentation for the current Odoo hackathon. No application code is supplied by this documentation pass. The detailed problem statement may add requirements; ideas below are provisional until reconciled with it.
+**Updated 31 October 2026 after reading all four supplied problem-statement pages.** This is a documentation-only planning pass. No application implementation or performance result is claimed.
 
-## Read first
+## Read in this order
 
-1. [Standing hackathon constraints](HACKATHON_CONSTRAINTS.md): required dynamic data, validation, UI, navigation and genuine team Git participation.
-2. [Research and prior editions](RESEARCH.md): what official sources establish versus historical participant reports.
-3. [Product ideation](PRODUCT_IDEATION.md): a coherent recurring-revenue product and carefully prioritized differentiation.
-4. [Domain and edge cases](DOMAIN_AND_EDGE_CASES.md): relational boundaries, state transitions and financial consistency.
-5. [Demo and proof](DEMO_AND_PROOF.md): show a complete lifecycle and test the claims, not just a static dashboard.
+1. [Authoritative requirements](REQUIREMENTS.md): every visible requirement, proof expectation and unresolved policy.
+2. [Standing hackathon constraints](HACKATHON_CONSTRAINTS.md): dynamic data, validation, responsive UI, navigation and genuine team Git participation.
+3. [Product and scope](PRODUCT_IDEATION.md): complete Brightloop workflows before optional differentiation.
+4. [Domain and edge cases](DOMAIN_AND_EDGE_CASES.md): records, states, billing safety, pricing and payment rules.
+5. [Demo and proof](DEMO_AND_PROOF.md): traceability, coherent scenarios, batch correctness and performance evidence.
+6. [Prior-event research](RESEARCH.md): historical context, explicitly subordinate to this brief.
 
-## Current recommendation
+## What the brief actually asks for
 
-A business-facing subscription operations system with an **explainable lifecycle timeline**. Complete the required quote/activation/billing/renewal/cancellation journey, then make every amount and state transition inspectable. An explicitly sandboxed billing clock can demonstrate future events quickly, but is optional and not a substitute for working normal workflows.
+A unified business system spanning products and variants, recurring plans, quotation templates, subscriptions, automatic invoice generation, taxes, bounded discounts, partial payments and finance reporting. Admin, internal staff and customer portal roles have different access. Hundreds of due subscriptions must not be double-billed or missed; views must remain responsive in under two seconds with thousands of subscriptions.
 
-The main competitive advantage should be that reviewers can change data, trigger a failure, retry an operation and still see correct money, permissions and customer access. Avoid a broad, fragile fintech platform or unrelated AI features.
+The core story is **configure → quote → confirm/activate → bill → collect → renew/pause/close → report**. Each step must use persisted data and enforce policy on the server.
 
-## Decisions still open
+## Competitive approach
 
-- Exact current problem statement, required roles, fields and workflows.
-- Current numeric rubric, if one is supplied.
-- Technology stack and team responsibilities after inspecting implementation plans.
-- Payment integration requirements, allowed sandbox and credentials.
-- Billing/proration policy, cancellation behavior and tax/discount scope.
-- Actual submission deadline/timezone and required evidence.
+First satisfy every requirement with one connected product. Then make correctness easy to inspect through a useful subscription history, explainable invoice amounts and an actionable queue of billing exceptions. Show partial payments and overdue balances, automatic discount expiry, safe batch retries and a measured large-data finance view. Do not replace required work with optional proration, a clock simulator, AI forecasting or a payment-provider integration.
 
-Do not silently turn a proposed feature into an official requirement. Keep research, decisions, implemented behavior and verified results distinct. Preserve teammates' implementation and documentation changes.
+The earlier title-only idea has been revised: mid-cycle upgrades and sandbox time travel are stretch only. A real payment gateway, automated bank matching and automatic card collection are not specified by the supplied brief. An admin-recorded payment workflow can meet the payment-recording requirement; any simulation or development inbox must be labelled accurately.
+
+## Implementation decision gate
+
+Before coding, reconcile the team's chosen stack and task ownership, document ambiguous tax/discount/pause/renewal policies, and assign requirement IDs to screens, API operations and tests. Keep the actual organizer deadline and submission instructions visible. Do not infer numeric rubric weights from a different Odoo event.
+
+Preserve teammates' changes. Documents are a planning contract, not evidence that implementation, test gates, email delivery or the two-second target has passed.

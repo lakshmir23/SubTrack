@@ -1,230 +1,217 @@
-# Domain, lifecycle and edge-case decisions
+# Brightloop: domain, billing invariants and edge cases
 
-> **Planning document — 31 October 2026. Not an implementation or a claim of completed tests.**
-> The confirmed problem title is **Subscription Management System**. The full current problem statement and judging rubric have not yet been supplied. Everything below is a proposed, defensible baseline, not an organizer requirement. Reconcile this document against the actual brief before building. The user-confirmed [hackathon constraints](HACKATHON_CONSTRAINTS.md) apply throughout: dynamic database-backed data, clean responsive UI, robust validation, intuitive navigation and genuine Git participation by every teammate. Local resilience, understandable code and justified technical choices take precedence over fashionable infrastructure.
+> **Documentation only, revised 31 October 2026 after inspecting all four pages of the supplied Subscription Management System problem statement.** This replaces the earlier title-only hypotheses. Required behavior below comes from that statement; implementation choices and unresolved semantics are explicitly marked. No tests or performance results are claimed as completed.
+>
+> The user-confirmed [hackathon constraints](HACKATHON_CONSTRAINTS.md) apply throughout: dynamic database-backed data, clean responsive UI, robust validation, intuitive navigation and genuine Git participation by every teammate. Prefer understandable code and a reliable local database/API over fashionable infrastructure.
 
-## 1. The central design bet
+## 1. What the actual brief makes non-negotiable
 
-Build a subscription system whose money and lifecycle decisions can be explained. A judge should be able to ask “Why is this customer charged this amount?” or “What happens if this runs twice?” and receive an answer backed by persisted records, not a rehearsed dashboard.
+Brightloop sells subscription software, services and products with variants. Admin configures products, plans, taxes and discounts; internal staff handles daily work with limited access; customers see only their own subscriptions and invoices through a portal.
 
-Three independent questions must stay independent:
+The [verified requirements matrix](REQUIREMENTS.md) is the authoritative cross-reference. The baseline is now **the entire ordinary billing month**, not just an attractive recurring-payment demo:
 
-1. **Service:** Is the customer's subscription active, paused, or ended?
-2. **Debt:** What has been invoiced, and how much remains unpaid?
-3. **Collection:** What happened during each attempt to collect that debt?
+- Unique-email signup, password rules, reset links and role-scoped access; only admin adds staff.
+- Product name/type/sales price/cost price, variant pricing, recurring plans and availability policies.
+- Reusable quotation templates with validity; subscription commercial lines and exact progression **Draft → Quotation → Confirmed → Active**.
+- Batch invoice generation from subscriptions, automatic taxes, confirm/cancel/send/print actions and **Draft → Confirmed → Paid** progression, without duplicate or skipped bills.
+- Admin-only fixed/percentage discounts with purchase/quantity thresholds, dates, usage limits, product/subscription targeting and automatic next-invoice application/expiry.
+- Payments against invoices with method, amount, date and note; accurate paid/outstanding balances, including partial payments.
+- Filtered finance views for active subscriptions, revenue, payments and overdue invoices, with summary and **under-two-second page responses at thousands of subscriptions**.
 
-A failed collection does not erase an invoice. A canceled subscription does not erase old debt. A successful payment does not silently reactivate a canceled contract. This separation is the foundation for an understandable demo and prevents a single overloaded `status` field from lying.
+**Not stated as requirements:** a live payment gateway, stored cards, automated charging, AI agents, multi-tenancy, proration, a time-travel UI or a full accounting ledger. Do not let these displace required workflows.
 
-### Proposed scope boundary
+## 2. Relational model: the smallest credible complete system
 
-- One organization, one configured currency, one simple recurring cadence initially.
-- A real local/hosted relational database; no mandatory Odoo integration unless the brief requires it.
-- Server-enforced access checks with the smallest role model the brief needs. Do not build a multi-tenant identity platform.
-- Explicitly labeled **simulated payments** or a permitted provider sandbox. No live charges, real credentials, or claims of a production payment integration.
-- No complete accounting ledger, foreign exchange, usage metering, revenue recognition, or tax compliance engine in the baseline.
-- Working vertical lifecycle first; proration and time-travel controls are additions only after it works.
+This is a proposed schema, not a claim that the brief prescribes table names. Every list below needs database constraints and server validation; client validation is additional UX.
 
-## 2. Lean relational model
-
-Names describe concepts, not prescribed framework classes. Use database constraints, not just form validation. This ten-record model is a reference design, **not ten mandatory CRUD screens or ten parallel implementation tickets**. For eight hours, retain the invariants with the smallest model that serves the actual brief: for example, accepted price snapshots on subscription/invoice lines can replace a standalone price-version editor. Do not add multi-item contracts or a separate price-version administration workflow unless required. Preserve immutable accepted prices, historical invoices and referential integrity even when simplifying.
-
-| Record | Purpose and minimum meaningful fields | Invariant / rationale |
+| Entity | Minimum information | Design reason / invariant |
 |---|---|---|
-| **Customer** | ID, display name, contact fields required by brief | Separate customer identity from a login. A staff-created customer need not have a portal account. |
-| **Product** | ID, name, description, active/archived | Describes **what** is sold. Archive rather than deleting products referenced by contracts. |
-| **Plan** | ID, name, interval unit/count, active/archived | Describes **when** billing repeats. Avoid combining product identity, price and billing cadence in one mutable record. |
-| **PriceVersion** | ID, product ID, plan ID, currency, unit amount in minor units, effective date, active/retired | Immutable commercial price. A new price creates a new version; it never rewrites accepted history. |
-| **Subscription** | ID, customer ID, plan ID, service state, current period start/end, next billing boundary, cancel-effective-at, collection hold/reason, version counter | Describes the continuing agreement. Subscription-level cadence means all its lines share a billing boundary. |
-| **SubscriptionLine** | ID, subscription ID, price-version ID, positive quantity, effective start/end | Records accepted items and prices. Close and replace a line for a plan/price change rather than overwriting historical terms. |
-| **Invoice** | ID, subscription ID, customer ID, issue/due date, currency, covered period, invoice state, totals, renewal key | One receivable for a specific charge. Snapshot customer display/billing details needed to reproduce it. |
-| **InvoiceLine** | ID, invoice ID, description snapshot, quantity, unit-price snapshot, period, subtotal, discount/tax amounts if supported, total, source line/version | Reproducible evidence. An invoice must not change when a product is renamed or its current price changes. Credit/debit adjustment lines carry a reason. |
-| **PaymentAttempt** | ID, invoice ID, idempotency key, amount/currency, adapter/provider reference, outcome, attempted/resolved timestamps, sanitized failure reason | Attempts are not invoices. Multiple failures may precede one successful payment; ambiguous outcomes remain unresolved. |
-| **LifecycleEvent** | ID, subscription/invoice/attempt reference, event type, actor, occurred-at, correlation key, safe structured details | Append-only explanation of actual business transitions. Never invent timeline entries solely in the UI. |
+| **User** | ID, normalized unique email, password hash, role, enabled flag | One account per email. Signup creates customer role only; admin creates staff. Never trust a submitted role. |
+| **Customer** | ID, linked user where applicable, name/contact/billing details | Commercial identity separate from authentication; staff may prepare quotes for a customer. |
+| **PasswordResetToken** | User, token hash, expiry, consumed timestamp | Single-use reset links; never store plaintext passwords or reset tokens. |
+| **Product** | ID, name, type, base sales price, cost price, currency, active flag | Cost is internal, never exposed in the portal. Referenced products are archived, not deleted. |
+| **VariantAttribute / VariantValue** | Attribute name and value, e.g. Brand → Odoo | Distinguish named attributes from individual saleable variants. |
+| **ProductVariant** | Product, unique combination/SKU, attribute values, sales-price adjustment or explicit price | Brief example: choosing brand **Odoo adds 560**. Store a numeric adjustment, not a name-specific UI calculation. Currency is not specified by that example. |
+| **Plan** | Name, price and currency, interval enum daily/weekly/monthly/yearly, positive interval count if supported, minimum quantity, available-from/to, auto-close-at-end, allow-early-close/pause/renew | Policies belong to the plan and must be enforced by actions, not only displayed. |
+| **PriceVersion / CommercialTermsVersion** | Product/variant, plan or pricing context, currency, accepted unit price and policy snapshot/version | Proposed lightweight versioning: catalog edits must not silently reprice accepted agreements. Immutable snapshots can replace a separate version table if simpler. |
+| **QuotationTemplate / TemplateLine** | Name, plan/default terms, validity days, product/variant lines and default quantities/prices | Copy to a new subscription quote; later template edits do not mutate existing quotations. |
+| **Subscription** | Unique human-facing number, customer, plan, start date, expiry date, payment terms, quotation-valid-until, stage, operational state, next billing boundary, version | Preserves required commercial fields and separates sales progression from pause/close behavior. |
+| **SubscriptionLine** | Subscription, product/variant, quantity, accepted unit price, tax references/snapshots, computed amount | Snapshot accepted price and terms on confirmation; retain history for later changes. |
+| **TaxRule** | Name, rate, applicable products/type if needed, enabled/effective dates, inclusive/exclusive policy | Admin-managed automatic calculation. Snapshot applied tax on finalized invoice lines. |
+| **Invoice / InvoiceLine** | Number, subscription/customer, charge period, issue/due date, currency, state; copied lines, quantities, prices, tax/discount amounts and totals | Reproducible financial document; historical display must survive catalog edits. |
+| **DiscountRule / DiscountTarget** | Fixed/percentage value, min purchase/quantity, start/end, usage limit, enabled flag, target products or subscriptions | Admin-only authoring. Eligibility checked at billing time, not by a stale browser preview. |
+| **DiscountApplication** | Rule, invoice and optional line, calculated amount, usage reservation/consumption state | Evidence of why a bill changed, plus a transactional record for enforcing a global limit. |
+| **Payment** | Invoice, method, positive amount, currency, payment date, note, recorder, unique submission key, optional external reference | Core requirement: manual recording supports partial payment. Payment is a money fact, not just a `paid` checkbox. |
+| **LifecycleEvent** | Entity references, type, actor, timestamp, correlation key, safe structured details | Append-only application audit trail for actual persisted transitions. |
+| **InvoiceDelivery** (small optional table) | Invoice, destination, delivery status/time, message reference | Useful evidence for Send. If email delivery is unavailable, expose a truthful pending/failed status rather than fake success. |
 
-### Deliberate simplifications
+### Cardinalities and shortcuts that remain defensible
 
-**One cadence per subscription.** Mixed monthly and annual items require separate subscriptions for now. If the brief explicitly needs mixed cadences, change the model before coding billing logic.
+A customer has many subscriptions; a subscription has many lines and invoices; an invoice has many lines and payments. A plan has many subscriptions. A rule has many target records and applications.
 
-**Full settlement only in the baseline.** A successful attempt settles the complete outstanding invoice amount. Partial payments, multiple allocations and refunds need a separate Payment/Allocation/CreditNote model; do not bolt them onto a boolean `paid` field. An actual provider may still report an unexpected amount or duplicate success: quarantine that fact for review instead of discarding it or inventing a refund.
+One invoice per recurring period is the proposed baseline. All lines on a subscription share its plan cadence. Multiple cadences require separate subscriptions unless clarified otherwise. One configured currency simplifies the build; do not silently combine different currencies in finance totals.
 
-**IDs are an engineering choice, not a score trick.** Integer keys are easy to inspect; UUIDs are useful for distributed generation and opaque public references. Either is defendable. Neither replaces authorization. A separately generated human-facing invoice number can coexist with an internal ID.
+Use integer or UUID internal keys consistently; neither is inherently a judging advantage. Customer-facing subscription/invoice numbers must be unique. Opaque IDs do not replace ownership checks.
 
-### Essential constraints
+## 3. Authentication and permissions are part of correctness
 
-- Positive quantities; positive interval count; valid period start < end.
-- Currency consistent across subscription terms, invoice lines and attempts.
-- Foreign keys prevent orphaned lines, attempts and events.
-- Unique renewal identity, such as `(subscription_id, period_start, period_end, charge_kind)`; a renewal retry must not create another charge.
-- Unique provider event ID when provider events exist; unique collection idempotency key per attempt.
-- At most one unresolved collection attempt for an invoice in the baseline, enforced transactionally.
-- Nonnegative regular price; adjustment lines may be signed under an explicit rule. Never let a general negative quantity bypass validation.
-- Finalized invoice totals and line snapshots cannot be edited. Corrections use explicit void/replacement or credit flow, according to supported scope.
+**Explicit password requirement:** more than eight characters (**at least nine**), at least one uppercase, one lowercase and one special character. Digits may be allowed but are not specified as mandatory. Apply checks server-side; choose a clear special-character policy and display it. Use established password hashing and session libraries, never homemade cryptography.
 
-## 3. State machines without state explosion
+Normalize email consistently for uniqueness (proposed: trim and lowercase); enforce a database unique index, including concurrent signups. Reset links go only to the registered address, expire, are single-use and contain high-entropy tokens. Return the same public response for known/unknown addresses to reduce account enumeration. Rate-limit login/reset attempts. Never expose secrets in logs or repository files.
 
-### Subscription service state
+| Action | Admin | Internal staff | Customer |
+|---|---|---|---|
+| Add staff / manage roles | Yes | No | No |
+| Product/plan/tax configuration | Yes | Read unless explicitly granted | Published information only |
+| Create/edit discount rules | Yes | No | No |
+| Prepare quotes/manage subscriptions | Yes | Within day-to-day permission | Own records/actions permitted by plan |
+| Generate/confirm invoices, record payments | Yes | Proposed day-to-day permission | Read own bills; no ability to mark paid |
+| Send/print invoice | Yes | Authorized scope | Own invoice print/download |
+| Finance-wide filters and summary | Yes | Grant only relevant finance permission | No cross-customer data |
 
-| Transition | Allowed effect | Must not happen implicitly |
-|---|---|---|
-| Draft → Active | Validate customer and accepted lines; establish first period; create the initial invoice under the chosen activation policy | Claim payment succeeded just because activation succeeded |
-| Active → Active with scheduled cancellation | Set cancellation effective at period end; show the date prominently | End service immediately or silently refund old invoices |
-| Active → Paused → Active | Optional only if the brief requires pause; define billing and date-shift semantics first | Treat “pause collection” and “pause service” as the same action |
-| Active → Canceled | End at the agreed effective boundary, or explicit authorized immediate cancellation | Delete financial history or auto-refund |
-| Canceled → New subscription | Preferred simple restart policy | Reuse old billing boundaries and accidentally collect old periods again |
+Staff scope above is a **proposed least-privilege interpretation**, since the brief says limited access without enumerating permissions. Enforce it server-side. Explicitly prevent changing a URL/customer ID to retrieve somebody else's invoice, receipt, subscription or PDF. Protect cost price and internal payment notes from portal serialization.
 
-Use **a cancellation date/flag**, not a separate `cancel_scheduled` service state, unless the UI needs that presentation label. Use a **collection hold** independently of service state. This avoids combinations such as “active-past-due-cancel-scheduled-payment-unknown.”
+## 4. State transitions and policy boundaries
 
-Activation policy must be decided: **invoice then activate** is easy to demonstrate, but creates service before payment. **Activate on paid invoice** is stricter and introduces a pending-activation state. Neither is universally correct; reflect the brief and label the chosen rule.
+### Required subscription progression
 
-### Invoice state
+**Draft → Quotation → Confirmed → Active** must remain visible. Do not replace it with a generic active/inactive toggle.
 
-- **Draft:** editable and not collectible.
-- **Open:** finalized, collectible, amount due remains.
-- **Paid:** full settlement recorded; no second collection.
-- **Void:** canceled as a receivable through an explicit authorized action; not deletion.
+- **Draft:** editable preparation; apply/copy a quotation template.
+- **Quotation:** offer issued with validity date and price/product lines. Expired offers cannot be confirmed without explicit renewal/reissue.
+- **Confirmed:** customer agreement recorded; freeze accepted commercial snapshots and validate dates, quantity, plan availability and payment terms.
+- **Active:** service has started according to start date/activation policy and is eligible for recurring billing. The brief does not require a successful-payment gate for activation; do not invent one.
 
-“Overdue” can be a derived label: open invoice with due date earlier than the system's business time. Do not maintain a second status that can drift from the actual dates. Zero-total invoices need an explicit no-payment-needed finalization rule, not a fabricated successful payment attempt.
+Pause/close is a separate operational status or explicit extension to that progression. Proposed representation: stage plus `running/paused/closed`, with paused/closed relevant only after activation. Plan permissions control whether staff/customer may pause, renew or close early.
 
-### Payment attempt outcome
+**Unresolved business semantics to decide openly:** Does pause stop billing, extend expiry, or only suspend service? Is renewal a new term on the same contract or a linked new contract? Does plan availability limit new sales only or existing renewals too? Proposed baseline: availability controls new acceptance; existing accepted terms remain honored; pause blocks future invoice generation without silently shifting dates; renewal is an explicit new term with recorded dates. Document any alternative before implementing it.
 
-- **Pending:** submitted/in progress; block a second attempt.
-- **Succeeded:** confirmed settlement evidence; terminal under this simplified model.
-- **Declined:** definitive failure, no settlement; a *new* attempt may be allowed by policy.
-- **Unknown:** timeout, disconnected response, or ambiguous result; reconcile before another collection.
+Auto-close at expiry must stop billing beyond the agreed term. Early close preserves historical invoices and recorded payments. Closing service does not erase unpaid debt or imply a refund.
 
-A timeout is **not** a decline. A response arriving late must not turn a confirmed success into failure. A failure on attempt A must not reopen an invoice settled by attempt B. Refunds/reversals, if required, are separate supported events, not permission to mutate `succeeded` into `declined`.
+### Required invoice progression
 
-## 4. Renewal and collection: two boundaries, not one giant transaction
+**Draft → Confirmed → Paid**, with **Canceled** as an explicit cancellation outcome.
 
-### Safe renewal sequence
+- Draft can be reviewed/edited and is not collectible.
+- Confirm validates calculated totals and freezes the financial snapshot.
+- Partial payment leaves invoice **Confirmed**, with a partial-payment label and outstanding balance.
+- Paid is derived from full valid payment allocation, not manually toggled.
+- Cancel is permitted only according to a clear policy. Proposed baseline: no cancellation of an invoice with recorded money; require reversal/credit workflow if later implemented. Never delete payments to make cancellation possible.
+- Print/download and send do not change settlement status. A failed email send must not pretend delivery succeeded.
 
-1. Determine the subscription's next due boundary using authoritative server/demo time.
-2. Lock the subscription or use a version comparison inside a database transaction.
-3. Recheck service state, cancellation date, existing renewal identity and eligible terms.
-4. If the period is already invoiced, return that existing invoice. Otherwise snapshot its lines, finalize the invoice, record the event and advance the billing cursor together.
-5. Commit. Only then request collection through the adapter.
+Overdue is a derived flag: Confirmed, positive balance, and due date earlier than business date. Specify whether due dates end at local midnight; don't label today's due invoice overdue prematurely.
 
-**Do not hold a database transaction open across an external payment call.** A committed invoice can legitimately remain open while collection is unresolved. Advancing the invoicing cursor must not be confused with receiving money. If policy says payment failure blocks future renewals, record and enforce that hold explicitly.
+## 5. Batch billing without duplicate or skipped invoices
 
-The smallest reliable hackathon implementation is a deterministic renewal service callable both by a scheduler and a protected demo action. It must use the same checks in both cases. A transactional outbox is a good later hardening step for reliably delivering collection jobs; it is not compulsory infrastructure for the first vertical slice.
+This is an explicit requirement, not an optional showcase.
 
-### Idempotency in plain language
+1. Query active, unpaused subscriptions whose next billing boundary is due.
+2. Lock/version-check each subscription independently in a short transaction.
+3. Recheck expiry, operational status and existing charge identity.
+4. Build the invoice with customer, accepted product/variant lines, applicable discounts, taxes, totals and due date already populated.
+5. Persist invoice, discount applications, audit event and billing-cursor advancement together.
+6. Commit each subscription independently; report created/already-existing/failed counts with retryable errors. One bad subscription must not silently lose the rest of the batch.
 
-- **Renewal key:** “This contract, this period, this type of charge” is invoiced once.
-- **Attempt key:** retrying the same collection request reuses its key; a new attempt after a confirmed decline gets a new key.
-- **Provider event key:** receiving the same event twice changes state once.
-- **UI mutation key/version:** double-clicks and stale browser tabs cannot create conflicting transitions.
+Use a unique key such as `(subscription_id, period_start, period_end, charge_kind)` for recurring charges. Repeated clicks, scheduler retries and two workers must return the same invoice for the same period. A failure before commit cannot advance the cursor. A failure after commit cannot create another invoice on retry.
 
-For simulated payments, use deterministic scenario outcomes and persist them. Do not randomly change an attempt result on every refresh. For a real sandbox, respect the provider's own idempotency/reconciliation semantics; local keys alone cannot guarantee external exactly-once execution.
+**Never skip backlog:** if more than one period is due, process due boundaries in order up to a documented batch limit and expose remaining work. Do not set `next_bill = today + interval`, which silently discards missed periods.
 
-### Concurrency cases worth defending
+**Cancellation nuance:** a canceled invoice still occupies its original charge identity. Do not let a routine rerun recreate it. If replacement is needed, require an explicit linked revision/replacement action. If the intended bill was canceled accidentally, show an exception for staff; “no duplicates” must not hide unbilled debt.
 
-| Collision | Chosen behavior |
+**Expiry nuance:** define whether a final partial period is disallowed, billed in full, or prorated. Proration is not specified. For the baseline, choose dates aligned to full plan periods and validate them, or explicitly support a documented final-period policy.
+
+## 6. Tax, variant price and discount calculations
+
+### Commercial amounts
+
+The plan has its own configured price as required. Clarify whether that price is a base fee, a recurring rate for its products, or a total offer price before combining it with product/variant lines; do not double-count a plan fee and its included products. Snapshot the chosen mapping in accepted terms.
+
+Store money in integer minor units of the configured currency (or appropriate fixed-precision decimals); never binary floating-point money. Currency scale is configured, not universally assumed to be two decimals. Snapshot both base price and variant adjustment, or their accepted total, so the Brand=Odoo **+560** example is explainable.
+
+Quantity × accepted unit price gives the pre-adjustment line base. The server calculates totals; client-submitted totals are untrusted. Cost price is not part of the customer invoice calculation.
+
+### Proposed explicit calculation policy
+
+The brief requires taxes and discounts but does not define precedence. Proposed baseline:
+
+1. Compute accepted line bases.
+2. Evaluate discount thresholds against eligible **pre-discount, pre-tax** bases/quantities.
+3. Apply selected discount and allocate invoice-wide fixed discounts deterministically across eligible lines.
+4. Calculate exclusive percentage tax on discounted line base.
+5. Round per line using documented half-up minor-unit rounding; sum rounded values.
+
+This is a product policy, not legal tax advice or a claim of GST compliance. Inclusive taxes, compound taxes, stacked discounts and tax exemptions are not specified. If supported, define them explicitly rather than producing arbitrary totals.
+
+### Discount edge cases that matter
+
+- Percentage must be in a valid range, proposed 0–100%; fixed amount nonnegative and capped at eligible base so it cannot create a negative bill.
+- Store whether minimum purchase, minimum quantity or both are required. If both are set, proposed policy is both must pass. For product rules, count eligible product lines only.
+- Dates and usage limits are checked when the next invoice is created, not merely when the rule was attached to a contract. End-date boundary and business timezone must be explicit.
+- **One use = one finalized invoice application**, not one unit or line, is a proposed definition; document it in admin UI.
+- If draft generation applies a usage-limited rule, reserve its usage transactionally. Confirmation consumes the reservation; cancellation of an unpaid draft releases it under an explicit policy. Otherwise several drafts can all promise the last remaining discount.
+- Lock/update the rule counter and insert its application in the same transaction. Concurrent invoices must not exceed the usage limit.
+- Global limit and per-customer limit are different concepts. The brief only specifies a usage limit; do not invent per-customer semantics silently.
+- Choose one deterministic non-stacking policy initially, such as admin priority then rule ID. Show the applied rule and amount. If multiple rules match, do not apply them in unpredictable database-return order.
+- Existing confirmed invoices never change when a discount expires or is edited. Expiry affects future invoices automatically.
+
+## 7. Recording payments and maintaining balances
+
+Payment recording is core; a gateway is not required. Record method, amount, date and note against the correct confirmed invoice. The payment date is the financial event date; also preserve recorded-at timestamp and actor for audit.
+
+**Balance = finalized invoice total − sum of valid allocated payments.** Recompute or transactionally maintain it from persisted facts. Use invoice locking/version checks when concurrent payments are entered.
+
+Example: invoice total 1,000; record 400 → balance 600, Confirmed/partially paid. Record 600 → balance 0, Paid. Finance summary, invoice detail and portal must agree immediately after commit.
+
+Reject zero/negative amounts and wrong currency. Proposed baseline rejects amounts greater than outstanding balance rather than inventing customer credit handling. Duplicate-submit keys prevent a double-click from recording the same payment twice. Two legitimate equal payments on the same date are still possible, so amount/date alone must not be treated as a unique identity.
+
+Corrections need an explicit reversal record linked to the original payment, not deletion or silent editing after finalization. If reversal is not in scope, restrict corrections and show a clear limitation. Do not permit arbitrary payment dates outside validated formats or blindly accept a note as trusted HTML.
+
+**Optional future gateway:** add PaymentAttempt separate from Payment. A timeout is unknown, not declined; reconcile before retry. Confirmed provider events need unique IDs and cannot regress a paid invoice. This remains stretch work and must not delay manual payment requirements.
+
+## 8. Finance summary and the under-two-second requirement
+
+Use database-backed filters and pagination; do not load thousands of records into the browser and hide most rows. Suggested indexes: subscription stage/operational state and next-bill date; customer foreign keys; invoice status/due date; payment date/invoice; unique billing identity. Validate actual query plans rather than adding every possible index.
+
+Define dashboard labels precisely:
+
+- **Active subscriptions:** active-stage, running contracts as of the selected date, excluding closed/expired according to policy.
+- **Revenue received:** valid payments in selected payment-date range. Label this cash received, not accounting revenue recognition.
+- **Outstanding:** invoice totals less valid payments for included non-canceled confirmed invoices.
+- **Overdue:** positive outstanding with due date before the chosen business date.
+- **Billed amount:** separate from cash received; never add both and call the sum revenue.
+
+Filters must use consistent date boundaries, customer/status semantics and currency. Summary totals cover the full filtered dataset, not only the current page. Avoid joining invoice lines and payments in a way that multiplies rows and inflates sums; aggregate each separately before combining.
+
+**Performance proof plan, not a result:** seed thousands of valid subscriptions with coherent invoices/payments; measure end-to-end dashboard/list response in the documented environment for representative filters, cold and warm loads. Record dataset counts, page size, timings and failure cases. Target every measured page response below two seconds; do not claim compliance from a fast empty dataset or a screenshot. Optimize bounded queries, pagination and aggregation before adding cache complexity; caches must invalidate after billing/payment changes.
+
+## 9. Acceptance matrix to execute
+
+| Test | Required observable evidence |
 |---|---|
-| Scheduler and “renew now” execute together | Database uniqueness plus lock/version yields one invoice; other request returns it. |
-| Cancellation races renewal | Both serialize on the subscription; cancellation effective at the boundary blocks that boundary's renewal. Return a clear conflict if a stale action loses. |
-| Two plan changes from two tabs | Expected-version check rejects the stale command; do not silently overwrite. |
-| Two collection workers | One unresolved attempt allowed; the second returns existing attempt state. |
-| Webhook arrives before HTTP response | Both reconcile the same provider attempt; confirmed success cannot regress. |
-| Old failure arrives after a later successful attempt | Preserve attempt history; leave invoice paid. |
-| Duplicate confirmed provider payment | Record/anomaly flag and halt further collection; never hide the second payment or automatically issue an unsupported refund. |
+| Concurrent same-email signup | Exactly one account; second gets clean validation error. |
+| Password/reset | Eight-character password rejected; nine with required classes accepted; reset link expires and cannot be reused. |
+| Staff creation / portal isolation | Non-admin cannot add staff; customer cannot access another customer's invoice, PDF or subscription by ID. |
+| Product variant | Brand Odoo adds exactly 560 to the defined base, and accepted quote preserves it after catalog edit. |
+| Plan controls | Each of daily/weekly/monthly/yearly schedules works; min quantity and availability enforced; disabled pause/renew/early-close denied. |
+| Quote template / expiry | Template copies lines; original survives template edits; expired offer cannot silently confirm. |
+| Subscription progression | Draft → Quotation → Confirmed → Active visible with required fields and line totals. |
+| Repeat/concurrent billing | Same due period creates one invoice; customer/products/taxes/totals prefilled. |
+| Failed batch item / backlog | No cursor advance on failure; other items succeed; retry fills failed/missed periods without duplicates. |
+| Discount last use race | Only permitted number of invoices reserve/use rule; next invoice stops applying expired/exhausted rule. |
+| Invoice actions | Confirm freezes amounts; cancel follows rules; send reports true delivery state; print matches persisted totals. |
+| Partial payments | 400 + 600 against 1,000 yields 600 then 0 balance; one final Paid status; duplicate click adds no payment. |
+| History integrity | Price/tax/discount edits do not change confirmed invoice or recorded payment. |
+| Month/year edges | January 31 anchoring and leap-year policy produce valid non-overlapping periods without drift. |
+| Finance consistency / speed | Filtered full-dataset summaries equal underlying records; thousands-row test produces recorded page timings under two seconds. |
 
-## 5. Money, periods and plan changes
+These are planned tests, not completed passes. Audit events must correspond to actual database changes, exclude passwords/tokens/payment secrets, and record business facts in the same transaction. Do not claim cryptographic tamper-proofing merely because the UI has no edit button.
 
-### Money policy
+## 10. Implementation decision gate
 
-Use integers in the configured currency's **minor unit**, not binary floating point. Do not assume every currency has two decimals. For the baseline, configure a single supported currency and its scale explicitly.
+Before coding, agree on: billing in advance vs arrears; activation date behavior; calendar anchoring; pause semantics; expiry/final-period billing; invoice cancellation/replacement; discount stacking/threshold/time boundaries and usage counting; payment correction; staff finance permissions; email delivery setup; single-currency assumption.
 
-For ratios such as proration, retain exact integer numerator/denominator until the documented rounding step. Proposed rule: round half up per adjustment line; sum the rounded line amounts to obtain the invoice total. Different valid policies can differ by a minor unit, so display the policy and test tie cases. Use safe integer ranges/decimal database types as appropriate to the stack.
+Build the required vertical path first: **role-safe signup → product/variant and plan → quote/template → accepted subscription → batch invoice with tax/discount → partial/full payment → filtered finance proof**. Then cover alternate branches. Proration, automatic collection and a demo clock are stretch additions, not substitutes.
 
-Tax, discounts and inclusive/exclusive pricing remain **unconfirmed requirements**. If required, specify calculation order, eligibility, rounding and invoice snapshots before building them. Do not describe a simple percentage demonstration as legally compliant GST invoicing.
+### Source boundary
 
-### Billing period policy
-
-- Represent service periods as half-open intervals **[start, end)**. The ending instant belongs to the next period.
-- Store authoritative timestamps consistently; display the configured business timezone.
-- Monthly means calendar-month arithmetic, not “add 30 days.” Decide month-end anchoring, e.g. January 31 → February's last day → March 31, rather than accidental drift to March 28.
-- Persist the original anchor and document leap-year behavior.
-- Demo time is isolated from wall-clock scheduling and labeled. Never let arbitrary customers alter system time.
-
-### Proposed change policy: defer first, prorate second
-
-The low-risk baseline is **plan changes effective next renewal**. Show the pending terms and effective date. It solves the core problem without inventing credit balances, refunds and mid-cycle taxation.
-
-If time and the brief justify proration, add a transparent upgrade preview:
-
-> Illustrative untaxed 30-day period: ₹900 old plan → ₹1,500 new plan with 10 of 30 days remaining. Unused old-plan credit ₹300; new-plan remainder ₹500; net adjustment ₹200. This example uses an explicit 30-day period, not a rule that every month has 30 days.
-
-The preview and committed change must use the **same calculation service** and expected subscription version. Store the inputs, effective time, rounding rule and adjustment lines. Do not rewrite the original invoice. If payment is required for an upgrade, specify whether entitlement changes immediately or only after payment; for a short build, activate paid upgrades only after confirmed settlement.
-
-**Delayed-payment boundary:** the optional demo's decline and recovery occur at the same simulated effective instant. A preview based on November 16 must not silently charge the same unused-time adjustment for access first granted November 20. Check expected subscription version and effective time again before issuing an adjustment. For a short build, reject stale previews and require a fresh quotation; an already issued but definitively unpaid stale adjustment must be explicitly voided before replacement. Never rewrite settled history. An unknown attempt cannot be treated as unpaid, expired and safe to retry: reconcile it first. Until late settlement and service-effective-time policy are deliberately supported, keep immediate changes demo-bounded or use next-renewal changes instead.
-
-Defer mid-cycle downgrades to the next period unless credit handling is explicitly built. Otherwise a negative invoice raises unanswered refund/credit-balance questions. A price catalog update alone must never upgrade, downgrade or reprice an existing subscription silently.
-
-## 6. Permissions and audit evidence
-
-Suggested minimal permission matrix, subject to the brief:
-
-| Action | Staff/admin | Customer portal, if required |
-|---|---|---|
-| Manage catalog | Allowed | No |
-| Read subscription/invoice | Authorized customer scope | Own records only |
-| Request plan change/cancellation | Allowed under policy | Own contract under same policy |
-| Mark payment confirmed | Adapter/reconciliation flow; manual action restricted and labeled | Never |
-| Void finalized invoice | Restricted, reason required | No |
-| Advance demo time / seed scenario | Protected demo environment only | No |
-
-Enforce ownership and permissions on the server, not by hiding buttons. Test direct access using another customer's ID. Never trust client-submitted totals, price snapshots, payment status or role names.
-
-Audit events should answer **who, what, when, why and which source record**. Include safe before/after commercial values, correlation keys and simulation labels. Exclude secrets, raw payment payloads, full card data and unnecessary personal information. Record business changes in the same transaction as their corresponding events. Append-only in the application is useful, but do not claim cryptographic tamper-proofing.
-
-## 7. Acceptance scenarios to implement and actually run
-
-These are **planned proof obligations, not passing test results**. Record actual outcomes only after execution.
-
-| Scenario | Observable result |
-|---|---|
-| Valid activation | Persisted subscription, accepted terms, one initial invoice, coherent timeline. |
-| Refresh/restart | Same records remain; no in-memory-only lifecycle. |
-| Repeat same renewal 10 times, including concurrent calls | Exactly one invoice for that period; no inflated totals. |
-| Definite decline then successful retry | Two distinct attempts, one settlement, invoice paid, no hidden failure. |
-| Timeout/unknown then retry click | Collection blocked with reconciliation explanation; no second charge request. |
-| Unknown reconciles to success | Existing attempt/invoice resolve consistently; hold cleared by explicit policy. |
-| Duplicate and out-of-order payment events | No duplicate settlement; no regression from paid to open. |
-| Cancel at period end then cross boundary | No renewal for the canceled next period; historical invoices intact. |
-| Rename product / publish a new price | Existing invoice unchanged; existing contract not silently repriced. |
-| Invalid quantity, currency mismatch, malformed date | Server rejects; no partial data or orphaned events. |
-| Customer A requests Customer B's invoice | Server denies; UI hiding is not considered a pass. |
-| January 31 and leap-year boundary | Agreed anchor behavior with no overlap or missing day. |
-| Proration preview races another edit, if supported | Stale preview rejected and recalculated; no surprise amount. |
-| Repeated demo run | Dedicated reset/seed path restores a known simulated dataset without touching real records. |
-
-Use realistic, constraint-valid data and pagination if required. A large row count is not a performance claim. Report the dataset size, query/action, environment and measured latency if demonstrating performance; do not fabricate benchmarks or seed contradictory billing histories merely to fill tables.
-
-## 8. Eight-hour trade-offs and questions to resolve
-
-**Protect first:** real persistence → catalog/customer → activation → invoice generation → idempotent renewal → simulated payment outcome/reconciliation → cancellation → visible evidence.
-
-**Add only after that works:** plan-change preview, proration, bounded demo clock, richer reporting, email queue. One strong scenario is better than five disconnected screens.
-
-**Cut first:** multi-tenancy, live payments, multiple currencies, general tax engine, metered usage, complex discounts, AI churn prediction, full accounting, refund automation. If the actual brief mandates one of these, reprioritize rather than pretending it is optional.
-
-Before coding, settle:
-
-1. Is this SaaS sold by a merchant, consumer subscription tracking, or an Odoo module? The title alone does not settle this.
-2. Exact required roles/entities/workflows and allowed stack/AI policy?
-3. Invoice on activation or only after payment? Trial periods required?
-4. What does nonpayment do to service, and when? Grace period/retry limit?
-5. Must cancellation be immediate, end-of-period, or both?
-6. Are proration, tax, discounts, refunds and real/sandbox payments required?
-7. Actual current deadline, submission route and evaluation rules?
-
-## 9. Source context and attribution
-
-This document's schema and policies are **our proposed design**, not a claim that Odoo uses these exact tables or that the current hackathon mandates them.
-
-- [Odoo 19: Automatic payments](https://www.odoo.com/documentation/19.0/applications/sales/subscriptions/automatic_payments.html) — project research identified Odoo's caution around automatic-payment exceptions and manual verification. It motivates separating ambiguous payment outcomes from confirmed declines. No provider behavior is assumed solely from this analogy.
-- [Odoo 19: Upselling](https://www.odoo.com/documentation/19.0/applications/sales/subscriptions/upselling.html) — relevant official background for prorated subscription changes, not proof that current judging requires proration.
-- See [RESEARCH.md](RESEARCH.md) for event evidence, historical accounts and the distinction between past and current requirements.
-
-The domain author encountered timeouts fetching the two official pages on 31 October; those source observations were supplied by the parallel research pass. Recheck the actual rules and provider documentation before implementation. None of the architectural proposals depends on claiming an organizer rubric that has not been verified.
+Primary source for this revision: user-supplied four-page **Subscription Management System / Meet Brightloop Software** statement, image `1000082739.jpg`, inspected directly on 31 October 2026. The filename is a provenance reference, not a requirement to publish the user's upload. See [RESEARCH.md](RESEARCH.md) for historical context; historical Odoo features and judging weights do not override this actual statement.

@@ -1,3 +1,5 @@
+> **Current scope update:** The four-page Brightloop Software problem statement is now available and supersedes earlier title-only inference. Read [REQUIREMENTS.md](REQUIREMENTS.md) first. Historical accounts below remain background, not additional mandatory features.
+
 # Odoo hackathon research: Subscription Management System
 
 Research date: 31 October 2026. Scope: public organizer material and first-person historical participant accounts. This is research and ideation, not a substitute for the current problem statement or judging instructions.
