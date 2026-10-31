@@ -1,6 +1,6 @@
 # Coding-agent roadmap — configure → collect → prove
 
-**Status: documentation-only implementation handoff. Every checkbox below is uncompleted; none is a claim that code, tests, delivery or benchmarks exist.** Start implementation only when the team gives the coding agent that task. This roadmap supplies execution order, not permission to change scope or spend on services.
+**Status: execution authorized on 31 October 2026. P0 and P1 are verified.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
 
 ## Read first; establish the real starting point
 
@@ -14,12 +14,12 @@ Read root `AGENTS.md`, [REQUIREMENTS.md](REQUIREMENTS.md), [HACKATHON_CONSTRAINT
 
 **Depends on:** team authorization to implement and current repository access.
 
-- [ ] Inspect current remote branch, local status, instructions and existing application before editing. Preserve teammate work; agree file ownership and an integration owner. Do not reset, force-push or migrate a working stack for preference.
-- [ ] Confirm D-01–D-10 once: plan price meaning, roles, business clock, lifecycle boundaries, immutable billing snapshots, discount reservations and finance definitions. Record amendments in the canonical decision register.
-- [ ] Keep the team's working stack. Only if none exists, the blueprint recommends React/TypeScript/Vite, Node/Express/TypeScript and PostgreSQL with familiar libraries; this is not a mandated stack.
-- [ ] Agree minimal persisted entities and shared request/response contracts: users/customer ownership; products/variants/plans; templates/subscriptions/lines; invoices/lines; payments; tax/discount rules and reservations; period outcomes and action history. Give money, timestamps and business dates distinct types/representations.
-- [ ] Agree migration/seed/start/test commands, server-only secrets and an approved email route. Establish a fresh local DB startup, health check, a real DB-backed page and synthetic demo identities. Do not provision paid services or credentials without authorization.
-- [ ] Start an evidence ledger: `REQ ID | implementation path | test or demo witness | observed result | blocker`. Use planned, implemented-unverified, verified or blocked; retain failures.
+- [x] Inspect current remote branch, local status, instructions and existing application before editing. Preserve teammate work; agree file ownership and an integration owner. Do not reset, force-push or migrate a working stack for preference.
+- [x] Confirm D-01–D-10 once: plan price meaning, roles, business clock, lifecycle boundaries, immutable billing snapshots, discount reservations and finance definitions. Record amendments in the canonical decision register.
+- [x] Keep the team's working stack. No application existed; React/TypeScript/Vite and Express/TypeScript adopted. SQLite fallback is deliberate because Docker's daemon was unavailable; real independent-process uniqueness and immediate transaction checks pass.
+- [x] Establish entities and shared request/response contracts, keeping money, timestamps and business dates distinct. See API_CONTRACT.md and shared types; future business tables are added in their vertical slices.
+- [x] Establish migration/seed/start/test commands, fresh persisted DB startup, health page and synthetic identities. User approved a controlled SMTP test account and entered its settings; SMTP acceptance observed. Inbox delivery remains a separate P1 witness.
+- [x] Start an evidence ledger: `REQ ID | implementation path | test or demo witness | observed result | blocker`. Use planned, implemented-unverified, verified or blocked; retain failures.
 
 **Gate:** another teammate starts the app against the DB using documented steps; contracts and ownership are agreed. **Fix before proceeding:** missing DB persistence, incompatible schema changes, secrets in source, or an email delivery route assumed to exist. Escalate email setup early while independent work continues.
 
@@ -27,10 +27,10 @@ Read root `AGENTS.md`, [REQUIREMENTS.md](REQUIREMENTS.md), [HACKATHON_CONSTRAINT
 
 **Depends on:** P0. **Coverage:** AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05.
 
-- [ ] Build signup/login/logout and persisted unique normalized-email accounts; validate on client and server. Require more than eight characters, uppercase, lowercase and special character—do not invent a digit requirement.
-- [ ] Add admin-only staff creation, fixed server-side permissions and distinct staff/customer navigation. Public signup must never accept an elevated role.
-- [ ] Build reset request → registered-address email → expiring single-use token → new password. Avoid leaking whether an unrelated email exists. Capture actual registered-inbox delivery evidence with approved accounts.
-- [ ] Give each role an authenticated landing page; establish reusable ownership checks and safe serialization before adding business data. Customer/staff responses must not leak protected cost fields.
+- [x] Build signup/login/logout and persisted unique normalized-email accounts; validate on client and server. Require more than eight characters, uppercase, lowercase and special character—do not invent a digit requirement.
+- [x] Add admin-only staff creation, fixed server-side permissions and distinct staff/customer navigation. Public signup must never accept an elevated role.
+- [x] Build reset request → registered-address email → expiring single-use token → new password. Avoid leaking whether an unrelated email exists. Capture actual registered-inbox delivery evidence with approved accounts.
+- [x] Give each role an authenticated landing page; establish reusable ownership checks and safe serialization before adding business data. Customer/staff responses must not leak protected cost fields.
 
 **Gate:** duplicate/concurrent signup rejected; eight-character rejection and valid nine-character acceptance tested; staff/customer direct staff-creation attempts denied; reset token expires and cannot replay. Verify ownership again against real records in P3/P7. **Fix failures:** hidden buttons are not authorization; a development outbox is not real inbox delivery. Track delivery blocked until genuinely verified or an organizer-approved fallback is explicitly recorded.
 

@@ -1,8 +1,8 @@
 # SubTrack — proposed baseline decisions
 
-**Status: team-adoptable defaults, pending team agreement. Not organizer requirements and not implemented behavior.** Revised 31 October 2026. The supplied brief leaves these semantics open; this document gives the implementation agents one coherent, deliberately small interpretation. [REQUIREMENTS.md](REQUIREMENTS.md) remains authoritative for what the organizer actually asks for. Confirm or amend these defaults once as a team before coding; reflect any change here and in its tests rather than allowing contradictory per-screen behavior.
+**Status: D-01–D-10 adopted as implementation defaults on 31 October 2026 under the instruction to execute ROADMAP.md. These are team policies, not organizer requirements. Adoption is not proof of implemented behavior or unanimous teammate review.** The supplied brief leaves these semantics open; this register gives implementation one coherent interpretation. [REQUIREMENTS.md](REQUIREMENTS.md) remains authoritative. Record amendments here and in affected tests.
 
-This is a documentation-only handoff. No application code, passing tests or measured performance is claimed. SubTrack is the proposed product; Brightloop Software is the fictional client in the brief. The aim is complete and explainable billing within the eight-hour round, not a full ERP.
+The historical handoff was documentation only. Implementation is now authorized; actual gate results are tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md), which does not infer passing tests or performance from this policy register. SubTrack is the product; Brightloop Software is the fictional client in the brief.
 
 ## D-01 — Price meaning and accepted terms
 
