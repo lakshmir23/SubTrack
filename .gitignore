@@ -9,3 +9,5 @@ playwright-report/
 .impeccable/review/
 *.tsbuildinfo
 coverage/
+output/pdf/
+tmp/pdfs/
