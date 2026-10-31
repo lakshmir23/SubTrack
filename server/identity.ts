@@ -8,16 +8,12 @@ import type { User } from '../shared/contracts.js';
 import { transaction } from './database.js';
 import { DomainError } from './errors.js';
 import { hashPassword, verifyPassword } from './password.js';
+import { businessDate } from './calendar.js';
 import { audit, cookieToken, digest, issueSession, rateLimit, requireRole, serializeUser, type UserRow } from './security.js';
 
 const genericReset = { message: 'If an account uses this email, a password reset link has been requested. Check your inbox. The link expires in 30 minutes.' };
 const dummyHash = 'scrypt:16384:8:1:efb3e8fb22932f35a5a7e3bc387b0324:9c139a792195e87e8c6e6f9a6cc5fa8822316423429f34ea361d88b54e7db62f65a020722609222d8539f5f1ee2f94b9b6de7457ea6d5a28ccbac33bac32d10a';
 const listSchema = z.object({ page: z.coerce.number().int().min(1).max(1000000).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(20), q: z.string().trim().max(100).optional(), search: z.string().trim().max(100).optional() });
-function businessDate(date: Date) {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
-  const part = (type: string) => parts.find(value => value.type === type)?.value;
-  return `${part('year')}-${part('month')}-${part('day')}`;
-}
 function attempt(db: DatabaseSync, req: Request, now: Date, kind: string, email?: string, accountLimit = 10) {
   transaction(db, () => {
     rateLimit(db, `${kind}:ip:${digest(req.ip || 'local')}`, now, kind === 'login' ? 50 : 20);
