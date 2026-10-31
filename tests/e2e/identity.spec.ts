@@ -310,3 +310,49 @@ test("narrow screens preserve the form and directory without horizontal page ove
     ),
   ).toBe(true);
 });
+
+test("an expired session preserves a dirty form until deliberate sign-in recovery", async ({
+  page,
+}) => {
+  await login(page);
+  await page.goto("/staff/new");
+  await page.getByLabel("Full name").fill("Preserved until sign in");
+  if (!process.env.E2E_DATABASE_PATH)
+    throw new Error("The isolated browser test database is not configured.");
+  const db = new DatabaseSync(process.env.E2E_DATABASE_PATH);
+  try {
+    db.prepare(
+      "DELETE FROM sessions WHERE user_id=(SELECT id FROM users WHERE email=?)",
+    ).run("admin@brightloop.test");
+  } finally {
+    db.close();
+  }
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(page.getByRole("alert")).toContainText(
+    "Your session has expired",
+  );
+  await expect(page.getByLabel("Full name")).toHaveValue(
+    "Preserved until sign in",
+  );
+  await page.getByRole("link", { name: "Sign in again", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Leave this form?" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Discard entries", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Welcome back.", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Email address", { exact: true })
+    .fill("admin@brightloop.test");
+  await page.getByLabel("Password", { exact: true }).fill(demoPassword);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Workspace", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Database connected", { exact: true }),
+  ).toBeVisible();
+});
