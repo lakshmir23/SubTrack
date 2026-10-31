@@ -49,6 +49,7 @@ const metadata = {
   worktree: execFileSync('git', ['status', '--short'], { encoding: 'utf8' }).trim(), node: process.version,
   hardware: { cpu: cpus()[0]?.model, logicalCpus: cpus().length, ramBytes: totalmem(), freeRamAtStart: freemem(), platform: platform(), release: release(), arch: arch() },
   origin, viewport, network: 'HTTP loopback; headless Chromium; no network or CPU throttling', samples,
+  selection: { only: only?.source || null, skipApi: args.includes('--skip-api'), skipConcurrent: args.includes('--skip-concurrent'), skipBatch: args.includes('--skip-batch') },
   fixture: { ...manifest, accounts: Object.fromEntries(Object.entries(manifest.accounts).map(([role, account]) => [role, { id: account.id, email: account.email }])) },
   databaseBytes: statSync(runtimePath).size, startSnapshot: snapshot(runtimePath),
   productionAssets: ['index.html', ...readdirSync(resolve('dist/client/assets')).filter(name => /\.(?:js|css)$/.test(name)).map(name => `assets/${name}`)].map(name => ({ name, bytes: statSync(resolve('dist/client', name)).size, sha256: createHash('sha256').update(readFileSync(resolve('dist/client', name))).digest('hex') })),
@@ -128,7 +129,7 @@ try {
   Object.assign(metadata, { inventory: pages.map(({ id, role, path, category, readiness, apiPaths }) => ({ id, role, path, category, readiness, apiPaths })), actionInventory: actions.map(({ id, role, path, category, readiness, apiPaths }) => ({ id, role, path, category, readiness, apiPaths })) });
   persist();
   const apiSeen = new Set<string>();
-  for (const item of [...pages, ...actions]) {
+  for (const item of args.includes('--skip-api') ? [] : [...pages, ...actions]) {
     for (const path of item.apiPaths) {
       const key = `${item.role}:${path}`;
       if (apiSeen.has(key)) continue;
