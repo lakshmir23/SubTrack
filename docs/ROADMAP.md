@@ -1,6 +1,6 @@
 # Coding-agent roadmap — configure → collect → prove
 
-**Status: execution authorized on 31 October 2026. P0 and P1 are verified.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
+**Status: execution authorized on 31 October 2026. P0 through P2 are verified; P3 is in progress.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
 
 ## Read first; establish the real starting point
 
@@ -38,10 +38,10 @@ Read root `AGENTS.md`, [REQUIREMENTS.md](REQUIREMENTS.md), [HACKATHON_CONSTRAINT
 
 **Depends on:** P1 admin boundary. **Coverage:** CAT-01, CAT-02, PLAN-01, PLAN-02, PLAN-03; foundations for BILL-02 and QUOTE-01.
 
-- [ ] Persist product name/type/sales price/cost price/notes and configurable variants. Selecting a variant updates a server-derived price explanation; the Odoo +560 example must be configuration, not a hardcoded brand branch.
-- [ ] Persist plan primary product, price, daily/weekly/monthly/yearly interval, minimum quantity, availability and auto-close/early-close/pause/renew permissions.
-- [ ] Add admin tax configuration and reusable quotation templates with plan/product lines and positive valid-days count. Set up one usable offering end to end, not dozens of unrelated forms.
-- [ ] Supply field errors, loading/empty/error states, readable money/date formatting and a working edit-save-reload cycle. Operational staff can read allowed catalog fields, not configure them.
+- [x] Persist product name/type/sales price/cost price/notes and configurable variants. Selecting a variant updates a server-derived price explanation; the Odoo +560 example must be configuration, not a hardcoded brand branch.
+- [x] Persist plan primary product, price, daily/weekly/monthly/yearly interval, minimum quantity, availability and auto-close/early-close/pause/renew permissions.
+- [x] Add admin tax configuration and reusable quotation templates with plan/product lines and positive valid-days count. Set up one usable offering end to end, not dozens of unrelated forms.
+- [x] Supply field errors, loading/empty/error states, readable money/date formatting and a working edit-save-reload cycle. Operational staff can read allowed catalog fields, not configure them.
 
 **Gate:** all four intervals persist; minimum/availability violations fail server-side; unequal catalog/plan price proves D-01 replacement semantics (1,200 catalog, 1,000 plan, +560 variant → 1,560 per primary unit). Cost data stays internal. **Fix failures:** ignored plan price, double-added base, fake saves or unauthorized configuration. Lifecycle flags are not complete merely because checkboxes save; P6 must exercise them.
 
