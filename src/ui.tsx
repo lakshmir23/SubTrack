@@ -47,17 +47,19 @@ export function Button({
   busy = false,
   tone = "primary",
   className = "",
+  intent = "neutral",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   busy?: boolean;
   tone?: "primary" | "secondary" | "ghost";
+  intent?: "neutral" | "danger";
   children: ReactNode;
 }) {
   return (
     <button
       type="button"
       {...props}
-      className={`button ${tone === "primary" ? "" : tone} ${className}`}
+      className={`button ${tone === "primary" ? "" : tone} ${intent === "danger" ? "danger" : ""} ${className}`}
       aria-busy={busy || undefined}
       disabled={busy || props.disabled}
     >
@@ -500,6 +502,7 @@ export function ConfirmationDialog({
   onCancel,
   onConfirm,
   children,
+  intent = "neutral",
 }: {
   open: boolean;
   title: string;
@@ -510,6 +513,7 @@ export function ConfirmationDialog({
   onCancel: () => void;
   onConfirm: () => void;
   children?: ReactNode;
+  intent?: "neutral" | "danger";
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
@@ -543,7 +547,7 @@ export function ConfirmationDialog({
         <Button tone="secondary" autoFocus disabled={busy} onClick={onCancel}>
           Cancel
         </Button>
-        <Button busy={busy} onClick={onConfirm}>
+        <Button busy={busy} intent={intent} onClick={onConfirm}>
           {confirmLabel}
         </Button>
       </div>

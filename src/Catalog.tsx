@@ -20,6 +20,7 @@ import {
   FileText,
   Package,
   Pencil,
+  Percent,
   Plus,
   RefreshCw,
   Repeat2,
@@ -99,7 +100,7 @@ const intervalLabels = {
   monthly: "Monthly",
   yearly: "Yearly",
 };
-const listPath = (kind: Kind) => `/configuration/${kind}`;
+const listPath = (kind: Kind | "discounts") => `/configuration/${kind}`;
 export type LineForm = {
   productId: string;
   variantId: string | null;
@@ -162,6 +163,10 @@ export function CatalogLayout() {
           Plans
         </NavLink>
         <NavLink to="/configuration/taxes">Tax rules</NavLink>
+        <NavLink to="/configuration/discounts">
+          <Percent size={16} />
+          Discounts
+        </NavLink>
         <NavLink to="/configuration/quotation-templates">
           <FileText size={16} />
           Templates
@@ -322,7 +327,13 @@ export function CatalogList({ kind }: { kind: Kind }) {
                 <tr>
                   <th scope="col">Name</th>
                   {headers.map((header) => (
-                    <th scope="col" key={header}>
+                    <th
+                      scope="col"
+                      key={header}
+                      className={
+                        /price/i.test(header) ? "money-cell" : undefined
+                      }
+                    >
                       {header}
                     </th>
                   ))}
@@ -348,7 +359,15 @@ export function CatalogList({ kind }: { kind: Kind }) {
                       </Link>
                     </td>
                     {cells(item).map((value, index) => (
-                      <td key={headers[index]} data-label={headers[index]}>
+                      <td
+                        key={headers[index]}
+                        data-label={headers[index]}
+                        className={
+                          /price/i.test(headers[index])
+                            ? "money-cell"
+                            : undefined
+                        }
+                      >
                         {value}
                       </td>
                     ))}
@@ -390,7 +409,7 @@ export function CatalogList({ kind }: { kind: Kind }) {
   );
 }
 
-export function RecordSelect<T extends { id: string; name: string }>({
+export function RecordSelect<T extends { id: string }>({
   resource,
   label,
   name,
@@ -402,7 +421,12 @@ export function RecordSelect<T extends { id: string; name: string }>({
   help,
   emptyLabel,
 }: {
-  resource: "products" | "plans" | "customers" | "quotation-templates";
+  resource:
+    | "products"
+    | "plans"
+    | "customers"
+    | "quotation-templates"
+    | "subscriptions";
   label: string;
   name: string;
   value: string;
@@ -422,7 +446,7 @@ export function RecordSelect<T extends { id: string; name: string }>({
     return () => clearTimeout(timer);
   }, [search, composing]);
   const list = useResource<Page<T>>(
-    `/api/${resource}?${resource === "customers" ? "" : "active=true&"}q=${encodeURIComponent(query)}&pageSize=100`,
+    `/api/${resource}?${resource === "customers" || resource === "subscriptions" ? "" : "active=true&"}q=${encodeURIComponent(query)}&pageSize=100`,
   );
   const found = list.data?.items.find((item) => item.id === value);
   const selected = useResource<T>(
@@ -431,6 +455,15 @@ export function RecordSelect<T extends { id: string; name: string }>({
       : null,
   );
   const options = list.data?.items || [];
+  function recordLabel(record: T) {
+    if ("name" in record)
+      return resource === "customers" && "email" in record
+        ? `${String(record.name)} · ${String(record.email)}`
+        : String(record.name);
+    if ("number" in record)
+      return `${String(record.number)}${"customerName" in record ? ` · ${String(record.customerName)}` : ""}`;
+    return "Selected record";
+  }
   return (
     <div className="record-select">
       <SelectField
@@ -465,20 +498,22 @@ export function RecordSelect<T extends { id: string; name: string }>({
                   ? "a customer"
                   : resource === "quotation-templates"
                     ? "a template"
-                    : "a product"}
+                    : resource === "subscriptions"
+                      ? "a subscription"
+                      : "a product"}
             </>
           )}
         </option>
         {value && !found && (
           <option value={value}>
-            {selected.data?.name || selectedLabel || "Selected record"}
+            {selected.data
+              ? recordLabel(selected.data)
+              : selectedLabel || "Selected record"}
           </option>
         )}
         {options.map((item) => (
           <option key={item.id} value={item.id}>
-            {resource === "customers" && "email" in item
-              ? `${item.name} · ${String(item.email)}`
-              : item.name}
+            {recordLabel(item)}
           </option>
         ))}
       </SelectField>
@@ -514,14 +549,16 @@ export function RecordSelect<T extends { id: string; name: string }>({
   );
 }
 
-function useEditor<T extends CatalogRecord, V>(
-  kind: Kind,
+export function useConfigurationEditor<T extends CatalogRecord, V>(
+  kind: Kind | "discounts",
   id: string | undefined,
   initial: V,
   fromRecord: (record: T) => V,
 ) {
   const location = useLocation();
   const navigate = useNavigate();
+  const singular =
+    kind === "discounts" ? "discount rule" : labels[kind].singular;
   const loaded = useResource<T>(id ? `/api/${kind}/${id}` : null);
   const [values, setValues] = useState(initial);
   const [baseline, setBaseline] = useState(JSON.stringify(initial));
@@ -579,7 +616,7 @@ function useEditor<T extends CatalogRecord, V>(
       guard.allowNavigation();
       navigate(back, {
         state: {
-          message: `${labels[kind].singular[0].toUpperCase() + labels[kind].singular.slice(1)} ${id ? "updated" : "created"}.`,
+          message: `${singular[0].toUpperCase() + singular.slice(1)} ${id ? "updated" : "created"}.`,
         },
       });
     } catch (reason) {
@@ -719,7 +756,7 @@ function productValues(product: Product): ProductFormValues {
   };
 }
 function ProductForm({ id }: { id?: string }) {
-  const editor = useEditor<Product, ProductFormValues>(
+  const editor = useConfigurationEditor<Product, ProductFormValues>(
     "products",
     id,
     newProduct,
@@ -981,7 +1018,7 @@ function planValues(plan: Plan): PlanFormValues {
   };
 }
 function PlanForm({ id }: { id?: string }) {
-  const editor = useEditor<Plan, PlanFormValues>(
+  const editor = useConfigurationEditor<Plan, PlanFormValues>(
     "plans",
     id,
     newPlan,
@@ -1171,7 +1208,7 @@ const newTax: TaxFormValues = {
   active: true,
 };
 function TaxForm({ id }: { id?: string }) {
-  const editor = useEditor<TaxRule, TaxFormValues>(
+  const editor = useConfigurationEditor<TaxRule, TaxFormValues>(
     "taxes",
     id,
     newTax,
@@ -1446,7 +1483,7 @@ const newTemplate: TemplateFormValues = {
   active: true,
 };
 function TemplateForm({ id }: { id?: string }) {
-  const editor = useEditor<QuotationTemplate, TemplateFormValues>(
+  const editor = useConfigurationEditor<QuotationTemplate, TemplateFormValues>(
     "quotation-templates",
     id,
     newTemplate,
@@ -1805,20 +1842,36 @@ function TemplateLine({ line }: { line: CatalogLineInput }) {
   );
 }
 
-export type AmountBreakdownData = Pick<
-  CatalogPreview,
-  "lines" | "subtotal" | "tax" | "total" | "priceExplanation"
-> & { businessDate?: string };
+export type AmountBreakdownData = Omit<
+  Pick<
+    CatalogPreview,
+    "lines" | "subtotal" | "tax" | "total" | "priceExplanation"
+  >,
+  "lines"
+> & {
+  lines: (Omit<CatalogPreview["lines"][number], "isPrimary"> & {
+    isPrimary?: boolean;
+    discountAmount?: number;
+    taxableAmount?: number;
+  })[];
+  businessDate?: string;
+  discountAmount?: number;
+  discountName?: string | null;
+};
 export function AmountBreakdown({
   value,
   estimated = false,
   note,
   periodLabel,
+  totalLabel,
+  baseLabel,
 }: {
   value: AmountBreakdownData;
   estimated?: boolean;
   note?: ReactNode;
   periodLabel?: string;
+  totalLabel?: string;
+  baseLabel?: string;
 }) {
   return (
     <>
@@ -1828,7 +1881,10 @@ export function AmountBreakdown({
         </p>
       )}
       {value.priceExplanation && (
-        <p className="calculation-explanation">{value.priceExplanation}</p>
+        <details className="calculation-explanation">
+          <summary>How this amount is calculated</summary>
+          <p>{value.priceExplanation}</p>
+        </details>
       )}
       {value.lines.map((line, index) => (
         <div className="calculation-line" key={index}>
@@ -1839,9 +1895,10 @@ export function AmountBreakdown({
           <dl>
             <div>
               <dt>
-                {line.isPrimary
-                  ? "Plan base per unit"
-                  : "Catalog base per unit"}
+                {baseLabel ||
+                  (line.isPrimary
+                    ? "Plan base per unit"
+                    : "Catalog base per unit")}
               </dt>
               <dd>{formatMoney(line.baseUnitPrice)}</dd>
             </div>
@@ -1862,6 +1919,21 @@ export function AmountBreakdown({
               <dt>Line subtotal</dt>
               <dd>{formatMoney(line.subtotal)}</dd>
             </div>
+            {line.discountAmount !== undefined && (
+              <div>
+                <dt>Discount</dt>
+                <dd>
+                  {line.discountAmount > 0 ? "−" : ""}
+                  {formatMoney(line.discountAmount)}
+                </dd>
+              </div>
+            )}
+            {line.taxableAmount !== undefined && (
+              <div>
+                <dt>Taxable amount</dt>
+                <dd>{formatMoney(line.taxableAmount)}</dd>
+              </div>
+            )}
             <div>
               <dt>
                 {line.taxName || (estimated ? "Estimated tax" : "Tax")} (
@@ -1877,12 +1949,23 @@ export function AmountBreakdown({
           <dt>Subtotal</dt>
           <dd>{formatMoney(value.subtotal)}</dd>
         </div>
+        {value.discountAmount !== undefined && (
+          <div>
+            <dt>{value.discountName || "Discount"}</dt>
+            <dd>
+              {value.discountAmount > 0 ? "−" : ""}
+              {formatMoney(value.discountAmount)}
+            </dd>
+          </div>
+        )}
         <div>
           <dt>{estimated ? "Estimated tax" : "Tax"}</dt>
           <dd>{formatMoney(value.tax)}</dd>
         </div>
         <div className="grand-total">
-          <dt>{estimated ? "Estimated period total" : "Total"}</dt>
+          <dt>
+            {totalLabel || (estimated ? "Estimated period total" : "Total")}
+          </dt>
           <dd>{formatMoney(value.total)}</dd>
         </div>
       </dl>

@@ -47,6 +47,7 @@ import {
   type LineForm,
 } from "./Catalog";
 import { useSession } from "./session";
+import { SubscriptionInvoicePanel } from "./Billing";
 import {
   formatBusinessDate,
   formatDate,
@@ -84,11 +85,7 @@ function termsBreakdown(terms: SubscriptionTerms): AmountBreakdownData {
   };
 }
 function stageTone(stage: SubscriptionStage) {
-  return stage === "Active"
-    ? "success"
-    : stage === "Quotation"
-      ? "warning"
-      : "info";
+  return stage === "Active" ? "success" : "info";
 }
 function serviceLabel(
   subscription: SubscriptionSummary,
@@ -350,7 +347,9 @@ export function SubscriptionList() {
                   <th scope="col">Plan</th>
                   <th scope="col">Stage</th>
                   <th scope="col">Service term</th>
-                  <th scope="col">Estimated period total</th>
+                  <th scope="col" className="money-cell">
+                    Estimated period total
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -498,6 +497,9 @@ function SubscriptionEditor({ id }: { id?: string }) {
     lines: [],
   };
   const [values, setValues] = useState(initial);
+  function patchValues(patch: Partial<DraftFormValues>) {
+    setValues((current) => ({ ...current, ...patch }));
+  }
   const [baseline, setBaseline] = useState(JSON.stringify(initial));
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [version, setVersion] = useState<number | null>(null);
@@ -753,7 +755,7 @@ function SubscriptionEditor({ id }: { id?: string }) {
               value={values.customerId}
               selectedLabel={loaded.data?.customerName}
               error={fields.customerId}
-              onChange={(customerId) => setValues({ ...values, customerId })}
+              onChange={(customerId) => patchValues({ customerId })}
             />
             <SelectField
               label="Offering source"
@@ -761,8 +763,7 @@ function SubscriptionEditor({ id }: { id?: string }) {
               onChange={(event) => {
                 const next = event.target.value as "plan" | "template";
                 setSource(next);
-                setValues({
-                  ...values,
+                patchValues({
                   templateId: null,
                   planId: "",
                   lines: [],
@@ -782,8 +783,7 @@ function SubscriptionEditor({ id }: { id?: string }) {
                 selectedLabel={loaded.data?.templateName || undefined}
                 error={fields.templateId}
                 onChange={(templateId, record) =>
-                  setValues({
-                    ...values,
+                  patchValues({
                     templateId: templateId || null,
                     planId: record?.planId || "",
                     validDays: record ? String(record.validDays) : "7",
@@ -810,8 +810,7 @@ function SubscriptionEditor({ id }: { id?: string }) {
                   : undefined
               }
               onChange={(planId, record) =>
-                setValues({
-                  ...values,
+                patchValues({
                   planId,
                   templateId: null,
                   lines: record
@@ -837,7 +836,7 @@ function SubscriptionEditor({ id }: { id?: string }) {
                 value={values.startDate}
                 error={fields.startDate}
                 onChange={(event) =>
-                  setValues({ ...values, startDate: event.target.value })
+                  patchValues({ startDate: event.target.value })
                 }
               />
               <Field
@@ -852,7 +851,7 @@ function SubscriptionEditor({ id }: { id?: string }) {
                     : "Expiry is calculated from whole calendar periods."
                 }
                 onChange={(event) =>
-                  setValues({ ...values, termPeriods: event.target.value })
+                  patchValues({ termPeriods: event.target.value })
                 }
               />
             </div>
@@ -865,7 +864,7 @@ function SubscriptionEditor({ id }: { id?: string }) {
                 error={fields.paymentTermDays}
                 help="Due date is this many days after invoice issue."
                 onChange={(event) =>
-                  setValues({ ...values, paymentTermDays: event.target.value })
+                  patchValues({ paymentTermDays: event.target.value })
                 }
               />
               <Field
@@ -876,7 +875,7 @@ function SubscriptionEditor({ id }: { id?: string }) {
                 error={fields.validDays}
                 help="Counted from the date the quotation is issued."
                 onChange={(event) =>
-                  setValues({ ...values, validDays: event.target.value })
+                  patchValues({ validDays: event.target.value })
                 }
               />
             </div>
@@ -885,7 +884,7 @@ function SubscriptionEditor({ id }: { id?: string }) {
             lines={values.lines}
             primaryProductId={plan.data?.primaryProductId}
             fields={fields}
-            onChange={(lines) => setValues({ ...values, lines })}
+            onChange={(lines) => patchValues({ lines })}
           />
           <div className="form-actions">
             <Link className="button secondary" to={back}>
@@ -1127,91 +1126,64 @@ export function SubscriptionDetail() {
         </Feedback>
       )}
       <div className="agreement-layout">
-        <div>
-          <section
-            className="panel agreement-terms"
-            aria-labelledby="agreement-terms-title"
-          >
-            <h2 id="agreement-terms-title">Agreement details</h2>
-            <dl className="catalog-detail-grid">
+        <section
+          className="panel agreement-terms"
+          aria-labelledby="agreement-terms-title"
+        >
+          <h2 id="agreement-terms-title">Agreement details</h2>
+          <dl className="catalog-detail-grid">
+            <div>
+              <dt>Customer</dt>
+              <dd>
+                {data.customerName}
+                <small>{data.customerEmail}</small>
+              </dd>
+            </div>
+            <div>
+              <dt>Recurring plan</dt>
+              <dd>{data.planName}</dd>
+            </div>
+            <div>
+              <dt>Service start</dt>
+              <dd>{formatBusinessDate(data.startDate)}</dd>
+            </div>
+            <div>
+              <dt>Expiry (exclusive)</dt>
+              <dd>{formatBusinessDate(data.expiryDate)}</dd>
+            </div>
+            <div>
+              <dt>Term length</dt>
+              <dd>
+                {data.termPeriods} {terms.plan.interval}{" "}
+                {data.termPeriods === 1 ? "period" : "periods"}
+              </dd>
+            </div>
+            <div>
+              <dt>Payment terms</dt>
+              <dd>{data.paymentTermDays} days after invoice issue</dd>
+            </div>
+            {data.templateName && (
               <div>
-                <dt>Customer</dt>
-                <dd>
-                  {data.customerName}
-                  <small>{data.customerEmail}</small>
-                </dd>
+                <dt>Quotation template</dt>
+                <dd>{data.templateName}</dd>
               </div>
+            )}
+            <div>
+              <dt>Quotation validity</dt>
+              <dd>{data.validDays} days from issue</dd>
+            </div>
+            {data.validUntil && (
               <div>
-                <dt>Recurring plan</dt>
-                <dd>{data.planName}</dd>
+                <dt>Valid through</dt>
+                <dd>{formatBusinessDate(data.validUntil)}</dd>
               </div>
-              <div>
-                <dt>Service start</dt>
-                <dd>{formatBusinessDate(data.startDate)}</dd>
-              </div>
-              <div>
-                <dt>Expiry (exclusive)</dt>
-                <dd>{formatBusinessDate(data.expiryDate)}</dd>
-              </div>
-              <div>
-                <dt>Term length</dt>
-                <dd>
-                  {data.termPeriods} {terms.plan.interval}{" "}
-                  {data.termPeriods === 1 ? "period" : "periods"}
-                </dd>
-              </div>
-              <div>
-                <dt>Payment terms</dt>
-                <dd>{data.paymentTermDays} days after invoice issue</dd>
-              </div>
-              {data.templateName && (
-                <div>
-                  <dt>Quotation template</dt>
-                  <dd>{data.templateName}</dd>
-                </div>
-              )}
-              <div>
-                <dt>Quotation validity</dt>
-                <dd>{data.validDays} days from issue</dd>
-              </div>
-              {data.validUntil && (
-                <div>
-                  <dt>Valid through</dt>
-                  <dd>{formatBusinessDate(data.validUntil)}</dd>
-                </div>
-              )}
-            </dl>
-            <p className="footnote">
-              Service includes its start date and excludes the expiry boundary.
-              Payment is recorded separately from service activation.
-            </p>
-          </section>
-          <section
-            className="panel agreement-history"
-            aria-labelledby="history-title"
-          >
-            <h2 id="history-title">Activity</h2>
-            <ol>
-              {data.history.map((event) => (
-                <li key={event.id}>
-                  <span className="history-dot" aria-hidden="true" />
-                  <div>
-                    <strong>{event.message}</strong>
-                    <p>
-                      {event.actorName} · {formatDate(event.at, true)}
-                    </p>
-                    {event.fromStage && event.fromStage !== event.toStage && (
-                      <small>
-                        {event.fromStage} <ArrowRight size={12} />{" "}
-                        {event.toStage}
-                      </small>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
-        </div>
+            )}
+          </dl>
+          <p className="footnote">
+            Service includes its start date and excludes the expiry boundary.
+            Payment is recorded separately from service activation.
+          </p>
+        </section>
         <section
           className="panel calculation-panel"
           aria-labelledby="agreement-pricing-title"
@@ -1232,6 +1204,31 @@ export function SubscriptionDetail() {
                   : "Prices were calculated when this draft was last saved. Editing and saving refreshes the catalog estimate."
             }
           />
+        </section>
+        <SubscriptionInvoicePanel subscription={data} />
+        <section
+          className="panel agreement-history"
+          aria-labelledby="history-title"
+        >
+          <h2 id="history-title">Activity</h2>
+          <ol>
+            {data.history.map((event) => (
+              <li key={event.id}>
+                <span className="history-dot" aria-hidden="true" />
+                <div>
+                  <strong>{event.message}</strong>
+                  <p>
+                    {event.actorName} · {formatDate(event.at, true)}
+                  </p>
+                  {event.fromStage && event.fromStage !== event.toStage && (
+                    <small>
+                      {event.fromStage} <ArrowRight size={12} /> {event.toStage}
+                    </small>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
       </div>
       <ConfirmationDialog

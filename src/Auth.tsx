@@ -56,6 +56,11 @@ export function validateForm(
       }
     } else if (issue.code === "invalid_type" && input?.inputMode === "numeric")
       message = "Enter a whole number.";
+    if (
+      (key === "rateBps" || key === "percentBps") &&
+      (issue.code === "too_big" || issue.code === "too_small")
+    )
+      message = "Use a percentage from 0 to 100.";
     if (!fields[key]) fields[key] = message;
   }
   window.setTimeout(

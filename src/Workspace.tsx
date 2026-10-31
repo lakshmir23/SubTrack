@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Settings2,
   FileText,
+  ReceiptText,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -61,7 +62,13 @@ const roleLabels: Record<Role, string> = {
   staff: "Internal staff",
   customer: "Customer",
 };
-export function RequireSession({ roles }: { roles?: Role[] }) {
+export function RequireSession({
+  roles,
+  inlineDenied = false,
+}: {
+  roles?: Role[];
+  inlineDenied?: boolean;
+}) {
   const { user } = useSession();
   const location = useLocation();
   if (!user)
@@ -72,16 +79,17 @@ export function RequireSession({ roles }: { roles?: Role[] }) {
         replace
       />
     );
-  if (roles && !roles.includes(user.role)) return <AccessDenied />;
+  if (roles && !roles.includes(user.role))
+    return <AccessDenied inline={inlineDenied} />;
   return <Outlet />;
 }
-export function AccessDenied() {
+export function AccessDenied({ inline = false }: { inline?: boolean }) {
   useEffect(() => {
     document.title = "Access restricted · SubTrack";
   }, []);
   return (
     <section aria-label="Access restricted">
-      <PageHeading title="Access restricted" />
+      {!inline && <PageHeading title="Access restricted" />}
       <EmptyState
         icon={<ShieldCheck size={28} />}
         title="This area is restricted."
@@ -105,6 +113,15 @@ export function WorkspaceShell() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const pending = useRef(false);
+  const navigation = useRef<HTMLElement>(null);
+  const location = useLocation();
+  useEffect(() => {
+    const nav = navigation.current;
+    const active = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (nav && active && nav.scrollWidth > nav.clientWidth) {
+      nav.scrollLeft = active.offsetLeft - nav.offsetLeft - 12;
+    }
+  }, [location.pathname]);
   async function logout() {
     if (pending.current) return;
     pending.current = true;
@@ -141,7 +158,11 @@ export function WorkspaceShell() {
             </small>
           </div>
         </div>
-        <nav className="primary-nav" aria-label="Main navigation">
+        <nav
+          className="primary-nav"
+          aria-label="Main navigation"
+          ref={navigation}
+        >
           <NavLink to="/workspace" end>
             <LayoutDashboard size={19} />
             Workspace
@@ -149,6 +170,10 @@ export function WorkspaceShell() {
           <NavLink to="/subscriptions">
             <FileText size={19} />
             Subscriptions
+          </NavLink>
+          <NavLink to="/billing/invoices">
+            <ReceiptText size={19} />
+            {user.role === "customer" ? "Invoices" : "Billing"}
           </NavLink>
           {user.role !== "customer" && (
             <NavLink to="/customers">

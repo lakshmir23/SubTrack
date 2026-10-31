@@ -13,6 +13,14 @@ import {
   SubscriptionEditorRoute,
 } from "./Subscriptions";
 import {
+  DiscountList,
+  DiscountDetail,
+  DiscountEditorRoute,
+  InvoiceList,
+  InvoiceDetail,
+  InvoiceGenerator,
+} from "./Billing";
+import {
   CatalogLayout,
   CatalogList,
   CatalogDetail,
@@ -58,9 +66,15 @@ const router = createBrowserRouter([
               { path: "/workspace", element: <Workspace /> },
               { path: "/subscriptions", element: <SubscriptionList /> },
               { path: "/subscriptions/:id", element: <SubscriptionDetail /> },
+              { path: "/billing/invoices", element: <InvoiceList /> },
+              { path: "/billing/invoices/:id", element: <InvoiceDetail /> },
               {
                 element: <RequireSession roles={["admin", "staff"]} />,
                 children: [
+                  {
+                    path: "/billing/subscriptions/:id/generate",
+                    element: <InvoiceGenerator />,
+                  },
                   {
                     path: "/subscriptions/new",
                     element: <SubscriptionEditorRoute />,
@@ -101,8 +115,27 @@ const router = createBrowserRouter([
                         },
                       ]),
                       { path: "preview", element: <CatalogPricePreview /> },
+                      { path: "discounts", element: <DiscountList /> },
+                      { path: "discounts/:id", element: <DiscountDetail /> },
                       {
-                        element: <RequireSession roles={["admin"]} />,
+                        element: (
+                          <RequireSession roles={["admin"]} inlineDenied />
+                        ),
+                        children: [
+                          {
+                            path: "discounts/new",
+                            element: <DiscountEditorRoute />,
+                          },
+                          {
+                            path: "discounts/:id/edit",
+                            element: <DiscountEditorRoute />,
+                          },
+                        ],
+                      },
+                      {
+                        element: (
+                          <RequireSession roles={["admin"]} inlineDenied />
+                        ),
                         children: (
                           [
                             "products",
