@@ -291,7 +291,7 @@ export function subscriptionRoutes(db: DatabaseSync, clock: () => Date): Router 
           if (row.valid_until! < date) throw new DomainError(400, 'QUOTATION_EXPIRED', 'This quotation has expired. Create a fresh quotation before confirming.');
           if (row.expiry_date <= date) throw new DomainError(400, 'TERM_ENDED', 'The service term has already ended. Create a fresh quotation with new service dates.');
           validateCurrentEligibility(db, row, date, true);
-          db.prepare("UPDATE subscriptions SET stage='Confirmed',accepted_terms_json=offered_terms_json,accepted_at=?,version=version+1,updated_at=? WHERE id=?").run(now.toISOString(), now.toISOString(), id);
+          db.prepare("UPDATE subscriptions SET stage='Confirmed',accepted_terms_json=offered_terms_json,accepted_at=?,next_billing_date=start_date,version=version+1,updated_at=? WHERE id=?").run(now.toISOString(), now.toISOString(), id);
           history(db, row, user.id, 'confirmed', 'Quotation', 'Confirmed', now, 'Agreement confirmed at its exact offered prices, quantities and plan capabilities.', input.version);
         } else activate(db, row, now, user.id, input.version);
       });

@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { migrateCatalog } from './catalog-schema.js';
 import { migrateSubscriptions } from './subscriptions-schema.js';
 import { migrateBilling } from './billing-schema.js';
+import { migrateBillingWorkbench } from './billing-workbench-schema.js';
 
 export function openDatabase(path: string): DatabaseSync {
   if (path !== ':memory:') mkdirSync(dirname(resolve(path)), { recursive: true });
@@ -86,6 +87,7 @@ export function openDatabase(path: string): DatabaseSync {
   migrateCatalog(db);
   migrateSubscriptions(db);
   migrateBilling(db);
+  migrateBillingWorkbench(db);
   return db;
 }
 
