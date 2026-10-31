@@ -10,7 +10,7 @@ export function createMailDelivery(db: DatabaseSync, config: MailConfig) {
   let current: Promise<void> | null = null;
   let stopping = false;
   async function run() {
-    db.prepare("UPDATE outbox SET status='unknown',error=? WHERE status='generated' AND claimed_at IS NOT NULL AND claimed_at < ?").run('Delivery was interrupted. The message may have been accepted; request a new reset link if needed.', new Date(Date.now() - 2 * 60 * 1000).toISOString());
+    db.prepare("UPDATE outbox SET status='unknown',error=? WHERE status='generated' AND claimed_at IS NOT NULL AND claimed_at < ?").run('Delivery was interrupted. The message may have been accepted; review its status before explicitly requesting another message.', new Date(Date.now() - 2 * 60 * 1000).toISOString());
       for (let index = 0; index < 10; index++) {
         if (stopping) break;
         const message = transaction(db, () => {
