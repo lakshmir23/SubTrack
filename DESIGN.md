@@ -145,6 +145,8 @@ Short 140ms state transitions communicate focus/hover; a loader rotates only whi
 
 Plain sentence case, specific errors and action verbs. Do not claim email arrival from message generation, or core workflow completion from P1. Local fixtures are labeled synthetic. INR formatting uses `Intl.NumberFormat`; amounts and dates remain server-authoritative. No graph exists until real related records are implemented.
 
+Finance is one linked working sheet: invoiced amount and money received receive the strongest number hierarchy, followed by active agreements, outstanding and overdue. Thin rules keep these related figures together; there are no decorative charts or five separate metric cards. Record drill-downs lead with one compact amount/count for that view and its matching records, with Back to finance preserving the applied scope. Descriptions explain date scope and current balances. Product copy names the business consequence—saved prices, billing dates and previous invoices staying unchanged—rather than implementation mechanisms. The synthetic-demo banner is restrained, uses the existing attention palette and appears consistently through authentication.
+
 ## Do's and Don'ts
 
 - Do show who can act and what happened, using persisted data.

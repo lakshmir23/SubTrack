@@ -8,7 +8,7 @@ Administrators configure the business and add staff. Internal staff handle agree
 
 ## Current surface
 
-P0–P5 establish persistence, role-separated identity, configuration, agreements, immutable invoice generation and discounts, bounded billing/retries, explicit replacement, truthful invoice email activity and own print output. P6 adds reviewed partial/full payment recording and history, permitted service transitions, original-boundary optional-line changes and explicit non-billable paused periods; acceptance verification is in progress. Finance waits for P7. Each gate is verified before the next begins. No decorative data or invented revenue is permitted. Root's instruction is to execute the roadmap autonomously; all domain defaults come from `docs/DECISIONS.md`.
+P0–P6 establish persistence, role-separated identity, configuration, agreements, saved invoice amounts and discounts, bounded billing/retries, explicit replacement, truthful email activity, own print, partial/full payment records and permitted service changes. P7 adds reconciled finance summaries, filtered drill-through, complete own-record portal access and clearer business copy; acceptance verification is in progress. Performance and release proof wait for P8. Each gate is verified before the next begins. No decorative data or invented revenue is permitted. Root's instruction is to execute the roadmap autonomously; all domain defaults come from `docs/DECISIONS.md`.
 
 ## Success and constraints
 
