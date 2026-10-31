@@ -34,6 +34,8 @@ While paused, every complete period beginning at/after the pause effective bound
 
 **Proof:** pause mid-month, resume next month, verify current issued bill remains owed, paused complete periods are explicitly waived, later periods resume on original anchor. An overdue period before the request remains billable even if processed after closing.
 
+**P6 history clarification, adopted consistently:** effective-boundary selection skips every period with a canonical logical outcome, including an invoice, a retryable failure or a recorded non-billable waiver. A new service/add-on request cannot reclassify a previously decided owed period or overwrite a prior waiver. Earlier scheduled intent still governs its effective historical period when a failed transaction is retried. This strengthens our team policy's history preservation; it is not an added organizer requirement. A candidate boundary at expiry fails clearly because it would provide no service period.
+
 ## D-04 — Expiry and renewal
 
 No service period starts at or after the exclusive expiry boundary. The required visible progression is Draft → Quotation → Confirmed → Active → Closed. With auto-close enabled, both stage and operational state become Closed at expiry. Without it, show the interim **Term ended — close or renew** condition, block new service/billing periods, and provide staff/admin an explicit end-of-term Close action that moves the stage to Closed. End-of-term closure does not require permission to close early; it does not reopen service or erase debt. Historical owed periods remain recoverable in either case.
