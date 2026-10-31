@@ -1,8 +1,10 @@
 # SubTrack: understand the whole project
 
+SubTrack is a complete subscription management system for Brightloop that connects product setup, quotations, recurring subscriptions, billing, payments, and financial reporting in one database-backed application. It includes secure admin, staff, and customer access; configurable plans, variants, taxes, and discounts; batch invoicing, partial payments, lifecycle controls, email and print workflows, and AI-assisted quotation preparation. Its strength is the care behind those features: exact money calculations, protected financial history, safe retries and concurrent operations, plus documented desktop performance testing with 10,000 subscriptions.
+
 > **For Junaid and Lakshmi:** this is a study guide for understanding, demonstrating and explaining the project. Read it with the application open. Follow the source links when you want to see the actual implementation.
 >
-> **Scope checked on 31 October 2026:** the application on `main` at `a6d4da8`, before this documentation commit. The ledger records all 28 requirements as Verified. FIN-02 has a **local desktop** evidence scope: the complete inventory had one real queue breach, the affected workload was corrected and repeated successfully, and the later full repeat was interrupted. Large-data mobile performance was canceled and is unmeasured. Section 23 explains the results and limits.
+> **Scope checked on 31 October 2026:** the application on `main` at `c5c3759`, before this documentation update. Mandatory P0–P8 and optional P9 quotation assistance are complete in the recorded scope. The ledger records all 28 requirements as Verified. FIN-02 has a **local desktop** evidence scope: the complete inventory had one real queue breach, the affected workload was corrected and repeated successfully, and the later full repeat was interrupted. Large-data mobile performance was canceled and is unmeasured. Sections 23 and 29 explain the results and limits.
 
 ## How to use this guide
 
@@ -44,6 +46,7 @@ You do not need to memorize every function. Both teammates should understand the
 26. [Requirement-by-requirement map](#26-requirement-by-requirement-map)
 27. [Troubleshooting and making changes safely](#27-troubleshooting-and-making-changes-safely)
 28. [Glossary and further reading](#28-glossary-and-further-reading)
+29. [P9: AI-assisted quotation preparation](#29-p9-ai-assisted-quotation-preparation)
 
 ## 1. What we built and why
 
@@ -97,16 +100,17 @@ The code and the latest implementation ledger describe the current product. Some
 | Payments and service lifecycle | P6 Verified | Ledger and [integrity evidence](../evidence/P6_INTEGRITY.md) |
 | Finance and connected customer portal | P7 Verified | Ledger and finance/browser tests |
 | Page response with thousands of subscriptions | P8 / FIN-02 Verified for the documented local desktop scope | [Performance evidence](../evidence/P8_PERFORMANCE.md); retained failures, corrected-path repeats and unmeasured mobile scope |
+| AI-assisted quotation preparation | Optional P9 implemented and verified | [P9 verification](../evidence/P9_VERIFICATION.md); three live synthetic requests, eleven focused tests and four new browser journeys |
 
 “Verified” above reports the evidence recorded for that feature. It does not mean security certification, production readiness, or unlimited scale.
 
 ### Features deliberately outside this implementation
 
-There is no live payment gateway, automatic card charge, bank feed, multi-currency support, tenant isolation, full accounting ledger, refund/payment reversal UI, partial-period proration, general mid-term repricing, historical “as of” balance reconstruction, or implemented AI assistant. These should not be presented as working features.
+There is no live payment gateway, automatic card charge, bank feed, multi-currency support, tenant isolation, full accounting ledger, refund/payment reversal UI, partial-period proration, general mid-term repricing or historical “as of” balance reconstruction. AI quotation suggestions are implemented; autonomous financial actions are outside their authority.
 
 ### What remains beyond the verified scope?
 
-The checked main includes P8 fixture, measurement, audit and query work. The final organizer/checklist handoff is separate and pending. The roadmap's Optional P9 is the constrained AI-assist idea, not submission work. Later uncommitted or feature-branch changes are not described as released features here. This guide is a documentation-only addition; each measurement still belongs to its recorded code/build and environment.
+The checked main includes P8 fixture, measurement, audit and query work and the completed Optional P9 quotation assistant. The organizer/checklist handoff is separate; no contest entry or external deployment is claimed. Later uncommitted or feature-branch changes are not described as released features here. This guide changes documentation only; each measurement still belongs to its recorded code/build and environment.
 
 ## 3. The technology stack
 
@@ -137,6 +141,8 @@ The following are package families from [package.json](../../package.json), not 
 | npm | Installs dependencies and runs scripts | A shared command interface for the team |
 
 There is no ORM: server modules use SQL directly. There is also no Redux, GraphQL, WebSocket server, or required model API. React hooks/context and normal HTTP requests cover this product's current needs.
+
+Optional P9 calls the OpenAI Responses API from the server using native `fetch`, Structured Outputs and the fixed release model `gpt-4.1-mini`. It adds no agent framework or provider SDK dependency. The manual product still works without model access.
 
 The manifest includes type-definition packages, ESLint support packages and a `minimatch` override. These support development/dependency resolution; they are not separate product features.
 
@@ -170,6 +176,7 @@ flowchart TB
     DB --> RULES
     RULES -->|Safe response data| HTTP
     WORK -->|Approved SMTP only| MAIL[Mail server]
+    RULES -->|Explicit approved quotation suggestion| AI[OpenAI Responses API]
 ```
 
 ### Follow one payment from the screen to finance
@@ -246,6 +253,8 @@ Generated/ignored: node_modules/, dist/, data/, .env,
 | [src/Billing.tsx](../../src/Billing.tsx) | Discount configuration, invoice records and single-period generation |
 | [src/BillingWorkbench.tsx](../../src/BillingWorkbench.tsx) | Due queue, saved batch runs, outcomes and retry |
 | [src/Payments.tsx](../../src/Payments.tsx), [src/Lifecycle.tsx](../../src/Lifecycle.tsx) | Payment review and effective service actions |
+| [src/QuoteAssist.tsx](../../src/QuoteAssist.tsx), [shared/ai-quote.ts](../../shared/ai-quote.ts) | Optional suggestion UI, allowed proposal fields and status/review contracts |
+| [server/ai-quote.ts](../../server/ai-quote.ts), [server/ai-quote-review.ts](../../server/ai-quote-review.ts), [server/ai-quote-schema.ts](../../server/ai-quote-schema.ts) | Provider requests, bounded budget/context, human-review guards and persisted AI tables |
 | [src/Finance.tsx](../../src/Finance.tsx), [src/InvoiceOutput.tsx](../../src/InvoiceOutput.tsx) | Financial summaries/drilldowns and email/print controls |
 | [server/index.ts](../../server/index.ts) | Start HTTP server, assets and scheduled jobs; graceful shutdown |
 | [server/app.ts](../../server/app.ts) | Assemble middleware, database and all API routers |
@@ -273,6 +282,8 @@ The feature names line up intentionally: payment screens live in `src/Payments.t
 ### First local setup
 
 Use Node.js **24 or newer** and npm. The documented development machine uses Windows; the following commands are PowerShell. Keep SQLite on local disk.
+
+After installing dependencies once, daily startup is just `npm run dev`: one terminal serves Express and the React client together. Database creation/migration is automatic, and `.env` is optional for default local operation. The expanded sequence below explicitly migrates and adds synthetic identities for a first rehearsal; startup itself never seeds users.
 
 Run these from your actual repository directory:
 
@@ -348,13 +359,17 @@ The normal server reads `.env` through `server/config.ts`. The tracked [.env.exa
 | `SMTP_USER`, `SMTP_PASSWORD` | Server-only SMTP credentials |
 | `MAIL_FROM` | Configured sender address |
 | `MAIL_ALLOWED_RECIPIENTS` | Exact comma-separated approved test-recipient allowlist |
-| `OPENAI_API_KEY` | Optional reserved server setting; unused by the mandatory product |
+| `OPENAI_API_KEY` | Server-only credential for optional quotation suggestions; manual workflows need no key |
+| `AI_QUOTE_ENABLED` | Explicit optional-assistant enablement; default false |
+| `AI_QUOTE_BUDGET_USD` | Approved per-database USD allowance; default zero disables AI; positive and at most $5 required |
 
 Set `APP_ORIGIN` to the same origin you open in the browser, including the correct port. Origin checks distinguish `localhost` from `127.0.0.1`. Restart the normal server after configuration changes.
 
 Never put a credential in a `VITE_` variable: Vite-prefixed variables can be exposed to browser code. The application needs no model key to function.
 
-### Four different kinds of data
+The recorded P9 approval reused an existing server key and a $5 total allowance. Controlled evaluation accounted for $0.001075, leaving the configured normal-app cap at $4.998925. Preserve the authorized remaining allowance and private key; this guide does not authorize new calls, credentials or spending. See section 29 for persisted reservations and manual fallback.
+
+### Separate data environments
 
 | Environment | Database and date | Why separate it? |
 |---|---|---|
@@ -392,7 +407,7 @@ erDiagram
     billing_runs ||--o{ billing_run_items : contains
 ```
 
-### The final 32 tables on the checked main
+### The final 35 tables on the checked main
 
 | Area | Tables | Plain-language role |
 |---|---|---|
@@ -408,6 +423,7 @@ erDiagram
 | Output/replacement receipts | `invoice_replacement_requests`, `invoice_send_requests` | Prevent duplicate successor invoices and duplicate queued notices |
 | Collections | `payments` | Immutable invoice-linked payment facts and submission keys |
 | Service | `lifecycle_events`, `lifecycle_requests` | Requested/effective actions and replay receipts |
+| Optional AI | `ai_quote_requests`, `ai_quote_proposals`, `ai_quote_reviews` | Persisted spend reservations/outcomes, actor/customer-bound suggestions and reviewed-preview receipts |
 
 ### Why keep snapshots as well as catalog records?
 
@@ -417,7 +433,7 @@ The catalog is relational configuration. A subscription stores offered/accepted 
 
 ### Migrations
 
-Migrations are versioned changes to the database shape. They run when the database opens; `db:migrate` is the explicit setup command. The checked `main` has versions 1–11:
+Migrations are versioned changes to the database shape. They run when the database opens; `db:migrate` is the explicit setup command. The checked `main` has versions 1–12:
 
 | Version | Added or protected |
 |---|---|
@@ -432,6 +448,7 @@ Migrations are versioned changes to the database shape. They run when the databa
 | 9 | Effective service lifecycle/history |
 | 10 | Stronger protection connecting cached payment balances to immutable facts |
 | 11 | Created-date/ID order indexes for measured subscription and invoice list bottlenecks; no new tables |
+| 12 | Optional AI request allowance ledger, bound proposals and human-review receipts |
 
 ### What protects the data?
 
@@ -505,6 +522,7 @@ Outbox mode proves message generation. Actual inbox delivery is separate evidenc
 | Write product/plan/tax/template/discount configuration | Yes | No | No |
 | Read operational configuration | Yes | Yes, without costs | Published safe catalog through authorized API views; no internal configuration screen |
 | Create/edit Draft and issue/confirm/activate agreement | Yes | Yes | No |
+| Request/apply quotation suggestions | Yes | Yes | No |
 | Read subscriptions and invoices | All | All | Own only |
 | Plan-permitted pause/resume/renew/early close/add-on requests | Yes | Yes | Own only |
 | Explicit end-of-term Close | Yes | Yes | No |
@@ -585,6 +603,8 @@ stateDiagram-v2
 - Invoice generation uses accepted prices, then chooses tax/discount eligibility for the invoice-generation date.
 
 This is why a later catalog change cannot silently alter an existing customer agreement.
+
+P9 can help fill the New quotation form. Staff explicitly apply a suggested selection, obtain an ordinary server preview, acknowledge its current terms and save Draft. The AI suggestion does not itself create an agreement. [Section 29](#29-p9-ai-assisted-quotation-preparation) explains proposal binding, changed-price review and safe replay.
 
 ### Dates, validity and activation
 
@@ -952,6 +972,7 @@ Customers cannot access any finance-wide endpoint, even by typing the URL.
 | `/workspace` | Signed in | Role-specific starting point and trusted environment/date |
 | `/subscriptions` | Internal or customer | Search/filter/page subscriptions; customers get own only |
 | `/subscriptions/new`, `/subscriptions/:id/edit` | Internal | Prepare or edit Draft |
+| Optional assistance within `/subscriptions/new` | Internal | Describe needs, request/apply a proposal, review server preview or continue manually |
 | `/subscriptions/:id` | Internal or owner | Commercial detail, stages, history and related invoices |
 | `/subscriptions/:id/service` | Internal or owner | Allowed service actions and requested/effective history |
 | `/subscriptions/service-processing` | Internal | Apply/review due service changes |
@@ -1020,6 +1041,7 @@ Browser routes show screens. API routes return data or perform operations. All r
 | Catalog | `GET /products`, `/plans`, `/taxes`, `/quotation-templates` and `/:id`; `POST` create; `PUT /:id` update | Products/plans allow signed-in published customer views; taxes/templates internal; writes admin |
 | Catalog preview | `POST /catalog/preview` | Internal |
 | Agreements | `GET /subscriptions`, `GET /subscriptions/:id`; `POST /subscriptions/preview`, `POST /subscriptions`, `PUT /subscriptions/:id` | Own reads for customer; internal commercial writes |
+| Optional quotation assistance | `GET /ai/quote-assist`, `POST /ai/quote-proposals` | Admin/staff only; no customer access and no autonomous business write |
 | Stages | `POST /subscriptions/:id/issue`, `/confirm`, `/activate`; `POST /subscriptions/process-due` | Internal |
 | Discounts | `GET /discounts`, `GET /discounts/:id`; `POST /discounts`, `PUT /discounts/:id` | Internal read; admin write |
 | Period invoice | `POST /subscriptions/:id/invoices/preview`, `POST /subscriptions/:id/invoices` | Internal |
@@ -1151,6 +1173,7 @@ These run within the local Node application, not a separate Redis/queue service 
 | `finance.test.ts` | Filters, exact aggregates, current balances and role denial |
 | `mail.test.ts`, `invoice-output.test.ts` | Outbox/transport states, safe output and send/print permissions |
 | `e2e/*.spec.ts` | Identity, catalog, subscriptions, billing, collections/lifecycle and finance browser journeys |
+| `ai-quote.test.ts`, `e2e/ai-quote.spec.ts` | Eleven focused suggestion/budget/review tests and four assisted/manual browser journeys with an injected provider |
 
 ### Isolation matters
 
@@ -1170,19 +1193,21 @@ npm run test:e2e
 
 ### Existing evidence versus this documentation pass
 
-The checked main's P8 ledger records lint, both TypeScript checks, **170 tests**, production build and a final **26/26** browser regression. Those are prior observations. This documentation pass first checked the earlier P7 tree, then synchronized to the newly updated main and repeated the affected aggregate/browser stages. The final current-main results appear below.
+The checked main's P9 evidence records lint, both TypeScript checks, **181 tests**, production build and **30/30** browser journeys. Three controlled real provider requests have separate live evidence; automated/browser AI tests inject a provider and never spend real API funds. The fresh checks for this documentation update appear below, separately from the release owner's observations.
 
 | Documentation-pass check | Result |
 |---|---|
 | Locked dependency install | `npm ci` passed on Node 26.8.1 / npm 12.2.1 in an isolated checkout |
-| Lint/typecheck/domain tests/build | `npm run check` passed: lint, both typechecks, 170/170 tests and production build; test duration 74,999.5145 ms |
-| Production browser journeys | `npm run test:e2e` passed 26/26 in 42.5 seconds against final current-main production assets and fresh temporary SQLite |
-| Markdown links, diagram syntax and formatting | 92 relative links, 28 contents anchors, 47 tables and all 28 requirement rows checked; 11 Mermaid diagrams parsed/rendered and visually reviewed; staged whitespace check passed |
-| Real SMTP resend / new PDF rendering / large-data benchmark | Not run for this documentation-only change |
+| Lint/typecheck/domain tests/build | `npm run check` passed lint, both typechecks, 181/181 tests and production build; test duration 70,155.5008 ms |
+| Production browser journeys | `npm run test:e2e` passed 30/30 in 52.0 seconds against production assets and fresh temporary SQLite; AI provider injected, no live call |
+| Markdown links, diagram syntax and formatting | 105 relative source links, 30 internal links, 50 tables and all 28 requirement rows checked; 12 Mermaid diagrams parsed/rendered and visually reviewed; whitespace check passed |
+| Real provider calls / SMTP resend / new PDF rendering / large-data benchmark | Not run for this documentation-only change |
 
-The final current-main build reported a large-chunk warning: **624.90 kB minified / 176.85 kB gzip**. The warning remains a disclosed concern. Test-suite durations are not page-performance measurements.
+The fresh P9 build retains a **633.24 kB minified / 179.40 kB gzip** large-chunk warning. The warning remains a disclosed concern. Test-suite durations are not page-performance measurements.
 
-No aggregate or browser stage failed in this documentation pass. No new SMTP delivery, PDF-layout proof or large-data benchmark was run; those claims refer to the existing evidence identified above.
+Live generation, delivery, PDF-layout and benchmark claims refer to the existing evidence identified here; this documentation update makes no new provider, email or payment requests.
+
+No lint, typecheck, domain/integration, build or browser stage failed in this update. The remaining build warning and unmeasured performance scopes are retained explicitly.
 
 ### Performance: the answer must stay precise
 
@@ -1355,6 +1380,7 @@ Stop with Ctrl+C. A settled demo is useful for explaining history; an unpaid/par
 | 11 | Service page | Show accepted capabilities and effective-date explanation |
 | 12 | Customer login and own print | Demonstrate ownership and absence of internal controls/private notes |
 | 13 | Tests/evidence and limitations | Explain the scoped desktop performance proof, retained breaches, correction and unmeasured mobile case |
+| Optional P9 | New quotation assistance with synthetic needs | Explicit request → Apply → server preview → review → Save Draft; show manual fallback without requiring a new paid call |
 
 To demonstrate a live quote-to-active creation, use a fresh customer agreement through the normal Draft editor, issue, confirm and activate controls, then bill its due period. Do this after the fixed finance reconciliation, or use a separate fresh demo launch: adding another agreement changes the witness totals.
 
@@ -1498,7 +1524,7 @@ We have measured local desktop evidence on 10,000 subscriptions. The full invent
 
 **Where is AI?**
 
-The mandatory app has no runtime AI integration. OPTIONAL_AI.md is a future design for reviewed quote suggestions, not an implemented assistant. The product runs without a model key.
+P9 implements optional quotation assistance in New quotation for admin/staff. It proposes existing catalog selections and quantities, then normal server calculation and explicit human review/save apply. It cannot choose customer identity, authoritative amounts, invoice/payment status or execute financial actions. Manual entry remains complete without a key; section 29 has the full flow and evidence.
 
 **What would you work on next?**
 
@@ -1632,8 +1658,112 @@ If a request times out, check persisted results first. A lost response and a fai
 | [Judge walkthrough](../JUDGE_WALKTHROUGH.md) | Presentation order and evidence points |
 | [P8 dataset](../evidence/P8_DATASET.md), [P8 performance](../evidence/P8_PERFORMANCE.md) | Large-data shape, measurements, corrected bottlenecks, failures and limits |
 | [Baseline and enhancements](../BASELINE_AND_ENHANCEMENTS.md) | Required scope versus optional improvements |
-| [Optional AI](../OPTIONAL_AI.md) | Future bounded proposal design; not implemented runtime behavior |
+| [Optional AI](../OPTIONAL_AI.md), [P9 verification](../evidence/P9_VERIFICATION.md) | Implemented suggestion contract, review/privacy/budget safeguards, real synthetic evaluation and limits |
 | [Research](../RESEARCH.md) | Historical context; subordinate to current supplied requirements |
 | [Design context](../../DESIGN.md), [UX contract](../../UX-CONTRACT.md) | Interface style and shared interaction behavior |
 
 When documents disagree, follow the authority order in [AGENTS.md](../../AGENTS.md): newest explicit clarification, actual brief, standing constraints, recorded team decisions, then planning/research. For claims about what works now, inspect the actual code and latest executed evidence. Explain both the implemented rule and its practical limit.
+
+## 29. P9: AI-assisted quotation preparation
+
+P9 is implemented and verified as an optional helper inside **New quotation**. It reduces manual catalog selection by turning a short description into a reviewable proposal. The complete manual quotation form still works if AI is disabled, unavailable or out of allowance.
+
+### Follow one assisted quotation
+
+```mermaid
+flowchart TD
+    A[Staff selects customer locally] --> B[Describe synthetic product needs]
+    B --> C[Server checks role, limits and allowance]
+    C --> D[Model receives bounded catalog context]
+    D --> E[Server validates suggested IDs and quantities]
+    E --> F[Staff explicitly applies suggestions]
+    F --> G[Ordinary server calculates current preview]
+    G --> H[Staff acknowledges current terms]
+    H --> I[Explicit Save creates Draft]
+    C --> J[Continue manually on failure]
+    E --> J
+```
+
+1. Admin/staff opens `/subscriptions/new` and chooses the customer using the normal form. The model does not choose that identity.
+2. Staff describes synthetic needs, such as two Odoo-variant Business Software units, without personal information.
+3. One explicit request goes to `POST /api/ai/quote-proposals`. Authentication and permission checks happen before catalog retrieval or provider transport.
+4. The server reserves allowance and sends a bounded catalog subset through the Responses API. The release fixes the model to `gpt-4.1-mini`, uses strict Structured Outputs, supplies no tools and sets `store:false`.
+5. The response is checked again for allowed fields, real catalog IDs, variant ownership, whole quantities, duplicate products and valid dates. Unsupported/ambiguous requests can return clarification rather than invented choices.
+6. The suggestion appears for review. **Apply** changes the local form; a template-only suggestion loads the template's real stored lines/validity.
+7. Normal `/api/subscriptions/preview` calculates prices and estimates using server rules. Staff acknowledges this current preview and explicitly saves Draft.
+8. Issue, confirm, activate, bill, collect and send remain separate ordinary actions. AI has no authority to execute them.
+
+The model may propose a plan/template, existing product/variant IDs, quantities and an optional requested start date, plus up to five clarification questions. It may not supply authoritative prices, tax, discount, total, customer identity, roles, status or executable commands.
+
+### How AI stays connected to the ordinary system
+
+| Component | Responsibility |
+|---|---|
+| `src/QuoteAssist.tsx` | Status/disclosure, request, suggestion review, explicit Apply and manual continuation |
+| `src/Subscriptions.tsx` | Keep ordinary form fields, get current preview, require acknowledgement and save through existing route |
+| `shared/ai-quote.ts` | Strict request/proposal schemas and response/review types |
+| `server/ai-quote.ts` | Authorization, bounded context, persisted reservation, one provider request and output validation |
+| `server/ai-quote-review.ts` | Bind the reviewed current preview to actor/customer/proposal/expiry |
+| `server/ai-quote-schema.ts` | Migration 12: request ledger, proposals and review receipts |
+| `server/subscriptions.ts` | Ordinary deterministic calculation and idempotent Draft creation |
+
+The model's JSON format is called `quote-proposal-v1`. The request body is only `{customerId,request}`; the selected customer ID is used server-side for authorization/binding and is excluded from provider context. A successful response includes proposal ID, expiry, allowed display labels and proposed fields. A proposal request persists AI bookkeeping, not a subscription, invoice or payment.
+
+### Human review is enforced on the server
+
+A proposal belongs to one actor and customer and expires after 15 minutes. A fresh preview returns an opaque `reviewHash`, stored server-side against the proposal and calculated commercial terms. Saving an assisted Draft requires that current receipt.
+
+If the customer changes, the proposal binding fails. If fields, prices or policies changed since review, fresh creation returns `409 AI_REVIEW_CHANGED`; the form remains available for re-preview and acknowledgement. Unknown/archived choices fail normal validation. Generated line IDs are excluded from the comparison so equivalent recalculations do not conflict for an irrelevant identifier change.
+
+Lost-response replay is different: an existing successful ordinary create key is resolved before AI-expiry/review checks. An unchanged commercial payload returns its original Draft, even after a newer preview or proposal expiry. Changing commercial fields under that key still conflicts. This preserves the same duplicate protection used by manual creation.
+
+### Privacy and limits
+
+| Control | Implemented behavior |
+|---|---|
+| Eligible users | Admin/staff only; customer APIs denied before transport |
+| Request text | 3–1,000 characters; use synthetic needs without personal information |
+| Catalog context | At most 20 active plans, 30 products, 100 variants and 20 templates, further filtered for included relationships |
+| Allowed catalog facts | IDs, names, types, versions and relevant eligibility metadata |
+| Excluded server facts | Customer identity/email, selling/cost prices, variant price adjustments, internal notes and payment history |
+| Context/request bound | Instructions plus request/catalog ≤20 KiB UTF-8; full request JSON ≤24 KiB |
+| Output | At most 800 tokens, ten lines and five short clarifications; line quantities 1–10,000 |
+| Provider deadline | Eight seconds maximum; no automatic retry or repair loop |
+| Per-user controls | One request in flight and five requests per 15 minutes |
+| Model failure | Preserve entered fields; Continue manually removes AI binding |
+| Retention wording | `store:false` is used; it does not establish zero provider retention |
+
+The context subset can omit valid catalog choices. Manual selection remains the complete path. Rejecting email-like text and the selected customer's name helps with privacy but is not a general personal-data detector. Free text and catalog names can contain personal data, so staff must follow the synthetic-input disclosure.
+
+There is no separate global request-rate cap. The fixed release model is not silently substituted if unavailable; the manual path remains usable. Its release evidence records availability and a deprecation notice; future model availability requires a new check rather than a promise in this guide.
+
+### Spending protection and concurrency
+
+AI defaults off in `.env.example`. Enablement requires the existing private server key, `AI_QUOTE_ENABLED=true` and an explicitly approved positive `AI_QUOTE_BUDGET_USD` no greater than $5. This describes implemented controls, not permission to provision a new key or spend more.
+
+Before dispatch, an immediate SQLite transaction reserves **$0.02**, stored as 20,000 integer micro-USD. Known returned usage reconciles to the release's configured token-accounting formula. Unknown, timeout or interrupted outcomes retain the full reservation because the application cannot prove that no usage happened. The ledger survives process restart.
+
+All users of one application database share that allowance atomically. This is not a provider-project or cross-database spending cap; cloning/resetting the ledger or enabling another database must not be used to extend approval. No JavaScript mutex library is needed: the transaction obtains the SQLite write lock for the final allowance/in-flight decision.
+
+The approved release evaluation used **$0.001075** of application-accounted allowance across three requests. The recorded remaining normal-app cap is **$4.998925**, keeping it within the approved $5 total. These numbers are application accounting from usage, not a provider billing statement or a current-price guarantee.
+
+### What has actually been verified?
+
+| Evidence | Recorded observation |
+|---|---|
+| Live known request | Two Odoo-variant units produced allowed selections; normal server preview calculated ₹3,120 subtotal |
+| Explicit save/replay | No business record before Save; one Draft added; exact retry returned it; invoices/payments unchanged |
+| Unsupported/ambiguous requests | Zero proposed lines and clarification questions |
+| Live generation latency | 3,735 ms, 3,942 ms and 999 ms; optional generation is separate from ordinary page rendering |
+| Focused automated coverage | Eleven tests covering authorization/privacy, strict output, fallback, budget concurrency, binding/review and replay |
+| Browser coverage | Four assisted/manual journeys added to 26 existing journeys; provider injected, no real key/calls |
+| Changed-form desktop measurement | Three changed variants on the 10,000-subscription fixture: 150 warm + three cold navigations, zero errors/breaches, 289.1794 ms maximum |
+| Runtime witness | Normal compiled startup, schema 12, protected new-draft navigation/reload and enabled approved configuration |
+
+See [P9_VERIFICATION.md](../evidence/P9_VERIFICATION.md), [live evaluation](../evidence/P9_LIVE.json), [independent evaluation audit](../evidence/P9_EVALUATION_AUDIT.json), [form measurements](../evidence/P9_FORM_PERFORMANCE.json) and [runtime witness](../evidence/P9_RUNTIME.json). The complete implemented policy is [OPTIONAL_AI.md](../OPTIONAL_AI.md).
+
+The form timing is affected-path desktop verification. It does not replace the P8 full-inventory evidence or create a mobile performance claim. The optional model operation can take longer than two seconds; ordinary manual page readiness and financial operations do not depend on that call.
+
+### A simple evaluator answer
+
+“Our AI helps staff select existing catalog items for a quotation. It cannot choose the customer or set financial values; the server calculates those, and staff review and save explicitly. If the model fails, the same form works manually, with its existing data and normal financial safeguards.”
