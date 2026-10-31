@@ -1,6 +1,6 @@
 # Shared application contract
 
-Owner: root integrates shared persistence/domain contracts; domain owns catalog/subscription schema and routes; ui owns src/design context/browser journeys; independent review verifies boundaries. Coordinate active files. P0–P2 are verified; P3 is in progress.
+Owner: root integrates shared persistence/domain contracts; domain owns catalog/subscription schema and routes; ui owns src/design context/browser journeys; independent review verifies boundaries. Coordinate active files. P0–P3 are verified; P4 is in progress.
 
 Adopt D-01–D-10 as implementation defaults under the current instruction to execute the roadmap. They remain team policies, not organizer requirements. Currency is INR with 100 minor units. Business date is server-owned Asia/Kolkata, timestamps are UTC, periods are half-open and derived from original anchors. No client date override. Public roles, ownership, price and totals are never accepted from the browser.
 
@@ -34,7 +34,7 @@ Email: `MAIL_MODE=outbox` proves generation only. SMTP requires configuration an
 
 `server/money.ts` owns exact bounded BigInt arithmetic (INR scale two); `shared/money.ts` owns exact decimal entry/display conversion. `server/calendar.ts` owns original-anchor calendar/date arithmetic. Read-only previews use a consistent read transaction; mutations acquire an immediate write transaction with a one-second busy bound and a useful retryable 503 on contention.
 
-## P3 quotation/agreement contract (in progress)
+## P3 quotation/agreement contract (verified)
 
 `shared/subscriptions.ts` owns the strict schemas and safe DTOs. POST `/subscriptions/preview` calculates a commercial preview; POST `/subscriptions` stores a numbered Draft. Input is customer/plan IDs, optional template ID, start date, whole `termPeriods` (or an explicitly aligned exclusive `expiryDate`), nonnegative payment-term days, validity days and product/variant quantities. Template lines/validity may be copied from the database or explicitly overridden for this instance. No prices, totals, roles, stage or clock overrides are accepted.
 
@@ -44,4 +44,12 @@ POST `/:id/issue`, `/:id/confirm`, `/:id/activate` require the last-read version
 
 POST `/subscriptions/process-due` accepts only a bounded limit, activates due Confirmed agreements and reports outcomes/backlog. Ended Confirmed terms are reported separately as blocked; they cannot starve actionable work. This is activation processing, not P6 expiry/closure. The operational service preference applies once stage is Active; Draft/Quotation/future Confirmed views state that service has not started. Customer detail includes only its own safe snapshot/history; costs and internal product notes are absent.
 
-Later contracts: logical charges/invoice revisions/discount reservations → batch/retry/print/send → payments/lifecycle → finance. These later gates are not implemented yet.
+## P4 invoice and discount contract (in progress)
+
+`shared/billing.ts` owns strict inputs and safe invoice DTOs. Admin alone creates/edits `/discounts`; internal staff can read their eligibility, reserved/consumed usage and holding Drafts. Rules support fixed amounts or percentage basis points, amount/quantity thresholds, inclusive business dates, maximum uses, product scope and an optional subscription target. Selection is non-stacking: ascending priority then stable ID. Percentage is rounded once over the eligible scope; fixed and percentage amounts use deterministic largest-remainder line allocation. Exclusive tax follows the discount and rounds per line.
+
+POST `/subscriptions/:id/invoices/preview` takes `expectedPeriodStart` and reserves nothing. POST `/subscriptions/:id/invoices` also requires a UUID `idempotencyKey`. It processes only the oldest unprocessed due period using accepted prices and generation-date tax/discount eligibility. One logical charge occupies each period; actor/payload-bound replay resolves its current invoice revision. Counter, immutable header/lines, discount reservation, cursor, history and receipt commit atomically. Existing or canceled charges cannot be silently regenerated.
+
+GET `/invoices` and `/:id` enforce customer ownership. Internal rule decisions and global usage never enter customer snapshots. POST `/:id/confirm` and `/:id/cancel` require the last-read `version`, internal access and a valid transition. Confirmation consumes a reserved use once even after later rule edits/expiry. A zero-total confirmation becomes Paid with zero payments. Draft cancellation releases any reservation; unpaid Confirmed cancellation retains any consumed use. Paid invoices cannot be canceled. Pricing and original eligibility snapshots remain immutable.
+
+Later contracts: batch/retry/replacement/print/send → payments/lifecycle → finance. Those gates are not implemented yet.
