@@ -36,6 +36,8 @@ Default `MAIL_MODE=outbox` stores development email locally. It proves message g
 
 `npm run mail:check` reports only missing setting names, never credential values. After approving a controlled recipient and starting the app with `MAIL_MODE=smtp`, `npm run verify:email` registers that allowlisted address if necessary and sends one real password-reset email. This explicit side-effect command is excluded from automated tests. SMTP acceptance is recorded separately from observed inbox arrival. Restart the server after changing SMTP settings.
 
+`npm run verify:invoice` is a separate explicit P5 delivery check. It requires the first approved address to be an existing customer and the opt-in synthetic admin seed to be available locally. It creates a clearly labeled synthetic service/agreement/invoice, sends one test invoice to that registered allowlisted address, and reports metadata without credentials or the recipient address. The email requests no real payment. This command is excluded from automated checks; do not use it as a benchmark or bulk-send tool. Actual inbox arrival still needs a separate witness.
+
 ## Architecture and ownership
 
 React/TypeScript/Vite client, Express server, SQLite with WAL/foreign keys and immediate write transactions. Root owns integration, migrations and shared contracts; UI and verification agents own their real changes. No teammate authorship is fabricated. See [API contracts](docs/API_CONTRACT.md) and [decisions](docs/DECISIONS.md) for policy and gate limitations.
