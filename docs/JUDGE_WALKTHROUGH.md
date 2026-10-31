@@ -19,7 +19,7 @@ Use the consistent fixture and amounts in [DEMO_AND_PROOF.md](DEMO_AND_PROOF.md)
 | 0:50–1:25 | Billing preview and generation for A/B, with C not due | Prefilled customer/lines, explicit discount and tax calculation; A 3,088.80 and B 1,100 under the declared demo policy. |
 | 1:25–1:45 | Repeat billing and inspect outcomes | Zero new period invoices; existing invoice references and the not-due reason remain visible. No fake counter animation. |
 | 1:45–2:10 | Record A's partial payment, then settle the balance | Confirmed while partially paid, Paid only at zero balance; method/date/note and invoice association visible. |
-| 2:10–2:35 | Switch to the labelled, isolated November 9 finance fixture from DEMO_AND_PROOF, filter finance and open overdue B | November 1 billing does not make B overdue immediately. Use the declared later synthetic date, not a fabricated overdue flag; invoiced, collected, outstanding and overdue reconcile with underlying records. |
+| 2:10–2:35 | Switch to the labelled, isolated November 9 finance fixture from DEMO_AND_PROOF, select November issue/payment ranges and open overdue B | November 1 billing does not make B overdue immediately. Use the declared later synthetic date, not a fabricated overdue flag; November invoiced/collected figures and current outstanding/overdue reconcile; C retains its preceding paid October period outside the month filter. |
 | 2:35–3:00 | Customer isolation plus an evidence summary | Another customer's invoice is denied by the server; display actual test and performance results only if measured, otherwise disclose the gap. |
 
 If interrupted, answer the question directly and use the corresponding record or test. Do not continue a rehearsed speech while the reviewer asks to inspect something.
