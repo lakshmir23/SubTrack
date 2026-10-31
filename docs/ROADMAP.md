@@ -1,6 +1,6 @@
 # Coding-agent roadmap — configure → collect → prove
 
-**Status: execution authorized on 31 October 2026. P0 through P8 are verified for the approved repository/local-demo scope.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
+**Status: execution authorized on 31 October 2026. P0 through P8 and the approved optional P9 are verified for the repository/local-demo scope.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
 
 ## Read first; establish the real starting point
 
@@ -116,10 +116,12 @@ Include the brief’s switchable add-ons using existing optional product lines a
 
 ## Optional P9 — One constrained AI assist, only if time remains
 
-- [ ] Only after mandatory gates, team approval and authorized API access, consider [OPTIONAL_AI.md](OPTIONAL_AI.md): staff request → structured quotation proposal → server validation/recalculation → human review → ordinary saved quote.
-- [ ] Never let model output write money, roles, ownership or lifecycle state; never expose keys in browser/repo. Keep manual form usable on timeout, refusal or rate limit; show no fabricated success. No guaranteed judging bonus is known.
+- [x] After mandatory gates, team approval and authorized API access, implemented [OPTIONAL_AI.md](OPTIONAL_AI.md): staff request → structured quotation proposal → server validation/recalculation → human review → ordinary saved quote.
+- [x] Never let model output write money, roles, ownership or lifecycle state; never expose keys in browser/repo. Keep manual form usable on timeout, refusal or rate limit; show no fabricated success. No guaranteed judging bonus is known.
 
 **Cut this whole slice first** if any required feature or evidence is incomplete. Also defer gateways, proration, bank feeds, churn models and decorative animation.
+
+P9 verification: [live and automated evidence](evidence/P9_VERIFICATION.md). Existing-key reuse and $5 total were explicitly approved. Three real synthetic calls passed; final aggregate181 tests and30 browser journeys passed. Manual quotation remains independent of model access.
 
 ## Mandatory coverage index
 

@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "checkedAt": "2026-10-31T10:23:47.262762+00:00",
+  "source": "data/p9-live-evaluation.json",
+  "liveCallsMadeByAuditor": 0,
+  "environmentFilesOpenedByAuditor": 0,
+  "ledgerRows": [
+    {
+      "status": "succeeded",
+      "reserved_microusd": 20000,
+      "charged_microusd": 436,
+      "input_tokens": 497,
+      "output_tokens": 148,
+      "outcome_code": "validated",
+      "latency_ms": 3942
+    },
+    {
+      "status": "succeeded",
+      "reserved_microusd": 20000,
+      "charged_microusd": 306,
+      "input_tokens": 488,
+      "output_tokens": 69,
+      "outcome_code": "validated",
+      "latency_ms": 999
+    },
+    {
+      "status": "succeeded",
+      "reserved_microusd": 20000,
+      "charged_microusd": 333,
+      "input_tokens": 487,
+      "output_tokens": 86,
+      "outcome_code": "validated",
+      "latency_ms": 3735
+    }
+  ],
+  "accountedMicroUsd": 1075,
+  "remainingTaskCapUsd": "4.998925",
+  "ordinaryDraftExplicitlySaved": true,
+  "sameDraftReplay": true,
+  "subtotalMinor": 312000,
+  "persistedCounts": {
+    "subscriptions": 4,
+    "invoices": 3,
+    "payments": 3
+  },
+  "unsupportedAndAmbiguousRequestsRemainUnresolved": true,
+  "pricingSource": "https://developers.openai.com/api/docs/models/gpt-4.1-mini",
+  "scope": "Read-only independent recomputation from the actual persisted evaluation database; no key/prompt/provider payload reproduced."
+}

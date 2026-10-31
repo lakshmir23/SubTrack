@@ -1,0 +1,76 @@
+{
+  "passed": true,
+  "databasePath": "C:\\Github\\odoo\\data\\ai-live-proof-1793442056780.sqlite",
+  "model": "gpt-4.1-mini",
+  "allocatedEvaluationCapUsd": 0.1,
+  "accountedMicroUsd": 1075,
+  "remainingTaskCapUsd": "4.998925",
+  "evaluations": [
+    {
+      "case": "known synthetic request",
+      "status": 201,
+      "code": null
+    },
+    {
+      "case": "unsupported catalog request",
+      "status": 201,
+      "code": null,
+      "clarificationCount": 1,
+      "lineCount": 0
+    },
+    {
+      "case": "ambiguous request",
+      "status": 201,
+      "code": null,
+      "clarificationCount": 2,
+      "lineCount": 0
+    }
+  ],
+  "requests": [
+    {
+      "id": "281c07fc-0df9-4593-9911-65ebb4e005b1",
+      "status": "succeeded",
+      "reserved_microusd": 20000,
+      "charged_microusd": 333,
+      "input_tokens": 487,
+      "output_tokens": 86,
+      "outcome_code": "validated",
+      "latency_ms": 3735
+    },
+    {
+      "id": "84497306-0b68-483c-b097-25774aac4836",
+      "status": "succeeded",
+      "reserved_microusd": 20000,
+      "charged_microusd": 436,
+      "input_tokens": 497,
+      "output_tokens": 148,
+      "outcome_code": "validated",
+      "latency_ms": 3942
+    },
+    {
+      "id": "ad2f9131-6cd7-4beb-8f1f-73f9afba2ffa",
+      "status": "succeeded",
+      "reserved_microusd": 20000,
+      "charged_microusd": 306,
+      "input_tokens": 488,
+      "output_tokens": 69,
+      "outcome_code": "validated",
+      "latency_ms": 999
+    }
+  ],
+  "before": {
+    "subscriptions": 3,
+    "invoices": 3,
+    "payments": 3
+  },
+  "after": {
+    "subscriptions": 4,
+    "invoices": 3,
+    "payments": 3
+  },
+  "subtotalMinor": 312000,
+  "explicitDraftSaved": true,
+  "replaySameDraft": true,
+  "outboundContext": "synthetic request and catalog metadata only; no customer identity/prices/costs/notes/payments",
+  "apiKey": "[omitted]"
+}

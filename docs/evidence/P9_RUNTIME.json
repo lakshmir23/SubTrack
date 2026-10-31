@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "health": {
+    "status": "ok",
+    "database": "sqlite",
+    "schemaVersion": 12,
+    "organization": "Brightloop Software"
+  },
+  "normalProductionOrigin": "http://localhost:3000",
+  "aiEnabled": true,
+  "model": "gpt-4.1-mini",
+  "remainingUsd": "4.998925",
+  "realProviderCallsDuringThisSmoke": 0,
+  "browser": "real sign-in, protected new-draft route and refresh",
+  "demoOrigin": "http://localhost:3003",
+  "november": {
+    "active": 3,
+    "billed": "418880",
+    "received": "308880",
+    "outstanding": "110000",
+    "overdue": "110000"
+  }
+}

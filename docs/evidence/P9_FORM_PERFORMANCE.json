@@ -1,0 +1,2198 @@
+{
+  "metadata": {
+    "label": "p9-form-regression",
+    "startedAt": "2026-10-31T10:25:36.354Z",
+    "commit": "49529e947c73bfff2a5d067dac36b0e939fcb934",
+    "worktree": "?? docs/working/",
+    "node": "v26.8.1",
+    "hardware": {
+      "cpu": "AMD Ryzen 9 5900HX with Radeon Graphics        ",
+      "logicalCpus": 16,
+      "ramBytes": 16477028352,
+      "freeRamAtStart": 2137903104,
+      "platform": "win32",
+      "release": "10.0.26300",
+      "arch": "x64"
+    },
+    "origin": "http://localhost:3004",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "network": "HTTP loopback; headless Chromium; no network or CPU throttling",
+    "samples": 50,
+    "selection": {
+      "only": "^(admin.subscriptions.new|staff.subscriptions.new|admin.subscriptions.new-from-template)$",
+      "skipApi": true,
+      "skipConcurrent": true,
+      "skipBatch": true,
+      "concurrentOnly": false,
+      "coldSamples": 1,
+      "diagnostic": false
+    },
+    "fixture": {
+      "version": 1,
+      "databasePath": "C:\\Github\\odoo\\data\\benchmark-p8-first.sqlite",
+      "createdAt": "2026-10-31T09:10:51.337Z",
+      "businessDate": "2026-11-09",
+      "instant": "2026-11-09T04:00:00.000Z",
+      "schemaVersion": 10,
+      "counts": {
+        "customers": 202,
+        "subscriptions": 10000,
+        "invoices": 30000,
+        "invoiceLines": 60000,
+        "payments": 27400,
+        "logicalCharges": 31056,
+        "lifecycleEvents": 2600,
+        "discountApplications": 30000
+      },
+      "groups": {
+        "stages": {
+          "Active": 6500,
+          "Closed": 1500,
+          "Confirmed": 1000,
+          "Draft": 500,
+          "Quotation": 500
+        },
+        "serviceStates": {
+          "Closed": 1500,
+          "Paused": 1000,
+          "Running": 7400,
+          "TermEnded": 100
+        },
+        "cadences": {
+          "daily": 2500,
+          "monthly": 2500,
+          "weekly": 2500,
+          "yearly": 2500
+        },
+        "invoiceStatuses": {
+          "Canceled": 900,
+          "Confirmed": 15399,
+          "Draft": 6000,
+          "Paid": 7701
+        },
+        "chargeOutcomes": {
+          "failed": 56,
+          "invoiced": 30000,
+          "nonbillable": 1000
+        }
+      },
+      "totals": {
+        "billed": "6982446350",
+        "outstanding": "3597025508",
+        "overdue": "3008190110",
+        "received": "3385420842"
+      },
+      "accounts": {
+        "admin": {
+          "id": "525b18fb-7773-47a9-9a7a-9c7a2f82b77e",
+          "email": "admin@brightloop.test"
+        },
+        "staff": {
+          "id": "040be5c9-3b43-4653-9e0f-d42f602089ff",
+          "email": "staff@brightloop.test"
+        },
+        "customer": {
+          "id": "7fde2434-3ae8-4faa-be6e-8ff6c306007d",
+          "email": "benchmark001@brightloop.test"
+        },
+        "otherCustomer": {
+          "id": "6cb7e561-eb2f-4e7d-a87c-9bb762fa4544",
+          "email": "benchmark002@brightloop.test"
+        }
+      },
+      "samples": {
+        "productId": "342eb11f-76fa-4c97-ba79-412f78ebaa86",
+        "variantId": "882633e7-8909-40e2-9469-bea944692168",
+        "addonProductId": "add3e711-1ed5-4505-98c9-ca98fc858221",
+        "planId": "72dc0b81-fe60-479d-8b38-73f8ee54e0e9",
+        "taxId": "995ea159-834e-41d3-873d-e26635e72a4a",
+        "templateId": "51108a44-8054-46ea-a7dc-e108c723ada9",
+        "discountId": "ead1f04f-5d4e-47ef-b9da-69a3e3c02185",
+        "plans": {
+          "daily": "1d5fe431-fb96-4e55-9c3d-14da7c3a30e7",
+          "weekly": "d01b1afd-c51b-4f4e-aa3f-1117b674a622",
+          "monthly": "72dc0b81-fe60-479d-8b38-73f8ee54e0e9",
+          "yearly": "9d9fac50-4381-4ed9-97ea-f11ab3bb9678"
+        },
+        "subscriptions": {
+          "draft": "a3f60cc6-717b-4393-b098-1ba4eedfb983",
+          "quotation": "667f66f1-efc0-449f-bce5-b3fdf24c1350",
+          "future": "0b82c791-5613-419b-ae86-63f298340de6",
+          "confirmed": "7af67e4f-a494-4d88-8995-857a5a40a748",
+          "due": "7af67e4f-a494-4d88-8995-857a5a40a748",
+          "running": "9172ab14-13b5-4c0d-81d8-11fec2ec8290",
+          "customerOwn": "7de723af-856b-41f4-a377-77c9ff7a6eef",
+          "failed": "35b06330-1dcc-4fdf-b05b-dd7b43c100ac",
+          "paused": "8229a514-de6f-4f32-8023-acd573a9c246",
+          "termEnded": "45c65858-687e-4adc-b330-0ca55e2b834c",
+          "closed": "a8c99dc4-0945-435d-921e-7ae2614c6f1a",
+          "earlyClosed": "8b04f10d-e684-452b-adca-15d12ca896ea"
+        },
+        "invoices": {
+          "draft": "fe8a996c-c7cd-40ad-a085-a45df02bfc96",
+          "confirmed": "b2ae57ae-78f8-4bca-b483-decfa0edb2b9",
+          "partial": "e9181ffd-4b92-4d3c-a531-fecf3cc79ec6",
+          "paid": "dae84d3a-263a-4b4d-83e4-c349f82f4a76",
+          "customerOwn": "ab1dfc71-75b4-4eed-9cb7-805a529fb377",
+          "zero": "0c91d613-33f4-4287-bc21-9427d7eef72e",
+          "canceled": "69b5274a-0117-4415-b7e5-fcd7faaa9f63"
+        },
+        "billingRunId": "59708858-b5fb-4a3f-be8c-31bb0bae3860",
+        "resetToken": "[synthetic credential omitted]"
+      },
+      "validation": {
+        "passed": true,
+        "checks": [
+          "Foreign keys enabled; FK and SQLite integrity checks.",
+          "All financial, payment, discount and accepted-term guards remain installed.",
+          "Every invoice/line reconciles with accepted prices, exact discounts, exclusive half-up tax, dates and current logical charge.",
+          "Every payment cache/count/settlement reconciles with immutable real positive payment inserts; zero Paid has no payment.",
+          "All 10k original daily/weekly/monthly/yearly anchors, whole expiry dates, decided prefixes, failed cursors, waivers and indexed projections checked.",
+          "Discount usage and real persisted billing run item counts reconcile."
+        ],
+        "errors": [],
+        "checkedSubscriptions": 10000,
+        "checkedInvoices": 30000,
+        "checkedPayments": 27400
+      }
+    },
+    "databaseBytes": 281014272,
+    "startSnapshot": {
+      "counts": {
+        "users": 204,
+        "subscriptions": 10000,
+        "invoices": 30000,
+        "invoice_lines": 60000,
+        "payments": 27400,
+        "logical_charges": 31056,
+        "lifecycle_events": 2600
+      },
+      "stages": [
+        {
+          "stage": "Active",
+          "n": 6500
+        },
+        {
+          "stage": "Closed",
+          "n": 1500
+        },
+        {
+          "stage": "Confirmed",
+          "n": 1000
+        },
+        {
+          "stage": "Draft",
+          "n": 500
+        },
+        {
+          "stage": "Quotation",
+          "n": 500
+        }
+      ],
+      "sqlite": {
+        "version": "3.53.4"
+      },
+      "schemaVersion": 10,
+      "pragmas": {
+        "journalMode": {
+          "journal_mode": "wal"
+        },
+        "synchronous": {
+          "synchronous": 2
+        },
+        "busyTimeout": "runtime sets 1000 ms",
+        "foreignKeys": "runtime ON"
+      },
+      "indexes": [
+        {
+          "name": "audit_subject",
+          "sql": "CREATE INDEX audit_subject ON audit_events(subject_id, created_at)"
+        },
+        {
+          "name": "billing_run_items_outcomes",
+          "sql": "CREATE INDEX billing_run_items_outcomes ON billing_run_items(run_id,outcome,position)"
+        },
+        {
+          "name": "billing_runs_recovery",
+          "sql": "CREATE INDEX billing_runs_recovery ON billing_runs(status,claimed_at,id)"
+        },
+        {
+          "name": "charges_outcome",
+          "sql": "CREATE INDEX charges_outcome ON logical_charges(outcome,period_start,id)"
+        },
+        {
+          "name": "charges_subscription_period",
+          "sql": "CREATE INDEX charges_subscription_period ON logical_charges(subscription_id,period_start)"
+        },
+        {
+          "name": "discount_applications_usage",
+          "sql": "CREATE INDEX discount_applications_usage ON discount_applications(rule_id,state,invoice_id)"
+        },
+        {
+          "name": "discounts_selection",
+          "sql": "CREATE INDEX discounts_selection ON discount_rules(active,priority,id)"
+        },
+        {
+          "name": "discounts_subscription",
+          "sql": "CREATE INDEX discounts_subscription ON discount_rules(subscription_id)"
+        },
+        {
+          "name": "invoice_history_invoice",
+          "sql": "CREATE INDEX invoice_history_invoice ON invoice_history(invoice_id,created_at,id)"
+        },
+        {
+          "name": "invoice_lines_invoice",
+          "sql": "CREATE INDEX invoice_lines_invoice ON invoice_lines(invoice_id,position)"
+        },
+        {
+          "name": "invoices_customer_created",
+          "sql": "CREATE INDEX invoices_customer_created ON invoices(customer_id,created_at DESC,id)"
+        },
+        {
+          "name": "invoices_issue",
+          "sql": "CREATE INDEX invoices_issue ON invoices(issue_date,id)"
+        },
+        {
+          "name": "invoices_status_due",
+          "sql": "CREATE INDEX invoices_status_due ON invoices(status,due_date,id)"
+        },
+        {
+          "name": "invoices_subscription",
+          "sql": "CREATE INDEX invoices_subscription ON invoices(subscription_id,period_start,id)"
+        },
+        {
+          "name": "lifecycle_events_due",
+          "sql": "CREATE INDEX lifecycle_events_due ON lifecycle_events(status,effective_date,subscription_id)"
+        },
+        {
+          "name": "lifecycle_events_subscription",
+          "sql": "CREATE INDEX lifecycle_events_subscription ON lifecycle_events(subscription_id,effective_date,created_at,id)"
+        },
+        {
+          "name": "lifecycle_one_expiry_outcome",
+          "sql": "CREATE UNIQUE INDEX lifecycle_one_expiry_outcome ON lifecycle_events(subscription_id,kind,effective_date) WHERE kind IN ('expiry','termEnded')"
+        },
+        {
+          "name": "one_live_invoice_per_charge",
+          "sql": "CREATE UNIQUE INDEX one_live_invoice_per_charge ON invoices(logical_charge_id) WHERE status<>'Canceled'"
+        },
+        {
+          "name": "outbox_status",
+          "sql": "CREATE INDEX outbox_status ON outbox(status, created_at)"
+        },
+        {
+          "name": "password_resets_user",
+          "sql": "CREATE INDEX password_resets_user ON password_resets(user_id, created_at DESC)"
+        },
+        {
+          "name": "payments_event_date",
+          "sql": "CREATE INDEX payments_event_date ON payments(payment_date,invoice_id,id)"
+        },
+        {
+          "name": "payments_invoice_date",
+          "sql": "CREATE INDEX payments_invoice_date ON payments(invoice_id,payment_date,created_at,id)"
+        },
+        {
+          "name": "plans_active_name",
+          "sql": "CREATE INDEX plans_active_name ON plans(active,name COLLATE NOCASE,id)"
+        },
+        {
+          "name": "plans_primary_product",
+          "sql": "CREATE INDEX plans_primary_product ON plans(primary_product_id)"
+        },
+        {
+          "name": "products_active_name",
+          "sql": "CREATE INDEX products_active_name ON products(active,name COLLATE NOCASE,id)"
+        },
+        {
+          "name": "sessions_user",
+          "sql": "CREATE INDEX sessions_user ON sessions(user_id)"
+        },
+        {
+          "name": "subscription_history_order",
+          "sql": "CREATE INDEX subscription_history_order ON subscription_history(subscription_id,created_at,id)"
+        },
+        {
+          "name": "subscriptions_customer_created",
+          "sql": "CREATE INDEX subscriptions_customer_created ON subscriptions(customer_id,created_at DESC,id)"
+        },
+        {
+          "name": "subscriptions_due_cursor",
+          "sql": "CREATE INDEX subscriptions_due_cursor ON subscriptions(next_billing_date,id) WHERE accepted_terms_json IS NOT NULL"
+        },
+        {
+          "name": "subscriptions_expiry",
+          "sql": "CREATE INDEX subscriptions_expiry ON subscriptions(stage,expiry_date,id)"
+        },
+        {
+          "name": "subscriptions_plan",
+          "sql": "CREATE INDEX subscriptions_plan ON subscriptions(plan_id)"
+        },
+        {
+          "name": "subscriptions_stage_start",
+          "sql": "CREATE INDEX subscriptions_stage_start ON subscriptions(stage,start_date,id)"
+        },
+        {
+          "name": "taxes_selection",
+          "sql": "CREATE INDEX taxes_selection ON tax_rules(active,priority,product_id,id)"
+        },
+        {
+          "name": "template_lines_template",
+          "sql": "CREATE INDEX template_lines_template ON quotation_template_lines(template_id,position)"
+        },
+        {
+          "name": "templates_active_name",
+          "sql": "CREATE INDEX templates_active_name ON quotation_templates(active,name COLLATE NOCASE,id)"
+        },
+        {
+          "name": "templates_plan",
+          "sql": "CREATE INDEX templates_plan ON quotation_templates(plan_id)"
+        },
+        {
+          "name": "users_role_created",
+          "sql": "CREATE INDEX users_role_created ON users(role, created_at DESC, id)"
+        },
+        {
+          "name": "variants_product",
+          "sql": "CREATE INDEX variants_product ON product_variants(product_id,active)"
+        }
+      ]
+    },
+    "productionAssets": [
+      {
+        "name": "index.html",
+        "bytes": 587,
+        "sha256": "102df90030235279786e8cc04e5017a89472da169a00aa08657faa5a85b885e1"
+      },
+      {
+        "name": "assets/index-Ay-Fex5c.css",
+        "bytes": 52720,
+        "sha256": "aaa1e8a1ff909b467dc6d23a4fa73cf47f9618b155eba6eede67c91b237e4601"
+      },
+      {
+        "name": "assets/index-B0O_wctk.css",
+        "bytes": 57332,
+        "sha256": "cc6b479fed4ef18eceed64fc377b22efb9ded9ae80fe1504de1e8dbbfc537c01"
+      },
+      {
+        "name": "assets/index-B26yKYFo.css",
+        "bytes": 72723,
+        "sha256": "67aa0bc15165fd6f7a27123598c31f2c7026177ea2df50afa208c57d90c95a63"
+      },
+      {
+        "name": "assets/index-B2PnnBWT.js",
+        "bytes": 225193,
+        "sha256": "851a1cd932265599c05406cee8995d856096813f858e732ebb080c002b551f2a"
+      },
+      {
+        "name": "assets/index-B3L8eD_6.css",
+        "bytes": 71854,
+        "sha256": "13bc4c492d9c033dd3f7a488232da23e367eeab39a876906b6e28b2c2639409c"
+      },
+      {
+        "name": "assets/index-B4Z22Iki.js",
+        "bytes": 479532,
+        "sha256": "dbf67a6e34a0c17151c05f9ff9489494590023ff26b0a5d8d31515f126e55a02"
+      },
+      {
+        "name": "assets/index-BiB9k0J_.js",
+        "bytes": 548242,
+        "sha256": "785fe657a5c2cad71e4d2f879e9e3bbddab3f4645bff19d06ce155bcb8f8f38c"
+      },
+      {
+        "name": "assets/index-Bj5sHml3.css",
+        "bytes": 74313,
+        "sha256": "a387c79a0716f0d2ee08c9e9bdf989bf5ffa288e677ca9d7deef2eda6030b09c"
+      },
+      {
+        "name": "assets/index-BKIIOdQ_.js",
+        "bytes": 435379,
+        "sha256": "565c6a55b4a33df7f7bdbe19b070f2b8c0def96f8b7ce2976cc6e375ae456b53"
+      },
+      {
+        "name": "assets/index-Bmt0gdZn.css",
+        "bytes": 22423,
+        "sha256": "15548da92dfd74fbe4f2c66b265df5611b249d307bf2995d3e90dee9dd9afcc3"
+      },
+      {
+        "name": "assets/index-Bsv8tHw3.js",
+        "bytes": 548233,
+        "sha256": "b0cac3b34bace3c676604b983a76faa529d6942753b720ae594ff7d7c55944fb"
+      },
+      {
+        "name": "assets/index-BWpdZYO-.js",
+        "bytes": 579426,
+        "sha256": "c2843bfbbdefdf7f161351f480ee913e4ce7e19792a50498271091159a156291"
+      },
+      {
+        "name": "assets/index-BynJZGLH.css",
+        "bytes": 39991,
+        "sha256": "fafedce7f497636328d9b594755ac713eaba9981c4f10867b3f5ea7602902cd5"
+      },
+      {
+        "name": "assets/index-C09TfCi7.js",
+        "bytes": 547797,
+        "sha256": "0d6711d7ec29eee1ae4bf5ed22b030dfe210a37dc662055cacac6db68c305dad"
+      },
+      {
+        "name": "assets/index-CA8U5hDg.css",
+        "bytes": 73259,
+        "sha256": "3dd8e878cf0c734ce7a134178fc15f99cf215c0bf6a92a585916a3b3277b791a"
+      },
+      {
+        "name": "assets/index-CFNhszfr.js",
+        "bytes": 624902,
+        "sha256": "4f2c9343285e90f3463ded8af423bd025b5aa586e80da76c05ceb46d1c13b498"
+      },
+      {
+        "name": "assets/index-Cj1_alE0.js",
+        "bytes": 607266,
+        "sha256": "7aa7a06e3de18c5691d5cd330cf1a4e40012a5c02b6d71e6695d29b823468ba4"
+      },
+      {
+        "name": "assets/index-Cl5w-1Y1.js",
+        "bytes": 434882,
+        "sha256": "8550bd1cf323771cb2bc1a87f1729bd73f4b0742d9be39cabcedb2ef05bf0a47"
+      },
+      {
+        "name": "assets/index-ClFc0BVd.js",
+        "bytes": 607150,
+        "sha256": "e06695d1e5e24f649ae2839d8bc66c5393a71cc0c61197f1e56be240cbb04c96"
+      },
+      {
+        "name": "assets/index-CsTLg7mq.js",
+        "bytes": 607152,
+        "sha256": "de2a51a6a336210461a63b84752b13a7b30230590597f9a42a5d4164ecb59203"
+      },
+      {
+        "name": "assets/index-CyWHbbR6.js",
+        "bytes": 479275,
+        "sha256": "f0e4c49672cc364d31087227f522af48169a3f6a4ea436353094a0b2dd1f8bc5"
+      },
+      {
+        "name": "assets/index-D-oPEa3W.js",
+        "bytes": 621573,
+        "sha256": "f785b3b1378305637eb695270b28ecd27a189cb283d797fd7b2983ff640a4f9e"
+      },
+      {
+        "name": "assets/index-D7rvI9FR.js",
+        "bytes": 579630,
+        "sha256": "9e2a5bc1b84b8a504f640b08b7670c270e5f4885109eb36ccd50b69b9aaa1cbb"
+      },
+      {
+        "name": "assets/index-D8Vj3rjU.css",
+        "bytes": 52635,
+        "sha256": "e4b95e56157f33fa0672e6584f86d087d4bb916ce55d68a8f75e937e509bd2c9"
+      },
+      {
+        "name": "assets/index-DAhPVBM_.js",
+        "bytes": 606977,
+        "sha256": "0b2c85ba7725aa4bf249a6d4dad42ce013d914646f928ce3513fae95213390b3"
+      },
+      {
+        "name": "assets/index-DaQCUbX1.css",
+        "bytes": 68533,
+        "sha256": "767c46da5749053b74af0ea3232567ceb44b02f47c1d1b720d2e3737abbb2206"
+      },
+      {
+        "name": "assets/index-DDCNJU4U.js",
+        "bytes": 507624,
+        "sha256": "083ac0226a337afff172e4e7d124e35e4da435444c54d2e4eb89c2ff6661e090"
+      },
+      {
+        "name": "assets/index-DdYuXWI3.js",
+        "bytes": 507406,
+        "sha256": "31b585da719da57c2f6ff33958e30ea52fcc746a265a44a544656ec466c3f629"
+      },
+      {
+        "name": "assets/index-Dl6uzRdh.js",
+        "bytes": 607068,
+        "sha256": "e1f27e923cfc0cad2efdb02a4714810af7965d18aa830e8da5c39f8cd2429f67"
+      },
+      {
+        "name": "assets/index-DlggtBOZ.js",
+        "bytes": 623512,
+        "sha256": "258ac07c646b2933f0e220166d674c6734dec355ba0d93e114f1b9412d19af36"
+      },
+      {
+        "name": "assets/index-Dr1hpxcC.js",
+        "bytes": 479104,
+        "sha256": "aafecd2a2ba9c11d316302dc0884e1dab6206b85819c48d4922d4a86aa82c9ec"
+      },
+      {
+        "name": "assets/index-DrIUXPYn.js",
+        "bytes": 434967,
+        "sha256": "afd6b261742c0803a22b1cbc310727aeba26d8b92e211de062bed0f20a724cf2"
+      },
+      {
+        "name": "assets/index-DRVoE2DY.js",
+        "bytes": 434171,
+        "sha256": "b3c62d3574eb4210541bc342d9aca707620b68a8d655a9fc05ae6534a9223265"
+      },
+      {
+        "name": "assets/index-DWq44OSr.js",
+        "bytes": 607489,
+        "sha256": "4d59c31dc40d04e139bea546f0ffa55bb0909fd51c6b66a4d181dc5fc2121ef6"
+      },
+      {
+        "name": "assets/index-DXYZgWSE.js",
+        "bytes": 507406,
+        "sha256": "31b585da719da57c2f6ff33958e30ea52fcc746a265a44a544656ec466c3f629"
+      },
+      {
+        "name": "assets/index-E7--ATrV.css",
+        "bytes": 63302,
+        "sha256": "598b1e6e2976e60facea2ede4e90a8741dce436fb858c47deb2162cc1ad9dba8"
+      },
+      {
+        "name": "assets/index-g2a3hAza.css",
+        "bytes": 39708,
+        "sha256": "f18114680b93e4449d18c7dbcf15d7209f93632586c46c7b456210d3f2709b96"
+      },
+      {
+        "name": "assets/index-ib12TTVq.css",
+        "bytes": 59144,
+        "sha256": "1a6b751a59b1f2340074579c35924dd0b29cfa234791b6f398b4eae6a59d025a"
+      },
+      {
+        "name": "assets/index-JmjhFfns.js",
+        "bytes": 548171,
+        "sha256": "6925abde331c4f870a9cd9b57314dc34975e0573d4b29362f36ef5985fcc8925"
+      },
+      {
+        "name": "assets/index-kWL7DyLi.css",
+        "bytes": 63363,
+        "sha256": "7b6a226e91fdc0243ae927585941f4b198866aed45ffe3a8f04eed2ce6c6d207"
+      },
+      {
+        "name": "assets/index-LjDUZE1j.js",
+        "bytes": 579565,
+        "sha256": "1074b9911f2245968471bb309e91c3c3510466c593ce179bae44f9f558c4b55c"
+      },
+      {
+        "name": "assets/index-Q7VgqYzT.css",
+        "bytes": 52365,
+        "sha256": "dcd21dc713c4ec293d397f34c3da574e4e94e0d5fb802ec17e28c127d3938b23"
+      },
+      {
+        "name": "assets/index-qaSgtLYM.js",
+        "bytes": 621601,
+        "sha256": "a29c5181b31a3037b3810fb3af46a6c81ae2396f8cd464282a52b5c26cfdf15e"
+      },
+      {
+        "name": "assets/index-RZWZ3kcg.js",
+        "bytes": 632806,
+        "sha256": "0c9430f14361ae7f079d9712e80b7958201cffd430c678ffee4ecbbf546db1a5"
+      },
+      {
+        "name": "assets/index-T_oJDohv.js",
+        "bytes": 434888,
+        "sha256": "a7e58314a1149b71dec17b9cc0adacfa24958aeebbdfefebc2657521b9232ca8"
+      },
+      {
+        "name": "assets/index-Ujv1c1Ma.js",
+        "bytes": 578757,
+        "sha256": "f1bc6b4b4a54ee2a920ecbf5f416cc1a101707528c861c4d8a249d3b0092f967"
+      },
+      {
+        "name": "assets/index-VNt8PROm.css",
+        "bytes": 46366,
+        "sha256": "befdc6664baf2d96976ee86170328511a4500c770a100b48d7c741d2ba7c564b"
+      },
+      {
+        "name": "assets/index-ygLJxtcj.js",
+        "bytes": 579042,
+        "sha256": "3d11eded11573d0d7bfe24b1c63c9355546d903a9c20fa8ee6d31fa8969df994"
+      },
+      {
+        "name": "assets/index-ypwLcHcn.js",
+        "bytes": 633245,
+        "sha256": "5cdbe2b9c435abecb5109f2ebcaf080fb6f46f714441043811009d2c534d2813"
+      },
+      {
+        "name": "assets/index-znO2YxNS.css",
+        "bytes": 58930,
+        "sha256": "a7cafe220cce81d7112bf07056bcce894da6be2da3bb298bb14638aab820321e"
+      }
+    ],
+    "protocol": {
+      "warm": "Hard navigation in reused role context, cached assets after one unrecorded preparation. Timer begins before goto and ends after destination data/controls, fonts.ready and two animation frames.",
+      "cold": "One navigation per destination in a new browser context with only authenticated cookies copied. Browser HTTP cache empty; server and OS filesystem caches are not flushed.",
+      "api": "Whole HTTP GET through response-body read. First probe after a fresh server process per endpoint, then warm samples; persisted role cookies/session checks included. Normal startup lifecycle processing retained. OS filesystem caches are not flushed.",
+      "action": "Setup outside timer; timer includes user action, debounce if applicable, response and ready result with fonts/two frames.",
+      "concurrency": "Separate five authenticated browser contexts. Subscription/invoice workloads use permitted destinations; finance workload includes three internal finance reads and two customer role-denial pages. An explicit mixed operational workload uses queue, finance, staff subscriptions and customer records. Not mixed into single-user samples.",
+      "target": "Every observed first-usable page/action below 2000 ms; percentile summaries never hide breaches."
+    },
+    "browser": "156.0.8078.4",
+    "inventory": [
+      {
+        "id": "admin.subscriptions.new",
+        "role": "admin",
+        "path": "/subscriptions/new",
+        "category": "agreements",
+        "readiness": "Customer/plan selectors, commercial dates and create control ready; no draft created.",
+        "apiPaths": [
+          "/api/session",
+          "/api/environment",
+          "/api/customers?q=&pageSize=100",
+          "/api/plans?active=true&q=&pageSize=100"
+        ]
+      },
+      {
+        "id": "staff.subscriptions.new",
+        "role": "staff",
+        "path": "/subscriptions/new",
+        "category": "agreements",
+        "readiness": "Customer/plan selectors, commercial dates and create control ready; no draft created.",
+        "apiPaths": [
+          "/api/session",
+          "/api/environment",
+          "/api/customers?q=&pageSize=100",
+          "/api/plans?active=true&q=&pageSize=100"
+        ]
+      },
+      {
+        "id": "admin.subscriptions.new-from-template",
+        "role": "admin",
+        "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+        "category": "agreements",
+        "readiness": "Template and plan loaded with copied product lines and usable draft fields.",
+        "apiPaths": [
+          "/api/session",
+          "/api/environment",
+          "/api/customers?q=&pageSize=100",
+          "/api/quotation-templates?active=true&q=&pageSize=100",
+          "/api/quotation-templates/51108a44-8054-46ea-a7dc-e108c723ada9",
+          "/api/plans/72dc0b81-fe60-479d-8b38-73f8ee54e0e9",
+          "/api/products?active=true&q=&pageSize=100"
+        ]
+      }
+    ],
+    "actionInventory": [],
+    "endSnapshot": {
+      "counts": {
+        "users": 204,
+        "subscriptions": 10000,
+        "invoices": 30000,
+        "invoice_lines": 60000,
+        "payments": 27400,
+        "logical_charges": 31056,
+        "lifecycle_events": 2600
+      },
+      "stages": [
+        {
+          "stage": "Active",
+          "n": 6500
+        },
+        {
+          "stage": "Closed",
+          "n": 1500
+        },
+        {
+          "stage": "Confirmed",
+          "n": 1000
+        },
+        {
+          "stage": "Draft",
+          "n": 500
+        },
+        {
+          "stage": "Quotation",
+          "n": 500
+        }
+      ],
+      "sqlite": {
+        "version": "3.53.4"
+      },
+      "schemaVersion": 12,
+      "pragmas": {
+        "journalMode": {
+          "journal_mode": "wal"
+        },
+        "synchronous": {
+          "synchronous": 2
+        },
+        "busyTimeout": "runtime sets 1000 ms",
+        "foreignKeys": "runtime ON"
+      },
+      "indexes": [
+        {
+          "name": "ai_quote_actor_recent",
+          "sql": "CREATE INDEX ai_quote_actor_recent ON ai_quote_requests(actor_id,created_at,status)"
+        },
+        {
+          "name": "audit_subject",
+          "sql": "CREATE INDEX audit_subject ON audit_events(subject_id, created_at)"
+        },
+        {
+          "name": "billing_run_items_outcomes",
+          "sql": "CREATE INDEX billing_run_items_outcomes ON billing_run_items(run_id,outcome,position)"
+        },
+        {
+          "name": "billing_runs_recovery",
+          "sql": "CREATE INDEX billing_runs_recovery ON billing_runs(status,claimed_at,id)"
+        },
+        {
+          "name": "charges_outcome",
+          "sql": "CREATE INDEX charges_outcome ON logical_charges(outcome,period_start,id)"
+        },
+        {
+          "name": "charges_subscription_period",
+          "sql": "CREATE INDEX charges_subscription_period ON logical_charges(subscription_id,period_start)"
+        },
+        {
+          "name": "discount_applications_usage",
+          "sql": "CREATE INDEX discount_applications_usage ON discount_applications(rule_id,state,invoice_id)"
+        },
+        {
+          "name": "discounts_selection",
+          "sql": "CREATE INDEX discounts_selection ON discount_rules(active,priority,id)"
+        },
+        {
+          "name": "discounts_subscription",
+          "sql": "CREATE INDEX discounts_subscription ON discount_rules(subscription_id)"
+        },
+        {
+          "name": "invoice_history_invoice",
+          "sql": "CREATE INDEX invoice_history_invoice ON invoice_history(invoice_id,created_at,id)"
+        },
+        {
+          "name": "invoice_lines_invoice",
+          "sql": "CREATE INDEX invoice_lines_invoice ON invoice_lines(invoice_id,position)"
+        },
+        {
+          "name": "invoices_created_page",
+          "sql": "CREATE INDEX invoices_created_page ON invoices(created_at DESC,id)"
+        },
+        {
+          "name": "invoices_customer_created",
+          "sql": "CREATE INDEX invoices_customer_created ON invoices(customer_id,created_at DESC,id)"
+        },
+        {
+          "name": "invoices_issue",
+          "sql": "CREATE INDEX invoices_issue ON invoices(issue_date,id)"
+        },
+        {
+          "name": "invoices_status_due",
+          "sql": "CREATE INDEX invoices_status_due ON invoices(status,due_date,id)"
+        },
+        {
+          "name": "invoices_subscription",
+          "sql": "CREATE INDEX invoices_subscription ON invoices(subscription_id,period_start,id)"
+        },
+        {
+          "name": "lifecycle_events_due",
+          "sql": "CREATE INDEX lifecycle_events_due ON lifecycle_events(status,effective_date,subscription_id)"
+        },
+        {
+          "name": "lifecycle_events_subscription",
+          "sql": "CREATE INDEX lifecycle_events_subscription ON lifecycle_events(subscription_id,effective_date,created_at,id)"
+        },
+        {
+          "name": "lifecycle_one_expiry_outcome",
+          "sql": "CREATE UNIQUE INDEX lifecycle_one_expiry_outcome ON lifecycle_events(subscription_id,kind,effective_date) WHERE kind IN ('expiry','termEnded')"
+        },
+        {
+          "name": "one_live_invoice_per_charge",
+          "sql": "CREATE UNIQUE INDEX one_live_invoice_per_charge ON invoices(logical_charge_id) WHERE status<>'Canceled'"
+        },
+        {
+          "name": "outbox_status",
+          "sql": "CREATE INDEX outbox_status ON outbox(status, created_at)"
+        },
+        {
+          "name": "password_resets_user",
+          "sql": "CREATE INDEX password_resets_user ON password_resets(user_id, created_at DESC)"
+        },
+        {
+          "name": "payments_event_date",
+          "sql": "CREATE INDEX payments_event_date ON payments(payment_date,invoice_id,id)"
+        },
+        {
+          "name": "payments_invoice_date",
+          "sql": "CREATE INDEX payments_invoice_date ON payments(invoice_id,payment_date,created_at,id)"
+        },
+        {
+          "name": "plans_active_name",
+          "sql": "CREATE INDEX plans_active_name ON plans(active,name COLLATE NOCASE,id)"
+        },
+        {
+          "name": "plans_primary_product",
+          "sql": "CREATE INDEX plans_primary_product ON plans(primary_product_id)"
+        },
+        {
+          "name": "products_active_name",
+          "sql": "CREATE INDEX products_active_name ON products(active,name COLLATE NOCASE,id)"
+        },
+        {
+          "name": "sessions_user",
+          "sql": "CREATE INDEX sessions_user ON sessions(user_id)"
+        },
+        {
+          "name": "subscription_history_order",
+          "sql": "CREATE INDEX subscription_history_order ON subscription_history(subscription_id,created_at,id)"
+        },
+        {
+          "name": "subscriptions_created_page",
+          "sql": "CREATE INDEX subscriptions_created_page ON subscriptions(created_at DESC,id)"
+        },
+        {
+          "name": "subscriptions_customer_created",
+          "sql": "CREATE INDEX subscriptions_customer_created ON subscriptions(customer_id,created_at DESC,id)"
+        },
+        {
+          "name": "subscriptions_due_cursor",
+          "sql": "CREATE INDEX subscriptions_due_cursor ON subscriptions(next_billing_date,id) WHERE accepted_terms_json IS NOT NULL"
+        },
+        {
+          "name": "subscriptions_expiry",
+          "sql": "CREATE INDEX subscriptions_expiry ON subscriptions(stage,expiry_date,id)"
+        },
+        {
+          "name": "subscriptions_plan",
+          "sql": "CREATE INDEX subscriptions_plan ON subscriptions(plan_id)"
+        },
+        {
+          "name": "subscriptions_stage_start",
+          "sql": "CREATE INDEX subscriptions_stage_start ON subscriptions(stage,start_date,id)"
+        },
+        {
+          "name": "taxes_selection",
+          "sql": "CREATE INDEX taxes_selection ON tax_rules(active,priority,product_id,id)"
+        },
+        {
+          "name": "template_lines_template",
+          "sql": "CREATE INDEX template_lines_template ON quotation_template_lines(template_id,position)"
+        },
+        {
+          "name": "templates_active_name",
+          "sql": "CREATE INDEX templates_active_name ON quotation_templates(active,name COLLATE NOCASE,id)"
+        },
+        {
+          "name": "templates_plan",
+          "sql": "CREATE INDEX templates_plan ON quotation_templates(plan_id)"
+        },
+        {
+          "name": "users_role_created",
+          "sql": "CREATE INDEX users_role_created ON users(role, created_at DESC, id)"
+        },
+        {
+          "name": "variants_product",
+          "sql": "CREATE INDEX variants_product ON product_variants(product_id,active)"
+        }
+      ]
+    }
+  },
+  "completion": {
+    "state": "complete",
+    "finishedAt": "2026-10-31T10:25:58.336Z",
+    "errors": 0,
+    "breaches": 0
+  },
+  "summary": [
+    {
+      "key": "page-cold-browser:admin.subscriptions.new",
+      "count": 1,
+      "errors": 0,
+      "median": 269.18629999999985,
+      "p95": 269.18629999999985,
+      "max": 269.18629999999985,
+      "breaches": 0
+    },
+    {
+      "key": "page-warm:admin.subscriptions.new",
+      "count": 50,
+      "errors": 0,
+      "median": 115.97665000000006,
+      "p95": 150.52390000000014,
+      "max": 166.08940000000075,
+      "breaches": 0
+    },
+    {
+      "key": "page-cold-browser:staff.subscriptions.new",
+      "count": 1,
+      "errors": 0,
+      "median": 286.59479999999894,
+      "p95": 286.59479999999894,
+      "max": 286.59479999999894,
+      "breaches": 0
+    },
+    {
+      "key": "page-warm:staff.subscriptions.new",
+      "count": 50,
+      "errors": 0,
+      "median": 100.14720000000034,
+      "p95": 150.3765000000003,
+      "max": 199.21810000000005,
+      "breaches": 0
+    },
+    {
+      "key": "page-cold-browser:admin.subscriptions.new-from-template",
+      "count": 1,
+      "errors": 0,
+      "median": 289.1794000000009,
+      "p95": 289.1794000000009,
+      "max": 289.1794000000009,
+      "breaches": 0
+    },
+    {
+      "key": "page-warm:admin.subscriptions.new-from-template",
+      "count": 50,
+      "errors": 0,
+      "median": 133.37064999999893,
+      "p95": 183.96840000000157,
+      "max": 217.5508000000009,
+      "breaches": 0
+    }
+  ],
+  "breaches": [],
+  "observations": [
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-cold-browser",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 0,
+      "milliseconds": 269.18629999999985
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 1,
+      "milliseconds": 118.35830000000033
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 2,
+      "milliseconds": 165.50369999999975
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 3,
+      "milliseconds": 150.12840000000006
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 4,
+      "milliseconds": 99.38390000000027
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 5,
+      "milliseconds": 101.48239999999987
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 6,
+      "milliseconds": 98.8762999999999
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 7,
+      "milliseconds": 134.32130000000006
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 8,
+      "milliseconds": 99.08399999999983
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 9,
+      "milliseconds": 116.92799999999988
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 10,
+      "milliseconds": 133.3728999999994
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 11,
+      "milliseconds": 116.1297999999997
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 12,
+      "milliseconds": 100.27689999999984
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 13,
+      "milliseconds": 100.17399999999998
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 14,
+      "milliseconds": 99.3139000000001
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 15,
+      "milliseconds": 99.99129999999968
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 16,
+      "milliseconds": 99.9408999999996
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 17,
+      "milliseconds": 100.88999999999942
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 18,
+      "milliseconds": 115.89680000000044
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 19,
+      "milliseconds": 150.0593999999992
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 20,
+      "milliseconds": 116.79080000000067
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 21,
+      "milliseconds": 100.5032000000001
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 22,
+      "milliseconds": 100.08880000000045
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 23,
+      "milliseconds": 99.83639999999923
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 24,
+      "milliseconds": 115.27390000000014
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 25,
+      "milliseconds": 118.47890000000007
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 26,
+      "milliseconds": 114.9389000000001
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 27,
+      "milliseconds": 101.38900000000012
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 28,
+      "milliseconds": 132.85099999999966
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 29,
+      "milliseconds": 149.6220000000003
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 30,
+      "milliseconds": 116.33140000000003
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 31,
+      "milliseconds": 99.88379999999961
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 32,
+      "milliseconds": 132.98210000000017
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 33,
+      "milliseconds": 100.28200000000015
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 34,
+      "milliseconds": 116.76479999999992
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 35,
+      "milliseconds": 150.52390000000014
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 36,
+      "milliseconds": 116.70399999999972
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 37,
+      "milliseconds": 116.05649999999969
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 38,
+      "milliseconds": 100.24269999999979
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 39,
+      "milliseconds": 116.11119999999937
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 40,
+      "milliseconds": 117.8772999999992
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 41,
+      "milliseconds": 99.59000000000015
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 42,
+      "milliseconds": 116.51269999999931
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 43,
+      "milliseconds": 117.07630000000063
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 44,
+      "milliseconds": 99.18499999999949
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 45,
+      "milliseconds": 166.08940000000075
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 46,
+      "milliseconds": 118.46919999999955
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 47,
+      "milliseconds": 115.20719999999892
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 48,
+      "milliseconds": 150.20510000000104
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 49,
+      "milliseconds": 99.26130000000012
+    },
+    {
+      "id": "admin.subscriptions.new",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new",
+      "sample": 50,
+      "milliseconds": 100.67009999999937
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-cold-browser",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 0,
+      "milliseconds": 286.59479999999894
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 1,
+      "milliseconds": 167.02490000000034
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 2,
+      "milliseconds": 117.16399999999885
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 3,
+      "milliseconds": 99.29379999999946
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 4,
+      "milliseconds": 100.07229999999981
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 5,
+      "milliseconds": 100.11750000000029
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 6,
+      "milliseconds": 99.98220000000038
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 7,
+      "milliseconds": 133.03070000000116
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 8,
+      "milliseconds": 99.2619999999988
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 9,
+      "milliseconds": 84.50540000000001
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 10,
+      "milliseconds": 83.04059999999845
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 11,
+      "milliseconds": 100.1255000000001
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 12,
+      "milliseconds": 99.58439999999973
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 13,
+      "milliseconds": 99.77859999999964
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 14,
+      "milliseconds": 99.79079999999885
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 15,
+      "milliseconds": 101.0055999999986
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 16,
+      "milliseconds": 99.11479999999938
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 17,
+      "milliseconds": 100.08779999999933
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 18,
+      "milliseconds": 100.27980000000025
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 19,
+      "milliseconds": 133.29759999999987
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 20,
+      "milliseconds": 100.11039999999957
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 21,
+      "milliseconds": 99.79469999999856
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 22,
+      "milliseconds": 100.496000000001
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 23,
+      "milliseconds": 199.21810000000005
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 24,
+      "milliseconds": 100.48280000000159
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 25,
+      "milliseconds": 100.16769999999997
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 26,
+      "milliseconds": 116.29390000000058
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 27,
+      "milliseconds": 132.91990000000078
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 28,
+      "milliseconds": 100.3155999999999
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 29,
+      "milliseconds": 100.12670000000071
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 30,
+      "milliseconds": 116.93580000000111
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 31,
+      "milliseconds": 99.25199999999859
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 32,
+      "milliseconds": 100.64460000000145
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 33,
+      "milliseconds": 99.259399999999
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 34,
+      "milliseconds": 99.8622000000014
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 35,
+      "milliseconds": 99.51599999999962
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 36,
+      "milliseconds": 118.44700000000012
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 37,
+      "milliseconds": 99.15710000000036
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 38,
+      "milliseconds": 99.71069999999963
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 39,
+      "milliseconds": 133.130799999999
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 40,
+      "milliseconds": 116.70739999999932
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 41,
+      "milliseconds": 99.9964
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 42,
+      "milliseconds": 149.58400000000074
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 43,
+      "milliseconds": 117.48559999999998
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 44,
+      "milliseconds": 99.23849999999948
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 45,
+      "milliseconds": 150.3765000000003
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 46,
+      "milliseconds": 100.49070000000029
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 47,
+      "milliseconds": 98.90109999999913
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 48,
+      "milliseconds": 100.23829999999907
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 49,
+      "milliseconds": 100.2515999999996
+    },
+    {
+      "id": "staff.subscriptions.new",
+      "kind": "page-warm",
+      "role": "staff",
+      "path": "/subscriptions/new",
+      "sample": 50,
+      "milliseconds": 100.80479999999989
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-cold-browser",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 0,
+      "milliseconds": 289.1794000000009
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 1,
+      "milliseconds": 117.14470000000074
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 2,
+      "milliseconds": 117.9315000000006
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 3,
+      "milliseconds": 115.03100000000086
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 4,
+      "milliseconds": 117.09280000000035
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 5,
+      "milliseconds": 150.46030000000064
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 6,
+      "milliseconds": 149.90439999999944
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 7,
+      "milliseconds": 132.83699999999953
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 8,
+      "milliseconds": 217.5508000000009
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 9,
+      "milliseconds": 148.5087999999996
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 10,
+      "milliseconds": 116.78810000000158
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 11,
+      "milliseconds": 117.57940000000235
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 12,
+      "milliseconds": 115.73589999999967
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 13,
+      "milliseconds": 134.70999999999913
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 14,
+      "milliseconds": 116.16370000000097
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 15,
+      "milliseconds": 149.28600000000006
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 16,
+      "milliseconds": 117.46180000000095
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 17,
+      "milliseconds": 115.58090000000084
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 18,
+      "milliseconds": 149.83680000000095
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 19,
+      "milliseconds": 117.98359999999957
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 20,
+      "milliseconds": 116.63240000000224
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 21,
+      "milliseconds": 115.60030000000188
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 22,
+      "milliseconds": 183.96319999999832
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 23,
+      "milliseconds": 132.84570000000167
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 24,
+      "milliseconds": 133.42649999999776
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 25,
+      "milliseconds": 182.77260000000024
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 26,
+      "milliseconds": 133.5622000000003
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 27,
+      "milliseconds": 133.34439999999813
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 28,
+      "milliseconds": 133.6681000000026
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 29,
+      "milliseconds": 132.79899999999907
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 30,
+      "milliseconds": 134.26929999999993
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 31,
+      "milliseconds": 132.3083000000006
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 32,
+      "milliseconds": 183.96840000000157
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 33,
+      "milliseconds": 133.7683999999972
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 34,
+      "milliseconds": 132.7494000000006
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 35,
+      "milliseconds": 132.70190000000002
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 36,
+      "milliseconds": 133.39689999999973
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 37,
+      "milliseconds": 134.29829999999856
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 38,
+      "milliseconds": 149.17380000000048
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 39,
+      "milliseconds": 133.8202999999994
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 40,
+      "milliseconds": 132.99359999999797
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 41,
+      "milliseconds": 133.56530000000203
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 42,
+      "milliseconds": 149.78870000000097
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 43,
+      "milliseconds": 133.10699999999997
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 44,
+      "milliseconds": 134.59920000000056
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 45,
+      "milliseconds": 131.45349999999962
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 46,
+      "milliseconds": 184.1469999999972
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 47,
+      "milliseconds": 133.23479999999836
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 48,
+      "milliseconds": 150.2373000000007
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 49,
+      "milliseconds": 132.77590000000055
+    },
+    {
+      "id": "admin.subscriptions.new-from-template",
+      "kind": "page-warm",
+      "role": "admin",
+      "path": "/subscriptions/new?templateId=51108a44-8054-46ea-a7dc-e108c723ada9",
+      "sample": 50,
+      "milliseconds": 133.62320000000182
+    }
+  ],
+  "serverJobs": [
+    {
+      "type": "benchmark-job",
+      "kind": "lifecycle",
+      "startedAt": "2026-10-31T10:25:37.562Z",
+      "milliseconds": 88.05100000000004
+    },
+    {
+      "type": "benchmark-job",
+      "kind": "lifecycle",
+      "startedAt": "2026-10-31T10:25:47.563Z",
+      "milliseconds": 87.12830000000031
+    },
+    {
+      "type": "benchmark-job",
+      "kind": "lifecycle",
+      "startedAt": "2026-10-31T10:25:57.568Z",
+      "milliseconds": 86.22739999999976
+    }
+  ]
+}
