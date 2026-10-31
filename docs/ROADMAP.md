@@ -1,6 +1,6 @@
 # Coding-agent roadmap — configure → collect → prove
 
-**Status: execution authorized on 31 October 2026. P0 through P3 are verified; P4 is in progress.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
+**Status: execution authorized on 31 October 2026. P0 through P4 are verified; P5 is next.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
 
 ## Read first; establish the real starting point
 
@@ -60,10 +60,10 @@ Read root `AGENTS.md`, [REQUIREMENTS.md](REQUIREMENTS.md), [HACKATHON_CONSTRAINT
 
 **Depends on:** P3 active agreement and P2 rule configuration. **Coverage:** BILL-02, DISC-01, DISC-02, DISC-03, DISC-04; first BILL-01/BILL-04 witness.
 
-- [ ] Generate one Draft invoice automatically from accepted subscription terms with customer, lines, taxes and totals. Use one server-authoritative fixed-decimal/minor-unit calculator, deterministic allocation and rounding; never trust posted totals. Implement its first Confirm transition here, including zero-total settlement; P5 expands this into the full billing workbench.
-- [ ] Implement admin-only fixed/percentage discounts, minimum amount/quantity, inclusive dates, maximum uses, product/subscription scope and deterministic non-stacking selection. Auto-select on the next eligible generated invoice.
-- [ ] Reserve usage atomically at generation; consume once at confirmation; release on Draft cancellation; retain consumed use on Confirmed cancellation. Preserve generated snapshots through later rule expiry or catalog edits.
-- [ ] Display base/variant/discount/tax/total and an understandable ineligibility reason. Do not claim jurisdictional tax compliance from the fictional demo rule.
+- [x] Generate one Draft invoice automatically from accepted subscription terms with customer, lines, taxes and totals. Use one server-authoritative fixed-decimal/minor-unit calculator, deterministic allocation and rounding; never trust posted totals. Implement its first Confirm transition here, including zero-total settlement; P5 expands this into the full billing workbench.
+- [x] Implement admin-only fixed/percentage discounts, minimum amount/quantity, inclusive dates, maximum uses, product/subscription scope and deterministic non-stacking selection. Auto-select on the next eligible generated invoice.
+- [x] Reserve usage atomically at generation; consume once at confirmation; release on Draft cancellation; retain consumed use on Confirmed cancellation. Preserve generated snapshots through later rule expiry or catalog edits.
+- [x] Display base/variant/discount/tax/total and an understandable ineligibility reason. Do not claim jurisdictional tax compliance from the fictional demo rule.
 
 **Gate:** demo A computes **3,088.80**, B **1,100**; independently test fixed and percentage, both scopes, amount/quantity boundaries, expiry and exhaustion separately, last-use race, fixed allocation rounding and 100% discount. Confirming a zero-total invoice yields Paid without a fake payment. **Fix failures:** client money authority, duplicate use, tax-before-discount mismatch or a correct happy path hiding missing rule dimensions.
 

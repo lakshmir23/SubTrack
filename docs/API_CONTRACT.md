@@ -1,6 +1,6 @@
 # Shared application contract
 
-Owner: root integrates shared persistence/domain contracts; domain owns catalog/subscription schema and routes; ui owns src/design context/browser journeys; independent review verifies boundaries. Coordinate active files. P0–P3 are verified; P4 is in progress.
+Owner: root integrates shared persistence/domain contracts; domain owns catalog/subscription schema and routes; ui owns src/design context/browser journeys; independent review verifies boundaries. Coordinate active files. P0–P4 are verified; P5 is next.
 
 Adopt D-01–D-10 as implementation defaults under the current instruction to execute the roadmap. They remain team policies, not organizer requirements. Currency is INR with 100 minor units. Business date is server-owned Asia/Kolkata, timestamps are UTC, periods are half-open and derived from original anchors. No client date override. Public roles, ownership, price and totals are never accepted from the browser.
 
@@ -44,7 +44,7 @@ POST `/:id/issue`, `/:id/confirm`, `/:id/activate` require the last-read version
 
 POST `/subscriptions/process-due` accepts only a bounded limit, activates due Confirmed agreements and reports outcomes/backlog. Ended Confirmed terms are reported separately as blocked; they cannot starve actionable work. This is activation processing, not P6 expiry/closure. The operational service preference applies once stage is Active; Draft/Quotation/future Confirmed views state that service has not started. Customer detail includes only its own safe snapshot/history; costs and internal product notes are absent.
 
-## P4 invoice and discount contract (in progress)
+## P4 invoice and discount contract (verified)
 
 `shared/billing.ts` owns strict inputs and safe invoice DTOs. Admin alone creates/edits `/discounts`; internal staff can read their eligibility, reserved/consumed usage and holding Drafts. Rules support fixed amounts or percentage basis points, amount/quantity thresholds, inclusive business dates, maximum uses, product scope and an optional subscription target. Selection is non-stacking: ascending priority then stable ID. Percentage is rounded once over the eligible scope; fixed and percentage amounts use deterministic largest-remainder line allocation. Exclusive tax follows the discount and rounds per line.
 
