@@ -1,6 +1,6 @@
 # Coding-agent roadmap — configure → collect → prove
 
-**Status: execution authorized on 31 October 2026. P0 through P5 are verified; P6 is in progress.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
+**Status: execution authorized on 31 October 2026. P0 through P6 are verified; P7 is next.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
 
 ## Read first; establish the real starting point
 
@@ -84,9 +84,9 @@ Include the brief’s switchable add-ons using existing optional product lines a
 
 **Depends on:** P5; lifecycle uses P2/P3 accepted policies. **Coverage:** PAY-01, PAY-02, PLAN-03; completes BILL-04 and exercises BILL-05.
 
-- [ ] Record method/amount/date/note against a Confirmed invoice; show history, paid/outstanding/due/overdue. Lock allocation and use an idempotency key; reject overpayment, invalid/future dates and zero/negative amounts. Identical legitimate payments may have different keys.
-- [ ] Implement permitted pause/resume/early-close/renew and expiry processing using D-02–D-04. Show requested and effective dates. Paused full periods have explicit nonbillable outcomes; earlier owed periods remain billable; renewal does not repeat old periods.
-- [ ] Exercise denied plan capabilities and direct API ownership. Preserve immutable payments and disclose the baseline's lack of payment reversal/correction UI.
+- [x] Record method/amount/date/note against a Confirmed invoice; show history, paid/outstanding/due/overdue. Lock allocation and use an idempotency key; reject overpayment, invalid/future dates and zero/negative amounts. Identical legitimate payments may have different keys.
+- [x] Implement permitted pause/resume/early-close/renew and expiry processing using D-02–D-04. Show requested and effective dates. Paused full periods have explicit nonbillable outcomes; earlier owed periods remain billable; renewal does not repeat old periods. Optional existing lines follow effective boundary history without repricing prior invoices.
+- [x] Exercise denied plan capabilities and direct API ownership. Preserve immutable payments and disclose the baseline's lack of payment reversal/correction UI.
 
 **Gate:** A pays 1,000 then 2,088.80: first remains Confirmed with 2,088.80 outstanding, second Paid; replay adds nothing; concurrent allocations cannot overpay. Separately exercise pause/resume, early close, auto-close on/off, renewal replay, late-renewal rejection and recovery of older debt after closure. **Fix failures:** partial marked Paid, pause wiping debt, renewable forever after expiry, or permissions checked only in UI.
 

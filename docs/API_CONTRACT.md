@@ -1,6 +1,6 @@
 # Shared application contract
 
-Owner: root integrates shared persistence/domain contracts; domain owns catalog/subscription schema and routes; ui owns src/design context/browser journeys; independent review verifies boundaries. Coordinate active files. P0–P5 are verified; P6 is next.
+Owner: root integrates shared persistence/domain contracts; domain owns catalog/subscription schema and routes; ui owns src/design context/browser journeys; independent review verifies boundaries. Coordinate active files. P0–P6 are verified; P7 is next.
 
 Adopt D-01–D-10 as implementation defaults under the current instruction to execute the roadmap. They remain team policies, not organizer requirements. Currency is INR with 100 minor units. Business date is server-owned Asia/Kolkata, timestamps are UTC, periods are half-open and derived from original anchors. No client date override. Public roles, ownership, price and totals are never accepted from the browser.
 
@@ -64,7 +64,7 @@ POST `/invoices/:id/replacement/preview` takes `version`; POST `/:id/replace` al
 
 GET `/invoices/:id/print` returns escaped saved HTML for authorized internal users or the owning customer. Its nonce-restricted style/print handler loads no remote assets and invokes the browser Print/Save as PDF path. Draft/Canceled labels remain explicit. Output actions never confirm or settle an invoice.
 
-## P6 collection and effective service contract (in progress)
+## P6 collection and effective service contract (verified)
 
 `shared/payments.ts` owns positive exact minor-unit amount, INR currency, method, valid payment date, internal note and UUID request key. POST `/invoices/:id/payments` is internal-only and returns `{payment,invoice,replayed}` (201 new, 200 replay). Under an immediate transaction it resolves matching actor/invoice/payload receipts first, then rechecks the current Confirmed invoice, immutable allocation facts and outstanding balance. Database triggers apply the allocation/status/count atomically and protect the cached balance against changes inconsistent with those facts. Partial remains Confirmed; final allocation becomes Paid. Future dates, overpayment, zero/negative amounts, forged fields and conflicting keys fail safely. Equal legitimate allocations may use different keys.
 

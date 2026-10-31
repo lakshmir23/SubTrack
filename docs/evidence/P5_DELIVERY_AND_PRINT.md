@@ -13,6 +13,8 @@ The saved `.env` default was `outbox`. Its settings were preserved. A temporary,
 
 The connected Gmail account did not expose this test message, so it was not used as receipt evidence. The existing browser session at the recipient inbox supplied the witness. The agent-created tab was closed after the scoped check; no message was opened, replied to, forwarded, labeled or deleted, and no new login or access permission was created.
 
+The user subsequently also confirmed: **“Yes, it arrived in the inbox.”** This independently corroborates the direct browser witness.
+
 ## Actual print renderer
 
 `npm run verify:print` uses a fresh isolated SQLite database, seeded synthetic identities, authenticated real HTTP routes and Chromium's actual PDF renderer. It never loads `.env` or uses SMTP. It exercises the nonce-authorized Print button, checks escaped product markup, and generates three A4 PDFs in ignored `output/pdf/`:
