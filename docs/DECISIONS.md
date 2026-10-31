@@ -60,6 +60,8 @@ Cancel is allowed only for Draft or Confirmed invoices with **no payment ever re
 
 Confirming a zero-total invoice immediately settles it as Paid with reason **zero amount due** and creates **no fake zero payment**. Preserve confirmation and settlement events. Send/print do not change financial status. Draft output must be labelled Draft; failed delivery must not be reported as sent.
 
+**P5 communication clarification:** new email notices use the current Draft, Confirmed or Paid revision and its saved customer address. Reject a new send for a canceled or superseded revision; replay of an already queued request still returns that original delivery record. Print remains available for every saved status, including canceled history, with ownership checks and truthful status labels. This local build uses controlled test notices with no real payment request. Browser Print/Save as PDF is the download path; emailing a PDF attachment is not claimed.
+
 ## D-07 — Discount allocation, reservation and expiry
 
 Choose **one eligible rule per invoice**, with deterministic administrator priority then stable rule ID. A product-targeted rule affects only its eligible product lines; a whole-subscription rule affects all eligible lines. No stacking. Both minimum amount and minimum quantity must pass if both are configured. Thresholds use eligible pre-tax/pre-discount bases and quantities. Global usage limit means one reserved/consumed application per invoice, not per line/unit/customer.

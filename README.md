@@ -38,6 +38,8 @@ Default `MAIL_MODE=outbox` stores development email locally. It proves message g
 
 `npm run verify:invoice` is a separate explicit P5 delivery check. It requires the first approved address to be an existing customer and the opt-in synthetic admin seed to be available locally. It creates a clearly labeled synthetic service/agreement/invoice, sends one test invoice to that registered allowlisted address, and reports metadata without credentials or the recipient address. The email requests no real payment. This command is excluded from automated checks; do not use it as a benchmark or bulk-send tool. Actual inbox arrival still needs a separate witness.
 
+`npm run verify:print` creates three real Chromium PDFs from authenticated print routes using an isolated synthetic database: Draft, Confirmed, and 50-line/maximum-amount examples. It does not load `.env` or send email. Outputs are ignored in `output/pdf/`; inspect the rendered PDFs after a print-layout change. See [the communication evidence](docs/evidence/P5_DELIVERY_AND_PRINT.md) for observed rendering and delivery results.
+
 ## Architecture and ownership
 
 React/TypeScript/Vite client, Express server, SQLite with WAL/foreign keys and immediate write transactions. Root owns integration, migrations and shared contracts; UI and verification agents own their real changes. No teammate authorship is fabricated. See [API contracts](docs/API_CONTRACT.md) and [decisions](docs/DECISIONS.md) for policy and gate limitations.
