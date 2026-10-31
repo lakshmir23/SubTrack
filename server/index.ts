@@ -22,10 +22,21 @@ const server = app.listen(settings.port, '127.0.0.1', () => {
 });
 const mailTimer = setInterval(() => { void app.locals.deliverPending().catch(() => console.error('Email worker interrupted. Check delivery status before requesting another message.')); }, 1000);
 mailTimer.unref();
+let stopping = false;
 const shutdown = () => {
+  if (stopping) return;
+  stopping = true;
   clearInterval(mailTimer);
   server.close(() => {
-    void app.locals.deliverPending.stop().finally(() => { app.locals.db.close(); process.exit(0); });
+    void Promise.allSettled([
+      Promise.resolve().then(() => app.locals.deliverPending.stop()),
+      Promise.resolve().then(() => app.locals.billingWorker.stop()),
+    ]).then(results => {
+      const failed = results.some(result => result.status === 'rejected');
+      if (failed) console.error('A worker stopped with an error. Review persisted delivery and billing outcomes before retrying.');
+      app.locals.db.close();
+      process.exit(failed ? 1 : 0);
+    });
   });
 };
 process.on('SIGTERM', shutdown);

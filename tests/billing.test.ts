@@ -350,7 +350,7 @@ async function raceGenerate(t: TestContext, current: Awaited<ReturnType<typeof s
     process.send({type:'ready'});process.once('message',async m=>{try{const r=await request(app).post('/api/subscriptions/'+m.body.subscriptionId+'/invoices')
       .set('Cookie',m.cookie).set('X-CSRF-Token',m.csrf).send({expectedPeriodStart:m.body.expectedPeriodStart,idempotencyKey:m.body.idempotencyKey});
       process.send({type:'result',status:r.status,id:r.body.id,discount:r.body.discount,error:r.body.error?.code});}
-    catch(e){process.send({type:'error',message:e.message});process.exitCode=1;}finally{app.locals.db.close();process.disconnect();}});`;
+    catch(e){process.send({type:'error',message:e.message});process.exitCode=1;}finally{await app.locals.billingWorker.stop();await app.locals.deliverPending.stop();app.locals.db.close();process.disconnect();}});`;
   type Message = { type: string; status: number; id: string; discount: number; error?: string; message?: string };
   function worker() {
     const child = spawn(process.execPath, ['--import', 'tsx', '--input-type=module', '-e', script], { cwd: process.cwd(), env: { ...process.env, SUBTRACK_TEST_DB: current.databasePath }, stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });

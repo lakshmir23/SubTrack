@@ -15,6 +15,7 @@ import { audit, digest, requireRole } from './security.js';
 import { businessDate, periodBoundary, periodIndex, addDays } from './calendar.js';
 import { checkedMinor, multiplyMinor, sumMinor, taxMinor, discountMinor, allocateMinor } from './money.js';
 import { nextReference } from './subscriptions.js';
+import { invoiceReplacementPreviewSchema, invoiceReplacementSchema, type InvoiceReplacementPreview } from '../shared/billing-workbench.js';
 
 interface DiscountRow {
   id: string; name: string; kind: 'fixed' | 'percentage'; amount_minor: number | null; percent_bps: number | null;
@@ -40,7 +41,11 @@ export interface DiscountSelection {
   rule: DiscountRow | null; snapshot: InvoiceDiscountSnapshot | null; allocations: Map<string, number>;
   decisions: DiscountDecision[]; truncated: boolean; reason: string;
 }
-export interface GenerationOptions { failpoint?: (point: 'after-reservation' | 'before-commit') => void }
+export interface GenerationResult { invoiceId: string; logicalChargeId: string; created: boolean }
+export interface GenerationOptions {
+  failpoint?: (point: 'after-reservation' | 'before-commit') => void;
+  onResult?: (result: GenerationResult) => void;
+}
 const idSchema = z.string().uuid('Select an existing record.');
 const pageShape = { q: z.string().trim().max(100).optional(), page: z.coerce.number().int().min(1).max(1_000_000).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(20) };
 const discountListSchema = z.object({ ...pageShape, active: z.enum(['true', 'false']).optional() }).strict();
@@ -199,6 +204,7 @@ function invoiceSummary(row: InvoiceRow, now: Date): InvoiceSummary {
 }
 export function serializeInvoice(db: DatabaseSync, id: string, user: User, now: Date): Invoice {
   const row = rowInvoice(db, id, user);
+  const current = db.prepare('SELECT i.id,i.number FROM logical_charges c JOIN invoices i ON i.id=c.current_invoice_id WHERE c.id=?').get(row.logical_charge_id) as { id: string; number: string };
   const application = db.prepare('SELECT state FROM discount_applications WHERE invoice_id=?').get(id) as { state: 'reserved' | 'consumed' | 'released' } | undefined;
   const history = db.prepare(`SELECT h.id,h.kind,coalesce(u.name,'System') AS actorName,h.created_at AS at,h.from_status AS fromStatus,h.to_status AS toStatus,h.message
     FROM invoice_history h LEFT JOIN users u ON u.id=h.actor_id WHERE invoice_id=? ORDER BY h.rowid`).all(id) as unknown as Invoice['history'];
@@ -206,8 +212,9 @@ export function serializeInvoice(db: DatabaseSync, id: string, user: User, now: 
   if (user.role !== 'customer') {
     if (row.status === 'Draft') allowedActions.push('confirm', 'cancel');
     else if (row.status === 'Confirmed' && !row.payment_count && !row.amount_paid) allowedActions.push('cancel');
+    else if (row.status === 'Canceled' && current.id === row.id && !row.payment_count && !row.amount_paid) allowedActions.push('replace');
   }
-  return { ...invoiceSummary(row, now), lines: invoiceLines(db, id), discountSnapshot: row.discount_snapshot_json ? JSON.parse(row.discount_snapshot_json) as InvoiceDiscountSnapshot : null,
+  return { ...invoiceSummary(row, now), currentInvoiceId: current.id, currentInvoiceNumber: current.number, lines: invoiceLines(db, id), discountSnapshot: row.discount_snapshot_json ? JSON.parse(row.discount_snapshot_json) as InvoiceDiscountSnapshot : null,
     discountReason: row.discount_reason, discountApplicationState: application?.state || null,
     ...(user.role !== 'customer' ? { discountDecisions: JSON.parse(row.discount_decisions_json) as DiscountDecision[], discountDecisionsTruncated: Boolean(row.discount_decisions_truncated) } : {}),
     history, businessDate: businessDate(now), allowedActions };
@@ -218,45 +225,52 @@ function invoiceHistory(db: DatabaseSync, invoiceId: string, actorId: string, ki
   audit(db, actorId, `invoice.${kind}`, invoiceId, now, { fromStatus: from, toStatus: to });
 }
 
-export function generateInvoice(db: DatabaseSync, subscriptionId: string, input: InvoiceGenerateInput, actorId: string, now: Date, options: GenerationOptions = {}): { invoiceId: string; logicalChargeId: string; created: boolean } {
+function persistDraft(db: DatabaseSync, source: SourceRow, chargeId: string, preview: InvoicePreview, actorId: string, now: Date, revision = 1, predecessorId: string | null = null): string {
+  const invoiceId = randomUUID(); const number = nextReference(db, 'invoice', 'INV');
+  db.prepare(`INSERT INTO invoices(id,number,logical_charge_id,revision_number,predecessor_id,subscription_id,subscription_number,customer_id,customer_name,customer_email,
+    period_start,period_end,issue_date,due_date,currency,status,subtotal,discount,tax,total,amount_paid,payment_count,discount_snapshot_json,discount_reason,discount_decisions_json,discount_decisions_truncated,version,created_at)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'INR','Draft',?,?,?,?,0,0,?,?,?,?,1,?)`)
+    .run(invoiceId, number, chargeId, revision, predecessorId, source.id, source.number, source.customer_id, source.customer_name, source.customer_email,
+      preview.periodStart, preview.periodEnd, preview.issueDate, preview.dueDate, preview.subtotal, preview.discount, preview.tax, preview.total,
+      preview.discountSnapshot ? JSON.stringify(preview.discountSnapshot) : null, preview.discountReason, JSON.stringify(preview.discountDecisions || []), Number(preview.discountDecisionsTruncated), now.toISOString());
+  const insertLine = db.prepare(`INSERT INTO invoice_lines(id,invoice_id,position,subscription_line_id,product_id,product_name,variant_id,variant_name,quantity,base_unit_price,variant_adjustment,unit_price,subtotal,discount,taxable_amount,tax_rule_id,tax_rule_name,tax_rule_version,tax_rate_bps,tax,total)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+  preview.lines.forEach((line, position) => insertLine.run(line.id, invoiceId, position, line.subscriptionLineId, line.productId, line.productName, line.variantId, line.variantName, line.quantity,
+    line.baseUnitPrice, line.variantAdjustment, line.unitPrice, line.subtotal, line.discount, line.taxableAmount, line.taxRuleId, line.taxRuleName, line.taxRuleVersion, line.taxRateBps, line.tax, line.total));
+  if (preview.discountSnapshot) db.prepare("INSERT INTO discount_applications(id,rule_id,invoice_id,rule_version,state,amount,created_at) VALUES(?,?,?,?,'reserved',?,?)")
+    .run(randomUUID(), preview.discountSnapshot.id, invoiceId, preview.discountSnapshot.version, preview.discount, now.toISOString());
+  invoiceHistory(db, invoiceId, actorId, 'generated', null, 'Draft', now, predecessorId ? 'Replacement Draft generated under current tax and discount eligibility; prior canceled revision remains immutable.' : 'Draft generated from accepted agreement prices. Taxes, discount eligibility and all amounts are frozen.');
+  return invoiceId;
+}
+
+export function generateInvoice(db: DatabaseSync, subscriptionId: string, input: InvoiceGenerateInput, actorId: string, now: Date, options: GenerationOptions = {}): GenerationResult {
   const validated = invoiceGenerateSchema.parse(input); internalActor(db, actorId);
   const payloadHash = digest(JSON.stringify([subscriptionId, validated.expectedPeriodStart]));
   return transaction(db, () => {
+    const finish = (result: GenerationResult) => { options.onResult?.(result); return result; };
     const receipt = db.prepare('SELECT actor_id,payload_hash,logical_charge_id FROM invoice_generation_requests WHERE idempotency_key=?').get(validated.idempotencyKey) as { actor_id: string; payload_hash: string; logical_charge_id: string } | undefined;
     if (receipt) {
       if (receipt.actor_id !== actorId || receipt.payload_hash !== payloadHash) throw new DomainError(409, 'IDEMPOTENCY_CONFLICT', 'This submission key was already used for a different invoice request. Review the current period before starting a new request.');
       const charge = db.prepare('SELECT current_invoice_id FROM logical_charges WHERE id=?').get(receipt.logical_charge_id);
       if (!charge?.current_invoice_id) throw new DomainError(409, 'CHARGE_EXCEPTION', 'This charge has no current invoice. Review its billing outcome before retrying.');
-      return { invoiceId: String(charge.current_invoice_id), logicalChargeId: receipt.logical_charge_id, created: false };
+      return finish({ invoiceId: String(charge.current_invoice_id), logicalChargeId: receipt.logical_charge_id, created: false });
     }
     const period = sourcePeriod(db, subscriptionId, validated.expectedPeriodStart, now);
     if (period.existing) {
-      db.prepare('INSERT INTO invoice_generation_requests VALUES(?,?,?,?,?)').run(validated.idempotencyKey, actorId, payloadHash, period.existing.logical_charge_id, now.toISOString());
-      return { invoiceId: period.existing.id, logicalChargeId: period.existing.logical_charge_id, created: false };
+      db.prepare('INSERT INTO invoice_generation_requests(idempotency_key,actor_id,payload_hash,logical_charge_id,created_at) VALUES(?,?,?,?,?)').run(validated.idempotencyKey, actorId, payloadHash, period.existing.logical_charge_id, now.toISOString());
+      return finish({ invoiceId: period.existing.id, logicalChargeId: period.existing.logical_charge_id, created: false });
     }
-    const preview = makePreview(db, period, now); const chargeId = period.charge?.id || randomUUID(); const invoiceId = randomUUID();
+    const preview = makePreview(db, period, now); const chargeId = period.charge?.id || randomUUID();
     if (!period.charge) db.prepare("INSERT INTO logical_charges(id,subscription_id,period_start,period_end,kind,outcome,reason,current_invoice_id,created_at,updated_at) VALUES(?,?,?,?,'recurring','failed',?,NULL,?,?)")
       .run(chargeId, subscriptionId, period.start, period.end, 'Generation has not committed.', now.toISOString(), now.toISOString());
-    const number = nextReference(db, 'invoice', 'INV');
-    db.prepare(`INSERT INTO invoices(id,number,logical_charge_id,revision_number,predecessor_id,subscription_id,subscription_number,customer_id,customer_name,customer_email,
-      period_start,period_end,issue_date,due_date,currency,status,subtotal,discount,tax,total,amount_paid,payment_count,discount_snapshot_json,discount_reason,discount_decisions_json,discount_decisions_truncated,version,created_at)
-      VALUES(?,?,?,1,NULL,?,?,?,?,?,?,?,?,?,'INR','Draft',?,?,?,?,0,0,?,?,?,?,1,?)`)
-      .run(invoiceId, number, chargeId, subscriptionId, period.source.number, period.source.customer_id, period.source.customer_name, period.source.customer_email,
-        period.start, period.end, preview.issueDate, preview.dueDate, preview.subtotal, preview.discount, preview.tax, preview.total,
-        preview.discountSnapshot ? JSON.stringify(preview.discountSnapshot) : null, preview.discountReason, JSON.stringify(preview.discountDecisions || []), Number(preview.discountDecisionsTruncated), now.toISOString());
-    const insertLine = db.prepare(`INSERT INTO invoice_lines(id,invoice_id,position,subscription_line_id,product_id,product_name,variant_id,variant_name,quantity,base_unit_price,variant_adjustment,unit_price,subtotal,discount,taxable_amount,tax_rule_id,tax_rule_name,tax_rule_version,tax_rate_bps,tax,total)
-      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
-    preview.lines.forEach((line, position) => insertLine.run(line.id, invoiceId, position, line.subscriptionLineId, line.productId, line.productName, line.variantId, line.variantName, line.quantity,
-      line.baseUnitPrice, line.variantAdjustment, line.unitPrice, line.subtotal, line.discount, line.taxableAmount, line.taxRuleId, line.taxRuleName, line.taxRuleVersion, line.taxRateBps, line.tax, line.total));
-    if (preview.discountSnapshot) db.prepare("INSERT INTO discount_applications(id,rule_id,invoice_id,rule_version,state,amount,created_at) VALUES(?,?,?,?,'reserved',?,?)")
-      .run(randomUUID(), preview.discountSnapshot.id, invoiceId, preview.discountSnapshot.version, preview.discount, now.toISOString());
+    const invoiceId = persistDraft(db, period.source, chargeId, preview, actorId, now);
     options.failpoint?.('after-reservation');
     db.prepare("UPDATE logical_charges SET outcome='invoiced',reason=NULL,current_invoice_id=?,updated_at=? WHERE id=?").run(invoiceId, now.toISOString(), chargeId);
-    db.prepare('UPDATE subscriptions SET next_period_index=next_period_index+1,version=version+1,updated_at=? WHERE id=?').run(now.toISOString(), subscriptionId);
-    db.prepare('INSERT INTO invoice_generation_requests VALUES(?,?,?,?,?)').run(validated.idempotencyKey, actorId, payloadHash, chargeId, now.toISOString());
-    invoiceHistory(db, invoiceId, actorId, 'generated', null, 'Draft', now, 'Draft generated from accepted agreement prices. Taxes, discount eligibility and all amounts are frozen.');
+    const nextDate = period.end < period.source.expiry_date ? period.end : null;
+    db.prepare('UPDATE subscriptions SET next_period_index=next_period_index+1,next_billing_date=?,version=version+1,updated_at=? WHERE id=?').run(nextDate, now.toISOString(), subscriptionId);
+    db.prepare('INSERT INTO invoice_generation_requests(idempotency_key,actor_id,payload_hash,logical_charge_id,created_at) VALUES(?,?,?,?,?)').run(validated.idempotencyKey, actorId, payloadHash, chargeId, now.toISOString());
     options.failpoint?.('before-commit');
-    return { invoiceId, logicalChargeId: chargeId, created: true };
+    return finish({ invoiceId, logicalChargeId: chargeId, created: true });
   });
 }
 
@@ -291,8 +305,63 @@ export function cancelInvoice(db: DatabaseSync, invoiceId: string, version: numb
   });
 }
 
+function replacementPeriod(db: DatabaseSync, invoiceId: string, version: number, now: Date) {
+  const predecessor = rowInvoice(db, invoiceId); versionMatches(predecessor, version);
+  const charge = db.prepare('SELECT * FROM logical_charges WHERE id=?').get(predecessor.logical_charge_id) as unknown as ChargeRow;
+  if (charge.current_invoice_id !== predecessor.id) throw new DomainError(409, 'NOT_CURRENT_REVISION', 'This revision was already replaced. Open the current linked invoice.');
+  if (predecessor.status !== 'Canceled' || predecessor.amount_paid || predecessor.payment_count) throw new DomainError(409, 'CANNOT_REPLACE', 'Replace only the current Canceled invoice with no payment ever recorded.');
+  if (db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='payments'").get() && Number(db.prepare('SELECT count(*) AS count FROM payments WHERE invoice_id=?').get(invoiceId)?.count)) throw new DomainError(409, 'CANNOT_REPLACE', 'A payment was recorded against this invoice. It cannot be replaced.');
+  const source = db.prepare('SELECT * FROM subscriptions WHERE id=?').get(predecessor.subscription_id) as unknown as SourceRow;
+  if (!source.accepted_terms_json) throw new DomainError(409, 'AGREEMENT_NOT_CONFIRMED', 'This invoice has no accepted agreement snapshot.');
+  const terms = JSON.parse(source.accepted_terms_json) as SubscriptionTerms;
+  const index = periodIndex(source.start_date, terms.plan.interval, predecessor.period_start);
+  if (periodBoundary(source.start_date, terms.plan.interval, index + 1) !== predecessor.period_end) throw new DomainError(409, 'INVALID_PERIOD', 'The saved invoice period does not match its accepted calendar schedule.');
+  if (predecessor.period_start > businessDate(now)) throw new DomainError(400, 'NOT_DUE', 'This invoice period has not started.');
+  return { predecessor, source, terms, index, start: predecessor.period_start, end: predecessor.period_end, charge, existing: null };
+}
+function replacementHash(predecessor: InvoiceRow, preview: InvoicePreview): string {
+  return digest(JSON.stringify({ predecessorId: predecessor.id, version: predecessor.version, periodStart: preview.periodStart, periodEnd: preview.periodEnd,
+    issueDate: preview.issueDate, dueDate: preview.dueDate, subtotal: preview.subtotal, discount: preview.discount, tax: preview.tax, total: preview.total,
+    discountSnapshot: preview.discountSnapshot, lines: preview.lines.map(line => Object.fromEntries(Object.entries(line).filter(([key]) => key !== 'id'))) }));
+}
+export function previewInvoiceReplacement(db: DatabaseSync, invoiceId: string, version: number, now: Date): InvoiceReplacementPreview {
+  return transaction(db, () => {
+    const period = replacementPeriod(db, invoiceId, version, now); const preview = makePreview(db, period, now);
+    return { ...preview, predecessorId: period.predecessor.id, predecessorNumber: period.predecessor.number, predecessorVersion: period.predecessor.version,
+      logicalChargeId: period.charge.id, previewHash: replacementHash(period.predecessor, preview) };
+  }, 'read');
+}
+export function replaceInvoice(db: DatabaseSync, invoiceId: string, input: z.infer<typeof invoiceReplacementSchema>, actorId: string, now: Date): GenerationResult {
+  const validated = invoiceReplacementSchema.parse(input); internalActor(db, actorId);
+  const payloadHash = digest(JSON.stringify([invoiceId, validated.version, validated.previewHash]));
+  return transaction(db, () => {
+    const receipt = db.prepare('SELECT actor_id,payload_hash,logical_charge_id FROM invoice_replacement_requests WHERE idempotency_key=?').get(validated.idempotencyKey) as { actor_id: string; payload_hash: string; logical_charge_id: string } | undefined;
+    if (receipt) {
+      if (receipt.actor_id !== actorId || receipt.payload_hash !== payloadHash) throw new DomainError(409, 'IDEMPOTENCY_CONFLICT', 'This replacement submission key was already used for different inputs.');
+      const charge = db.prepare('SELECT current_invoice_id FROM logical_charges WHERE id=?').get(receipt.logical_charge_id);
+      if (!charge?.current_invoice_id) throw new DomainError(409, 'CHARGE_EXCEPTION', 'This logical charge has no current revision. Review its billing history.');
+      return { invoiceId: String(charge.current_invoice_id), logicalChargeId: receipt.logical_charge_id, created: false };
+    }
+    const period = replacementPeriod(db, invoiceId, validated.version, now); const preview = makePreview(db, period, now);
+    if (replacementHash(period.predecessor, preview) !== validated.previewHash) throw new DomainError(409, 'PREVIEW_CHANGED', 'Tax or discount eligibility changed after the preview. Review a fresh replacement before continuing.', { previewHash: 'Review the updated financial preview.' });
+    const successorId = persistDraft(db, period.source, period.charge.id, preview, actorId, now, period.predecessor.revision_number + 1, period.predecessor.id);
+    db.prepare("UPDATE logical_charges SET current_invoice_id=?,outcome='invoiced',reason=NULL,updated_at=? WHERE id=?").run(successorId, now.toISOString(), period.charge.id);
+    db.prepare('INSERT INTO invoice_replacement_requests(idempotency_key,actor_id,payload_hash,logical_charge_id,predecessor_id,created_at) VALUES(?,?,?,?,?,?)')
+      .run(validated.idempotencyKey, actorId, payloadHash, period.charge.id, period.predecessor.id, now.toISOString());
+    invoiceHistory(db, period.predecessor.id, actorId, 'replacement_created', 'Canceled', 'Canceled', now, 'An explicit linked successor Draft was created. This canceled revision remains immutable.');
+    return { invoiceId: successorId, logicalChargeId: period.charge.id, created: true };
+  });
+}
+
 export function billingRoutes(db: DatabaseSync, clock: () => Date): Router {
   const router = Router();
+  router.post('/invoices/:id/replacement/preview', requireRole('admin', 'staff'), (req, res) => {
+    const id = idSchema.parse(req.params.id); const input = invoiceReplacementPreviewSchema.parse(req.body); res.json(previewInvoiceReplacement(db, id, input.version, clock()));
+  });
+  router.post('/invoices/:id/replace', requireRole('admin', 'staff'), (req, res) => {
+    const id = idSchema.parse(req.params.id); const input = invoiceReplacementSchema.parse(req.body); const user = res.locals.user as User;
+    const result = replaceInvoice(db, id, input, user.id, clock()); res.status(result.created ? 201 : 200).json(transaction(db, () => serializeInvoice(db, result.invoiceId, user, clock()), 'read'));
+  });
   router.get('/discounts', requireRole('admin', 'staff'), (req, res) => {
     const input = discountListSchema.parse(req.query);
     res.json(transaction(db, () => {

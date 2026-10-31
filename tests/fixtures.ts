@@ -26,7 +26,9 @@ export async function fixture(t: TestContext, options: { seeded?: boolean; appOp
     mailMode: options.appOptions?.mailMode || 'outbox',
   });
   const db = app.locals.db as DatabaseSync;
-  t.after(() => {
+  t.after(async () => {
+    await app.locals.billingWorker?.stop();
+    await app.locals.deliverPending?.stop();
     db.close();
     rmSync(directory, { recursive: true, force: true });
   });

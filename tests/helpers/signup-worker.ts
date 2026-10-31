@@ -14,6 +14,8 @@ process.once('message', async () => {
     process.send?.({ type: 'error', message: error instanceof Error ? error.message : 'Worker failed.' });
     process.exitCode = 1;
   } finally {
+    await app.locals.billingWorker?.stop();
+    await app.locals.deliverPending?.stop();
     (app.locals.db as DatabaseSync).close();
     process.disconnect();
   }

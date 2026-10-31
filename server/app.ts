@@ -9,8 +9,10 @@ import { createMailDelivery, type MailConfig } from './mail.js';
 import { catalogRoutes } from './catalog.js';
 import { subscriptionRoutes } from './subscriptions.js';
 import { billingRoutes } from './billing.js';
+import { invoiceOutputRoutes } from './invoice-output.js';
+import { createBillingWorker, billingWorkbenchRoutes, type BillingWorkerOptions } from './billing-workbench.js';
 
-export interface AppOptions { databasePath: string; clock?: () => Date; appUrl?: string; mailMode?: 'outbox' | 'smtp'; mailConfig?: MailConfig; production?: boolean }
+export interface AppOptions { databasePath: string; clock?: () => Date; appUrl?: string; mailMode?: 'outbox' | 'smtp'; mailConfig?: MailConfig; production?: boolean; billingWorkerOptions?: BillingWorkerOptions }
 export function createApp(options: AppOptions) {
   const app = express();
   const db = openDatabase(options.databasePath);
@@ -19,6 +21,7 @@ export function createApp(options: AppOptions) {
   const mailConfig = options.mailConfig || { mode: options.mailMode || 'outbox' };
   app.locals.db = db;
   app.locals.deliverPending = createMailDelivery(db, mailConfig);
+  app.locals.billingWorker = createBillingWorker(db, clock, options.billingWorkerOptions);
   app.disable('x-powered-by');
   app.use(helmet({ contentSecurityPolicy: options.production ? undefined : false, referrerPolicy: { policy: 'no-referrer' } }));
   app.use((_req, res, next) => { res.locals.requestId = randomUUID(); res.setHeader('X-Request-Id', res.locals.requestId); next(); });
@@ -43,6 +46,8 @@ export function createApp(options: AppOptions) {
   app.use('/api', catalogRoutes(db, clock));
   app.use('/api', subscriptionRoutes(db, clock));
   app.use('/api', billingRoutes(db, clock));
+  app.use('/api', invoiceOutputRoutes(db, clock));
+  app.use('/api', billingWorkbenchRoutes(db, clock, app.locals.billingWorker));
   app.use('/api', (_req, res) => res.status(404).json({ error: { code: 'NOT_FOUND', message: 'This operation is not available.', requestId: res.locals.requestId } }));
   app.use(errorHandler);
   return app;

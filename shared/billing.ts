@@ -64,11 +64,12 @@ export interface InvoiceSummary {
   version: number; createdAt: string; confirmedAt: string | null; canceledAt: string | null; settledAt: string | null; settlementReason: string | null;
 }
 export interface Invoice extends InvoiceSummary {
+  currentInvoiceId: string; currentInvoiceNumber: string;
   lines: InvoiceLine[]; discountSnapshot: InvoiceDiscountSnapshot | null; discountReason: string;
   discountApplicationState: 'reserved' | 'consumed' | 'released' | null;
   discountDecisions?: DiscountDecision[]; discountDecisionsTruncated?: boolean;
   history: { id: string; kind: string; actorName: string; at: string; fromStatus: InvoiceStatus | null; toStatus: InvoiceStatus; message: string }[];
-  businessDate: string; allowedActions: ('confirm' | 'cancel')[];
+  businessDate: string; allowedActions: ('confirm' | 'cancel' | 'replace')[];
 }
 
 // All amounts are exact INR minor units. One eligible rule is selected by priority then ID.

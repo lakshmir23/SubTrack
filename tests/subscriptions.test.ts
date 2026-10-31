@@ -248,7 +248,7 @@ test('P3: independent workers racing the same create key commit one agreement an
       try{const response=await request(app).post('/api/subscriptions').set('Cookie',message.cookie).set('X-CSRF-Token',message.csrfToken).send(message.body);
         process.send({type:'result',status:response.status,id:response.body.id});}
       catch(error){process.send({type:'error',message:error.message});process.exitCode=1;}
-      finally{app.locals.db.close();process.disconnect();}
+      finally{await app.locals.billingWorker.stop();await app.locals.deliverPending.stop();app.locals.db.close();process.disconnect();}
     });`;
   type Message = { type: string; status: number; id: string; message: string };
   function worker() {
