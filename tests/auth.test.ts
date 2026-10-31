@@ -124,6 +124,19 @@ test('AUTH-04: invalid credentials remain generic and login abuse is rate-limite
   assert.ok(limited, 'Repeated failed logins must reach a bounded rate limit.');
 });
 
+test('AUTH-04: successful sign-ins do not exhaust the account failure allowance', async t => {
+  const { app } = await fixture(t);
+  for (let count = 0; count < 12; count++) {
+    const response = await request(app).post('/api/auth/login').send({ email: 'admin@brightloop.test', password: demoPassword });
+    assert.equal(response.status, 200);
+  }
+  for (let count = 0; count < 10; count++) {
+    const response = await request(app).post('/api/auth/login').send({ email: 'admin@brightloop.test', password: 'WrongPassword!' });
+    assert.equal(response.status, 401);
+  }
+  assert.equal((await request(app).post('/api/auth/login').send({ email: 'admin@brightloop.test', password: 'WrongPassword!' })).status, 429);
+});
+
 test('AUTH-02: HTTP password validation counts Unicode characters consistently through signup and login', async t => {
   const { app } = await fixture(t, { seeded: false });
   for (const password of ['Abcdefghé', 'AbcdeF!😀', `Aa!${'😀'.repeat(126)}`]) {

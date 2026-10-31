@@ -50,6 +50,9 @@ export function identityRoutes(db: DatabaseSync, clock: () => Date, origin: stri
     const now = clock();
     const session = transaction(db, () => {
       if (userByEmail(db, input.email)?.password_hash !== user.password_hash) throw new DomainError(401, 'INVALID_CREDENTIALS', 'The email or password is incorrect. Try again or reset your password.');
+      // A successful sign-in clears the account's consecutive-failure allowance.
+      // The independent IP window still bounds overall authentication traffic.
+      db.prepare('DELETE FROM auth_limits WHERE key=?').run(`login:account:${digest(input.email)}`);
       const csrfToken = issueSession(db, user.id, res, now, secure, cookieToken(req));
       audit(db, user.id, 'session.started', user.id, now);
       return { user: serializeUser(user), csrfToken };
