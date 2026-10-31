@@ -1,6 +1,6 @@
 # Coding-agent roadmap — configure → collect → prove
 
-**Status: execution authorized on 31 October 2026. P0 through P4 are verified; P5 is in progress.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
+**Status: execution authorized on 31 October 2026. P0 through P5 are verified; P6 is next.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
 
 ## Read first; establish the real starting point
 
@@ -71,10 +71,10 @@ Read root `AGENTS.md`, [REQUIREMENTS.md](REQUIREMENTS.md), [HACKATHON_CONSTRAINT
 
 **Depends on:** P4; D-05–D-07 transactional policies. **Coverage:** BILL-01, BILL-03, BILL-04, BILL-05.
 
-- [ ] Process hundreds of due subscriptions, oldest owed periods first under a visible batch limit. Produce created/already-existing/explicitly-nonbillable/failed-retryable outcomes and remaining backlog. Historical owed periods must remain recoverable after pause, close or expiry.
-- [ ] Enforce DB-level period uniqueness and atomic invoice/reservation/outcome/cursor persistence. Concurrent runs and retry after commit must not duplicate a charge; rollback must not move the cursor past failure.
-- [ ] Add review/Confirm, eligible Cancel, explicit linked replacement, Send and Print. Canceled period identities remain occupied; ordinary batch replay must not silently rebill them. Never allow cancel after a payment was recorded.
-- [ ] Send through the approved mechanism with truthful delivery status; render usable print/download output with number/customer/lines/tax/total/status. Label Draft output. Print/send must not alter settlement state.
+- [x] Process hundreds of due subscriptions, oldest owed periods first under a visible batch limit. Produce created/already-existing/explicitly-nonbillable/failed-retryable outcomes and remaining backlog. Historical owed periods remain recoverable after close or expiry; effective pause behavior is exercised in P6.
+- [x] Enforce DB-level period uniqueness and atomic invoice/reservation/outcome/cursor persistence. Concurrent runs and retry after commit cannot duplicate a charge; rollback cannot move the cursor past failure.
+- [x] Add review/Confirm, eligible Cancel, explicit linked replacement, Send and Print. Canceled period identities remain occupied; ordinary batch replay cannot silently rebill them. Never allow cancel after a payment was recorded (positive payment witnesses follow in P6).
+- [x] Send through the approved mechanism with truthful delivery status; render usable print/download output with number/customer/lines/tax/total/status. Label Draft output. Print/send do not alter settlement state. Actual controlled invoice inbox receipt and rendered PDFs were inspected; see evidence/P5_DELIVERY_AND_PRINT.md.
 
 **Gate:** hundreds-record results reconcile; replay creates zero duplicates; one injected failure remains retryable while other records succeed; two workers cannot double bill; print is inspected and actual invoice delivery verified. **Fix failures:** generic success toast over failed rows, untraceable skips, lost backlog, fake send button or a canceled invoice regenerated on replay.
 

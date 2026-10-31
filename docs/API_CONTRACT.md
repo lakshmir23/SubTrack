@@ -1,6 +1,6 @@
 # Shared application contract
 
-Owner: root integrates shared persistence/domain contracts; domain owns catalog/subscription schema and routes; ui owns src/design context/browser journeys; independent review verifies boundaries. Coordinate active files. P0–P4 are verified; P5 is next.
+Owner: root integrates shared persistence/domain contracts; domain owns catalog/subscription schema and routes; ui owns src/design context/browser journeys; independent review verifies boundaries. Coordinate active files. P0–P5 are verified; P6 is next.
 
 Adopt D-01–D-10 as implementation defaults under the current instruction to execute the roadmap. They remain team policies, not organizer requirements. Currency is INR with 100 minor units. Business date is server-owned Asia/Kolkata, timestamps are UTC, periods are half-open and derived from original anchors. No client date override. Public roles, ownership, price and totals are never accepted from the browser.
 
@@ -52,7 +52,7 @@ POST `/subscriptions/:id/invoices/preview` takes `expectedPeriodStart` and reser
 
 GET `/invoices` and `/:id` enforce customer ownership. Internal rule decisions and global usage never enter customer snapshots. POST `/:id/confirm` and `/:id/cancel` require the last-read `version`, internal access and a valid transition. Confirmation consumes a reserved use once even after later rule edits/expiry. A zero-total confirmation becomes Paid with zero payments. Draft cancellation releases any reservation; unpaid Confirmed cancellation retains any consumed use. Paid invoices cannot be canceled. Pricing and original eligibility snapshots remain immutable.
 
-## P5 billing workbench and output contract (in progress)
+## P5 billing workbench and output contract (verified)
 
 `shared/billing-workbench.ts` owns strict bounded run/retry/replacement inputs and paged results. GET `/billing/queue` accepts `q`, `customerId`, `view=due|exceptions` and pagination. It selects the next oldest owed period per accepted subscription using an indexed original-anchor cursor, without excluding debt because of the current service badge. Failed periods and canceled current revisions remain visible exceptions. Future accepted subscriptions are counted as not due; that is not a waiver of their future charge.
 
