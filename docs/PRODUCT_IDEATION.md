@@ -6,7 +6,7 @@ Canonical requirement IDs and the source paraphrase are in [REQUIREMENTS.md](REQ
 
 ## The actual assignment
 
-Brightloop Software sells monthly or yearly business software, add-ons, and support products. Its customers range from small monthly subscribers to large yearly contracts. The requested product is one unified platform for plans, subscriptions, recurring invoices, payments, and reporting—not a consumer subscription tracker and not a standalone billing calculator.
+Brightloop Software sells monthly or yearly business software, switchable add-ons, and products with variants. Its customers range from small monthly subscribers to large yearly contracts. The requested product is one unified platform for plans, subscriptions, recurring invoices, payments, and reporting—not a consumer subscription tracker and not a standalone billing calculator.
 
 The brief's business failures are missed renewals, duplicate invoices, manual payment matching, and unclear recurring revenue. The best strategy is to make the entire described month work. **Mandatory coverage is the differentiator's foundation.** Proration, a real payment gateway, AI predictions, refunds, and an elaborate simulator are not specified and must not displace required functionality.
 
@@ -32,7 +32,7 @@ The precise staff permission matrix is not supplied. Document a least-privilege 
 
 ### Products and plans
 
-Products include name, type, sales price, cost price, and variants. The brief's example brand variant **Odoo adds 560 to the price**. Preserve the distinction between base sales price, variant adjustment, and resulting line price; customers must not see internal cost price by accident.
+Products include name, type, sales price, cost price, notes, and variants. The brief's example brand variant **Odoo adds 560 to the price**. Preserve the distinction between base sales price, variant adjustment, and resulting line price; customers must not see internal cost price by accident.
 
 Plans define price, billing frequency (**daily, weekly, monthly, yearly**), minimum quantity, and availability dates. The administrator chooses which plans close automatically at the end and which support early closure, pause, or renewal. These choices must affect the available operations and actual behavior.
 
@@ -42,7 +42,7 @@ Do not copy Odoo ERP's restrictions blindly: the problem statement explicitly al
 
 Quotation templates provide the right plan, product lines, and validity in days. A subscription has its own number, customer, plan, start date, expiry date, payment terms, and lines containing product, quantity, unit price, taxes, and amount.
 
-The required lifecycle is **Draft → Quotation → Confirmed → Active**. Include the plan-controlled close, pause, and renew operations. The screenshot also describes plans that can be closed early; distinguish a cancellation request or action from an effective closed state in the chosen policy. Everyone with permission should be able to identify the current stage.
+The required lifecycle is **Draft → Quotation → Confirmed → Active → Closed**. Include the plan-controlled close, pause, and renew operations. The screenshot also describes plans that can be closed early; distinguish a cancellation request or action from an effective closed state in the chosen policy. Everyone with permission should be able to identify the current stage.
 
 ### Recurring billing
 
@@ -60,7 +60,7 @@ Persist why a discount applied and which version or terms the invoice used. Usag
 
 Each invoice-linked payment records method, amount, date, and note. The user must be able to see paid and outstanding invoices. Partial-payment balances are a natural acceptance case for that requirement; document the policy rather than pretending the brief specifies a separate partial-payment status.
 
-Finance needs active subscription count, revenue, payments, overdue invoices, filters, and a summary view. Pages should respond **in under two seconds with thousands of subscriptions**. Treat that as a measurable acceptance target, not a marketing claim.
+Finance needs active subscription count, revenue, payments, overdue invoices, filters, and a summary view. Every page should respond **in under two seconds with thousands of subscriptions**. Treat that as a measurable acceptance target, not a marketing claim.
 
 ## One coherent interface
 

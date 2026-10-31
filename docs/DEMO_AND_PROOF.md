@@ -18,7 +18,7 @@ These are explicit demo policies, not additional requirements or tax advice:
 
 - Currency is INR for presentation; single currency throughout.
 - Billing date is November 1, 2026, using a clearly labeled synthetic fixture. A and B use seven-day payment terms: invoices issued November 1 are due November 8, with overdue status starting November 9 under this demo policy. The finance snapshot is November 9, before C becomes due on November 15; all three contracts remain unexpired.
-- Product **Business Software** has base sales price ₹1,000 and cost price ₹400. Cost price is internal only.
+- Product **Business Software** has base sales price ₹1,000 and cost price ₹400 and notes “Demo recurring software product.” Cost price is internal only.
 - Variant **Odoo** adds ₹560 **per unit**, following the statement's variant example.
 - The monthly plan identifies Business Software as its primary product; plan price ₹1,000 replaces that product’s catalog base unit price. Add the chosen variant per unit; never add a separate plan fee. See [DECISIONS.md](DECISIONS.md). A separate unequal-plan/catalog-price test proves this mapping.
 - Demonstration tax is a fictional configurable **10% demo tax**, calculated after discount. It is not described as an applicable statutory rate.
@@ -34,7 +34,7 @@ These are explicit demo policies, not additional requirements or tax advice:
 | B | Sample Shop | One Business Software unit, base variant | Due November 1; no discount. |
 | C | Sample Services | One Business Software unit, base variant | Active but next billing date November 15; not due in this run. |
 
-All agreements have explicit numbers, customers, plans, start/expiry dates, payment terms, and product lines. Use a quotation template to create A and show **Draft → Quotation → Confirmed → Active** rather than seeding away the entire required workflow.
+All agreements have explicit numbers, customers, plans, start/expiry dates, payment terms, and product lines. Use a quotation template to create A and show **Draft → Quotation → Confirmed → Active → Closed** for the full required lifecycle. In the main billing fixture, stop A at Active until collection/reporting is shown; use a separate ending fixture to prove Closed, so closing A does not contradict the active-count arithmetic.
 
 ### Subscription A: explain the invoice
 
@@ -93,7 +93,7 @@ All entries are **Not verified** until the implemented system supplies evidence.
 | AUTH-04 | Administrator, limited internal staff, customer portal | Separate identities; test actual allowed and denied requests. |
 | AUTH-05 | Only administrator adds internal staff | Staff/customer direct requests rejected. |
 | AUTH-04 | Customers see only their own subscriptions/invoices | Cross-customer URL/API attempts rejected; own records accessible. |
-| CAT-01 | Product name, type, sales price, cost price | Create/edit valid record; values persist; cost visibility restricted appropriately. |
+| CAT-01 | Product name, type, sales price, cost price and notes | Create/edit valid record including notes; values persist; cost visibility restricted appropriately. |
 | CAT-02 | Variants and price adjustment | Odoo variant adds 560; line unit price and total update consistently. |
 | PLAN-01 | Plan price and daily/weekly/monthly/yearly frequency | Configure each interval; verify actual next billing dates. |
 | PLAN-02 | Minimum quantity and availability dates | Reject below-minimum or unavailable selection; boundary cases recorded. |
@@ -101,7 +101,7 @@ All entries are **Not verified** until the implemented system supplies evidence.
 | QUOTE-01 | Templates with plan, lines, validity days | Create quote from template; correct copied values and validity date. |
 | SUB-01 | Number, customer, plan, start, expiry, payment terms | Persist and display all agreement fields; subscription numbers remain unique. |
 | SUB-02 | Product, quantity, unit price, taxes, amount on lines | Correct populated lines and calculated totals. |
-| SUB-03 | Draft → Quotation → Confirmed → Active | Legal transitions work; invalid/repeated transitions do not duplicate effects. |
+| SUB-03 | Draft → Quotation → Confirmed → Active → Closed | Legal transitions, including final closure on a separate fixture, work; invalid/repeated transitions do not duplicate effects. |
 | SUB-04 | Internal team can see where each subscription stands | Separate authorized staff views reflect the same persisted state. |
 | BILL-01 | Batch invoices created from subscriptions | Customer, lines, taxes, totals populated without manual re-entry. |
 | BILL-02 | Automatic administrator-configured tax rules | Eligible tax applied; noneligible tax not applied; rounding policy documented. |
@@ -182,3 +182,7 @@ Never invent customers served, revenue saved, delivery success, test coverage, o
 - Portal responses omit internal cost and payment-note fields, not merely hide them visually.
 
 Every check remains unrun until implementation evidence exists.
+
+## Higher-quality source reconciliation
+
+Product notes persist and remain editable under normal catalog permissions. The exact subscription sequence is Draft → Quotation → Confirmed → Active → Closed; prove Closed on a separate fixture so the main three-active-subscription snapshot remains internally consistent. Cover switchable add-ons through ordinary optional lines and the chosen effective-boundary policy; historical invoices remain unchanged. FIN-02 measures every required page with the populated dataset, not finance alone.

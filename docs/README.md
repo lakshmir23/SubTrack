@@ -15,6 +15,10 @@ Read the root [AGENTS.md](../AGENTS.md), then follow [ROADMAP.md](ROADMAP.md) fr
 5. [Demo and proof](DEMO_AND_PROOF.md): traceability, coherent scenarios, batch correctness and performance evidence.
 6. [Prior-event research](RESEARCH.md): historical context, explicitly subordinate to this brief.
 
+## Baseline versus differentiation
+
+Both supplied attachments govern this project: the full Brightloop brief and the Odoo Must have / Nice to have guidance. [BASELINE_AND_ENHANCEMENTS.md](BASELINE_AND_ENHANCEMENTS.md) separates those obligations from ranked, requirement-linked enhancements. Finish the baseline first; add polish that makes its correctness and usability obvious.
+
 ## Fast path for the team
 
 - **First five minutes:** read REQUIREMENTS, then agree the proposed defaults in [DECISIONS.md](DECISIONS.md).
@@ -24,7 +28,7 @@ Read the root [AGENTS.md](../AGENTS.md), then follow [ROADMAP.md](ROADMAP.md) fr
 
 ## What the brief actually asks for
 
-A unified business system spanning products and variants, recurring plans, quotation templates, subscriptions, automatic invoice generation, taxes, bounded discounts, partial payments and finance reporting. Admin, internal staff and customer portal roles have different access. Hundreds of due subscriptions must not be double-billed or missed; views must remain responsive in under two seconds with thousands of subscriptions.
+A unified business system spanning products and variants, recurring plans, quotation templates, subscriptions, automatic invoice generation, taxes, bounded discounts, partial payments and finance reporting. Admin, internal staff and customer portal roles have different access. Hundreds of due subscriptions must not be double-billed or missed; every page must remain responsive in under two seconds with thousands of subscriptions.
 
 The core story is **configure → quote → confirm/activate → bill → collect → renew/pause/close → report**. Each step must use persisted data and enforce policy on the server.
 

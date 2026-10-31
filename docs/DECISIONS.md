@@ -1,14 +1,16 @@
-# Brightloop — proposed baseline decisions
+# SubTrack — proposed baseline decisions
 
 **Status: team-adoptable defaults, pending team agreement. Not organizer requirements and not implemented behavior.** Revised 31 October 2026. The supplied brief leaves these semantics open; this document gives the implementation agents one coherent, deliberately small interpretation. [REQUIREMENTS.md](REQUIREMENTS.md) remains authoritative for what the organizer actually asks for. Confirm or amend these defaults once as a team before coding; reflect any change here and in its tests rather than allowing contradictory per-screen behavior.
 
-This is a documentation-only handoff. No application code, passing tests or measured performance is claimed. The aim is complete and explainable billing within the eight-hour round, not a full ERP.
+This is a documentation-only handoff. No application code, passing tests or measured performance is claimed. SubTrack is the proposed product; Brightloop Software is the fictional client in the brief. The aim is complete and explainable billing within the eight-hour round, not a full ERP.
 
 ## D-01 — Price meaning and accepted terms
 
 **Default:** A plan identifies one primary product. Its price is the recurring base unit price for that product, replacing—not adding to—the catalog base sales price in that plan. Add the chosen variant adjustment per unit. Additional product lines use their accepted catalog unit prices and share the plan cadence. Require exactly one primary-product line; no separate invisible plan fee. The minimum quantity applies to the primary-product line, not unrelated add-ons.
 
-At subscription confirmation, snapshot plan policies, prices, quantities, variant adjustments and payment terms. Catalog/plan/template edits do not change accepted subscriptions. A different plan or commercial price requires a fresh quotation; automatic repricing and mid-term amendments are deferred. Taxes/discounts are selected when an invoice is generated and then snapshotted on that invoice. Prices and currency must be compatible before confirmation.
+At subscription confirmation, snapshot plan policies, prices, quantities, variant adjustments and payment terms. Catalog/plan/template edits do not change accepted subscriptions. A different plan or commercial price requires a fresh quotation; automatic repricing and general mid-term commercial amendments are deferred. Taxes/discounts are selected when an invoice is generated and then snapshotted on that invoice. Prices and currency must be compatible before confirmation.
+
+The brief also describes add-ons customers switch on/off. Bounded proposed policy: represent these as optional existing product lines with effective active intervals. An authorized enable/disable request takes effect at the first original schedule boundary on or after its request date that is not already invoiced. Preserve prior owed periods and invoice snapshots; use accepted unit prices without proration or silent repricing. The primary-product line cannot be disabled. Persist requested/effective dates and enforce customer ownership; this is not a separate add-on CRUD platform.
 
 **Why:** Both plan price and product sales price must have a real purpose, without double billing. **Proof:** catalog base 1,200, plan base 1,000, variant +560 gives 1,560 per primary-product unit, not 2,760; an add-on is separately priced. Existing accepted terms survive later edits. This is a proposed interpretation, not text asserted by the brief.
 
@@ -26,17 +28,17 @@ Plan availability and discount end dates are inclusive. Plan availability limits
 
 Capabilities are enforced from accepted plan policy. **Pause/early-close requests take effect at the first original schedule boundary on or after the request business date that is not already invoiced.** Display request date and effective date. Never waive an older owed period or cancel a previously generated invoice simply because the user asks to pause now. This includes overdue unbilled periods: they remain owed. No partial-period refund or proration is implied.
 
-While paused, every complete period beginning at/after the pause effective boundary and before resume/expiry is recorded as **non-billable: paused**. A small period-outcome record or equivalent persisted interval plus auditable period outcomes is enough; no event-sourcing platform is needed. Resume takes effect at the first original boundary on or after its request date, after the pause boundary; it cannot change prior waived/owed outcomes. If that boundary reaches expiry, renewal is required before service resumes. Pause does not extend expiry or shift the original anchor. Early close stops future periods at its effective boundary and does not erase debt.
+While paused, every complete period beginning at/after the pause effective boundary and before resume/expiry is recorded as **non-billable: paused**. A small period-outcome record or equivalent persisted interval plus auditable period outcomes is enough; no event-sourcing platform is needed. Resume takes effect at the first original boundary on or after its request date, after the pause boundary; it cannot change prior waived/owed outcomes. If that boundary reaches expiry, renewal is required before service resumes. Pause does not extend expiry or shift the original anchor. Early close moves the subscription stage to Closed at its effective boundary, stops future periods and does not erase debt.
 
 **Proof:** pause mid-month, resume next month, verify current issued bill remains owed, paused complete periods are explicitly waived, later periods resume on original anchor. An overdue period before the request remains billable even if processed after closing.
 
 ## D-04 — Expiry and renewal
 
-No service period starts at or after the exclusive expiry boundary. With auto-close enabled, the operational state becomes Closed at expiry. Without it, show **Term ended — renewal required**; this does not grant indefinite service or billing. Historical owed periods remain recoverable in either case.
+No service period starts at or after the exclusive expiry boundary. The required visible progression is Draft → Quotation → Confirmed → Active → Closed. With auto-close enabled, both stage and operational state become Closed at expiry. Without it, show the interim **Term ended — close or renew** condition, block new service/billing periods, and provide staff/admin an explicit end-of-term Close action that moves the stage to Closed. End-of-term closure does not require permission to close early; it does not reopen service or erase debt. Historical owed periods remain recoverable in either case.
 
 If renewal is allowed, extend the existing term by a positive whole number of plan periods at its existing accepted terms. Preserve previous/new expiry in audit history and use an idempotent renewal action. Renewal never resets billing cursor or repeats old periods. Do not renew an early-closed contract; create a fresh quote instead. For a term that already ended, do not silently charge the expired gap: baseline rejects late renewal and requires a fresh quote/start date. Renew before expiry, or exactly at its boundary before any gap arises. New pricing requires a new quote rather than invisible amendment.
 
-Serialize renewal and expiry processing with the same subscription lock/version check, and re-evaluate the persisted expiry inside that transaction. Record closure cause: at the exact expiry boundary, expiry-closed is still eligible for the permitted renewal, but early-closed is not. A successful boundary renewal restores the appropriate running/paused state under the existing lifecycle policy; an expiry worker must not close a term that has already been extended. After that boundary date, the late-renewal rejection still applies; no expired gap is back-billed.
+Serialize renewal and expiry processing with the same subscription lock/version check, and re-evaluate the persisted expiry inside that transaction. Record closure cause: at the exact expiry boundary, expiry-closed is still eligible for the permitted renewal, but early-closed is not. A successful boundary renewal restores Active stage and the appropriate running/paused condition under the existing lifecycle policy; an expiry worker must not close a term that has already been extended. After that boundary date, the late-renewal rejection still applies; no expired gap is back-billed.
 
 **Why:** Makes “renew” a demonstrable operation while avoiding retroactive service/debt. **Proof:** renew one term, generate exactly its new next-period invoice, replay renewal request without extending twice; disabled renewal and late renewal fail clearly.
 
@@ -82,7 +84,8 @@ No configurable permission-builder is needed for the round. Enforce these rules 
 |---|---|---|---|
 | Add staff, roles, catalog/plans/taxes/templates/discount configuration | Yes | Read necessary operational catalog only | Published plan/product information only |
 | Create customer quote, issue/confirm/activate subscription | Yes | Yes | Read own quote/subscription; no commercial editing |
-| Plan-permitted pause/resume/renew/early close | Yes | Yes | Own subscription only |
+| Plan-permitted pause/resume/renew/early close; scheduled optional add-on toggles | Yes | Yes | Own subscription only |
+| Explicit end-of-term Close when auto-close is off | Yes | Yes | Read resulting state |
 | Generate/confirm/cancel/replace invoice under D-06 | Yes | Yes | No |
 | Record payment | Yes | Yes | No |
 | Invoice send/print | Yes | Yes | Own invoice print/download only |

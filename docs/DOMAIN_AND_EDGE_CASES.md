@@ -1,4 +1,4 @@
-# Brightloop: domain, billing invariants and edge cases
+# SubTrack: domain, billing invariants and edge cases
 
 > **Documentation only, revised 31 October 2026 after inspecting all four pages of the supplied Subscription Management System problem statement.** This replaces the earlier title-only hypotheses. Required behavior below comes from that statement; implementation choices and unresolved semantics are explicitly marked. No tests or performance results are claimed as completed.
 >
@@ -6,17 +6,17 @@
 
 ## 1. What the actual brief makes non-negotiable
 
-Brightloop sells subscription software, services and products with variants. Admin configures products, plans, taxes and discounts; internal staff handles daily work with limited access; customers see only their own subscriptions and invoices through a portal.
+SubTrack is the proposed product for the fictional client Brightloop Software. The brief describes business software, add-ons customers switch on/off, and products with variants. Admin configures products, plans, taxes and discounts; internal staff handles daily work with limited access; customers see only their own subscriptions and invoices through a portal.
 
 The [verified requirements matrix](REQUIREMENTS.md) is the authoritative cross-reference. The baseline is now **the entire ordinary billing month**, not just an attractive recurring-payment demo:
 
 - Unique-email signup, password rules, reset links and role-scoped access; only admin adds staff.
-- Product name/type/sales price/cost price, variant pricing, recurring plans and availability policies.
-- Reusable quotation templates with validity; subscription commercial lines and exact progression **Draft → Quotation → Confirmed → Active**.
+- Product name/type/sales price/cost price/notes, variant pricing, recurring plans and availability policies.
+- Reusable quotation templates with validity; subscription commercial lines and exact progression **Draft → Quotation → Confirmed → Active → Closed**.
 - Batch invoice generation from subscriptions, automatic taxes, confirm/cancel/send/print actions and **Draft → Confirmed → Paid** progression, without duplicate or skipped bills.
 - Admin-only fixed/percentage discounts with purchase/quantity thresholds, dates, usage limits, product/subscription targeting and automatic next-invoice application/expiry.
 - Payments against invoices with method, amount, date and note; accurate paid/outstanding balances, including partial payments.
-- Filtered finance views for active subscriptions, revenue, payments and overdue invoices, with summary and **under-two-second page responses at thousands of subscriptions**.
+- Filtered finance views for active subscriptions, revenue, payments and overdue invoices, with summary; **every application page**, not only finance, must respond in under two seconds with thousands of subscriptions.
 
 **Not stated as requirements:** a live payment gateway, stored cards, automated charging, AI agents, multi-tenancy, proration, a time-travel UI or a full accounting ledger. Do not let these displace required workflows.
 
@@ -31,14 +31,14 @@ This is a proposed schema, not a claim that the brief prescribes table names. Ev
 | **User** | ID, normalized unique email, password hash, role, enabled flag | One account per email. Signup creates customer role only; admin creates staff. Never trust a submitted role. |
 | **Customer** | ID, linked user where applicable, name/contact/billing details | Commercial identity separate from authentication; staff may prepare quotes for a customer. |
 | **PasswordResetToken** | User, token hash, expiry, consumed timestamp | Single-use reset links; never store plaintext passwords or reset tokens. |
-| **Product** | ID, name, type, base sales price, cost price, currency, active flag | Cost is internal, never exposed in the portal. Referenced products are archived, not deleted. |
+| **Product** | ID, name, type, base sales price, cost price, notes, currency, active flag | Cost is internal, never exposed in the portal. Referenced products are archived, not deleted. |
 | **VariantAttribute / VariantValue** | Attribute name and value, e.g. Brand → Odoo | Distinguish named attributes from individual saleable variants. |
 | **ProductVariant** | Product, unique combination/SKU, attribute values, sales-price adjustment or explicit price | Brief example: choosing brand **Odoo adds 560**. Store a numeric adjustment, not a name-specific UI calculation. Currency is not specified by that example. |
 | **Plan** | Name, primary product, price and currency, interval enum daily/weekly/monthly/yearly, positive interval count if supported, minimum quantity, available-from/to, auto-close-at-end, allow-early-close/pause/renew | Policies belong to the plan and must be enforced by actions, not only displayed. |
 | **PriceVersion / CommercialTermsVersion** | Product/variant, plan or pricing context, currency, accepted unit price and policy snapshot/version | Proposed lightweight versioning: catalog edits must not silently reprice accepted agreements. Immutable snapshots can replace a separate version table if simpler. |
 | **QuotationTemplate / TemplateLine** | Name, plan/default terms, validity days, product/variant lines and default quantities/prices | Copy to a new subscription quote; later template edits do not mutate existing quotations. |
 | **Subscription** | Unique human-facing number, customer, plan, start date, expiry date, payment terms, quotation-valid-until, stage, operational state, next billing boundary, version | Preserves required commercial fields and separates sales progression from pause/close behavior. |
-| **SubscriptionLine** | Subscription, product/variant, quantity, accepted unit price, tax references/snapshots, computed amount | Snapshot accepted price and terms on confirmation; retain history for later changes. |
+| **SubscriptionLine** | Subscription, product/variant, quantity, accepted unit price, tax references/snapshots, computed amount; effective active intervals for optional add-on lines | Snapshot accepted price and terms on confirmation; retain history for later changes. |
 | **TaxRule** | Name, rate, applicable products/type if needed, enabled/effective dates, inclusive/exclusive policy | Admin-managed automatic calculation. Snapshot applied tax on finalized invoice lines. |
 | **Invoice / InvoiceLine** | Number, subscription/customer, logical charge, revision number, predecessor if replaced, charge period, issue/due date, currency, state; copied lines, quantities, prices, tax/discount amounts and totals | Reproducible financial document; historical display must survive catalog edits. |
 | **DiscountRule / DiscountTarget** | Fixed/percentage value, min purchase/quantity, start/end, usage limit, enabled flag, target products or subscriptions | Admin-only authoring. Eligibility checked at billing time, not by a stale browser preview. |
@@ -70,14 +70,16 @@ Enforce roles and ownership server-side, including PDFs and indirect references.
 
 ### Required subscription progression
 
-**Draft → Quotation → Confirmed → Active** must remain visible. Do not replace it with a generic active/inactive toggle.
+**Draft → Quotation → Confirmed → Active → Closed** must remain visible. Do not replace it with a generic active/inactive toggle.
 
 - **Draft:** editable preparation; apply/copy a quotation template.
 - **Quotation:** offer issued with validity date and price/product lines. Expired offers cannot be confirmed without explicit renewal/reissue.
 - **Confirmed:** customer agreement recorded; freeze accepted commercial snapshots and validate dates, quantity, plan availability and payment terms.
 - **Active:** service has started according to start date/activation policy and is eligible for recurring billing. The brief does not require a successful-payment gate for activation; do not invent one.
 
-Pause/close is a separate operational status or explicit extension to that progression. Proposed representation: stage plus `running/paused/closed`, with paused/closed relevant only after activation. Plan permissions control whether staff/customer may pause, renew or close early.
+- **Closed:** required final stage after permitted effective early closure, automatic end closure, or explicit closure of an ended term. Preserve financial history and owed backlog.
+
+Pause is an operational condition while the stage remains Active; closure must visibly move the stage to Closed, not merely change a badge. Keep stage and operational state consistent transactionally. Plan permissions control pause, renewal and early closure. Auto-close off may show a temporary term-ended condition, but staff/admin must have an explicit end-of-term Close action; this is not early closure permission.
 
 Use [D-02–D-04](DECISIONS.md#d-02--time-boundaries-and-activation) for exact proposed date/lifecycle defaults: full-period boundaries, original-anchor calendar arithmetic, next-boundary pause/early close, explicit paused-period waivers, and explicit whole-term renewal. No retroactive waiver of owed periods. Pausing does not shift the anchor or extend expiry. Resume cannot invoice waived paused periods. Term expiry blocks future periods whether auto-close is enabled or not; older debt remains recoverable. Late renewal requires a new quote rather than automatically charging an expired gap.
 
@@ -118,6 +120,8 @@ Use a unique key such as `(subscription_id, period_start, period_end, charge_kin
 ### Commercial amounts
 
 Use D-01: plan price supplies the recurring base unit price of its designated primary product; variant adjustment is per unit. Additional product lines use accepted catalog prices. No additive plan fee. Snapshot accepted mapping and terms; minimum quantity applies to the primary-product line. This is a proposed policy, not an organizer-prescribed pricing formula.
+
+For the brief’s switchable add-ons, use existing optional subscription product lines rather than a new add-on platform. Proposed D-01 policy schedules enable/disable at the next eligible original billing boundary, preserving accepted unit prices and historical billed/owed lines. Show requested/effective state and validate ownership; do not allow disabling the required primary-product line or rewriting a past invoice.
 
 Store money in integer minor units of the configured currency (or appropriate fixed-precision decimals); never binary floating-point money. Currency scale is configured, not universally assumed to be two decimals. Snapshot both base price and variant adjustment, or their accepted total, so the Brand=Odoo **+560** example is explainable.
 
@@ -161,7 +165,7 @@ D-08 defers correction/reversal UI: payments are immutable and reviewed before r
 
 **Optional future gateway:** add PaymentAttempt separate from Payment. A timeout is unknown, not declined; reconcile before retry. Confirmed provider events need unique IDs and cannot regress a paid invoice. This remains stretch work and must not delay manual payment requirements.
 
-## 8. Finance summary and the under-two-second requirement
+## 8. Finance summary and application-wide performance
 
 Use database-backed filters and pagination; do not load thousands of records into the browser and hide most rows. Suggested indexes: subscription stage/operational state and next-bill date; customer foreign keys; invoice status/due date; payment date/invoice; unique billing identity. Validate actual query plans rather than adding every possible index.
 
@@ -175,7 +179,7 @@ Define dashboard labels precisely:
 
 Filters must use consistent date boundaries, customer/status semantics and currency. Summary totals cover the full filtered dataset, not only the current page. Avoid joining invoice lines and payments in a way that multiplies rows and inflates sums; aggregate each separately before combining.
 
-**Performance proof plan, not a result:** seed thousands of valid subscriptions with coherent invoices/payments; measure end-to-end dashboard/list response in the documented environment for representative filters, cold and warm loads. Record dataset counts, page size, timings and failure cases. Target every measured page response below two seconds; do not claim compliance from a fast empty dataset or a screenshot. Optimize bounded queries, pagination and aggregation before adding cache complexity; caches must invalidate after billing/payment changes.
+**Performance proof plan, not a result:** seed thousands of valid subscriptions with coherent invoices/payments; inventory and measure every application page, including authentication, configuration, lists, details, billing, finance and the customer portal, in the documented environment for representative filters, cold and warm loads. Measure user-visible page readiness and API timing separately. Record dataset counts, page size, timings and failure cases. Target every measured page response below two seconds; do not claim compliance from a fast empty dataset or a screenshot. Optimize bounded queries, pagination and aggregation before adding cache complexity; caches must invalidate after billing/payment changes.
 
 ## 9. Acceptance matrix to execute
 
@@ -184,10 +188,10 @@ Filters must use consistent date boundaries, customer/status semantics and curre
 | Concurrent same-email signup | Exactly one account; second gets clean validation error. |
 | Password/reset | Eight-character password rejected; nine with required classes accepted; reset link expires and cannot be reused. |
 | Staff creation / portal isolation | Non-admin cannot add staff; customer cannot access another customer's invoice, PDF or subscription by ID. |
-| Product variant | Brand Odoo adds exactly 560 to the defined base, and accepted quote preserves it after catalog edit. |
+| Product fields / variant | Product name, type, sales price, cost price and notes persist after edit/reload. Brand Odoo adds exactly 560 to the defined base, and accepted quote preserves it after catalog edit. |
 | Plan controls | Each of daily/weekly/monthly/yearly schedules works; min quantity and availability enforced; disabled pause/renew/early-close denied. |
 | Quote template / expiry | Template copies lines; original survives template edits; expired offer cannot silently confirm. |
-| Subscription progression | Draft → Quotation → Confirmed → Active visible with required fields and line totals. |
+| Subscription progression | Draft → Quotation → Confirmed → Active → Closed visible with required fields and line totals; both automatic end closure and manual end-of-term closure are exercised. |
 | Repeat/concurrent billing | Same due period creates one invoice; customer/products/taxes/totals prefilled. |
 | Failed batch item / backlog | No cursor advance on failure; other items succeed; retry fills failed/missed periods without duplicates. |
 | Discount last use race | Only permitted number of invoices reserve/use rule; next invoice stops applying expired/exhausted rule. |
@@ -198,7 +202,7 @@ Filters must use consistent date boundaries, customer/status semantics and curre
 | Renewal | Extend accepted term before expiry; next new-period invoice exists exactly once; idempotent request replay does not extend twice. |
 | History integrity | Price/tax/discount edits do not change confirmed invoice or recorded payment. |
 | Month/year edges | January 31 anchoring and leap-year policy produce valid non-overlapping periods without drift. |
-| Finance consistency / speed | Filtered full-dataset summaries equal underlying records; thousands-row test produces recorded page timings under two seconds. |
+| Finance consistency / application speed | Filtered full-dataset summaries equal underlying records; thousands-row test inventories every application page and records user-visible timings, including every two-second breach. |
 
 These are planned tests, not completed passes. Audit events must correspond to actual database changes, exclude passwords/tokens/payment secrets, and record business facts in the same transaction. Do not claim cryptographic tamper-proofing merely because the UI has no edit button.
 

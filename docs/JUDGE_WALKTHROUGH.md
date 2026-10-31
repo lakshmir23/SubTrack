@@ -15,7 +15,7 @@ Use the consistent fixture and amounts in [DEMO_AND_PROOF.md](DEMO_AND_PROOF.md)
 | Time | Show | Evidence rather than narration |
 |---|---|---|
 | 0:00–0:20 | Brightloop's problem and the operational overview | Real persisted counts, with every count linking to matching records. State which fixture data is synthetic. |
-| 0:20–0:50 | Product variant, recurring plan and quotation template becoming a subscription | Configured Odoo variant price adjustment; required fields; visible Draft → Quotation → Confirmed → Active progression. |
+| 0:20–0:50 | Product variant, recurring plan and quotation template becoming a subscription | Configured Odoo variant price adjustment; required fields; visible Draft → Quotation → Confirmed → Active progression here; show the final Closed transition in the lifecycle fixture without changing the main active-count example. |
 | 0:50–1:25 | Billing preview and generation for A/B, with C not due | Prefilled customer/lines, explicit discount and tax calculation; A 3,088.80 and B 1,100 under the declared demo policy. |
 | 1:25–1:45 | Repeat billing and inspect outcomes | Zero new period invoices; existing invoice references and the not-due reason remain visible. No fake counter animation. |
 | 1:45–2:10 | Record A's partial payment, then settle the balance | Confirmed while partially paid, Paid only at zero balance; method/date/note and invoice association visible. |

@@ -1,10 +1,10 @@
 # Brightloop Software — authoritative requirements
 
-Source: the supplied four-page **Subscription Management System** problem statement, inspected on 31 October 2026. It describes Brightloop Software and an ordinary billing month. This document paraphrases the visible brief; requirement IDs are our tracking labels, not organizer numbering. These requirements supersede title-only assumptions in the first research pass. The source was received as an image of the four pages, not as a machine-readable PDF.
+Source: the supplied higher-quality four-page **Subscription Management System** problem statement, inspected on 31 October 2026. It describes Brightloop Software and an ordinary billing month. This document paraphrases the visible brief; requirement IDs are our tracking labels, not organizer numbering. Rechecked against the four higher-quality images on 31 October: product notes and final Closed status are explicit, and the performance target covers every page. These requirements supersede title-only assumptions in the first research pass. The source was received as an image of the four pages, not as a machine-readable PDF.
 
 ## Product and users
 
-Brightloop sells business software monthly or yearly, add-ons, customer support and products with variants. Customers range from small monthly subscribers to large annual-contract clients. Replace spreadsheet subscription tracking, manually remembered renewals, hand-typed invoices, manual bank matching and manually assembled revenue reports with one connected system.
+Brightloop sells business software monthly or yearly, add-ons customers switch on and off, and products with variants. Customers range from small monthly subscribers to large annual-contract clients. Replace spreadsheet subscription tracking, manually remembered renewals, hand-typed invoices, manual bank matching and manually assembled revenue reports with one connected system.
 
 | ID | Explicit requirement | Evidence expected from the final application |
 |---|---|---|
@@ -18,11 +18,13 @@ Brightloop sells business software monthly or yearly, add-ons, customer support 
 
 | ID | Explicit requirement | Evidence expected |
 |---|---|---|
-| CAT-01 | Admin adds a product with name, type, sales price and cost price. | Persisted validated product; distinguish selling price from internal cost. |
+| CAT-01 | Admin adds a product with name, type, sales price, cost price and notes. | Persisted validated product; distinguish selling price from internal cost. |
 | CAT-02 | Products support variants, including brand-dependent price changes; the supplied example adds 560 for Odoo brand. | Select a variant and show the correct persisted price computation. The example is not a universal hardcoded surcharge for all products. Currency is not specified in that sentence. |
 | PLAN-01 | Admin creates recurring plans with price and interval: daily, weekly, monthly or yearly. | All four intervals can be configured and date arithmetic is tested. |
 | PLAN-02 | Plans include minimum quantity and availability dates. | Quantity and date eligibility are enforced when choosing/confirming a plan. |
 | PLAN-03 | Plans may close automatically when they end, or permit closing early, pausing or renewing; admin decides which play by which rules. | Persist the chosen policies and enforce permitted actions on the server. Do not assume every plan permits every action. |
+
+**Scenario context to preserve:** Brightloop’s add-ons can be switched on and off. Represent them through ordinary product/subscription lines rather than inventing a separate product. The effective date, permission and pricing behavior are proposed team policy in DECISIONS; the brief does not prescribe immediate proration.
 
 ## Quote to subscription
 
@@ -31,7 +33,7 @@ Brightloop sells business software monthly or yearly, add-ons, customer support 
 | QUOTE-01 | Reusable quotation templates contain the appropriate plan/product lines and a number of valid days. | Create a quotation from a template, edit the instance without silently changing the template, show validity. |
 | SUB-01 | Each subscription has its own number, customer, plan, start date, expiry date and payment terms. | Unique reference and complete persisted detail. Distinguish contract dates, invoice due dates and plan availability. |
 | SUB-02 | Lines show product, quantity, unit price, taxes and amount. | Server-calculated line/total values; original pricing inputs remain explainable. |
-| SUB-03 | Progression is Draft → Quotation → Confirmed → Active. | Visible status history and valid transition enforcement. The brief does not explicitly say payment must gate activation; declare any such policy rather than inventing it as a requirement. |
+| SUB-03 | Progression is Draft → Quotation → Confirmed → Active → Closed. | Visible status history and valid transition enforcement. The brief does not explicitly say payment must gate activation; declare any such policy rather than inventing it as a requirement. |
 | SUB-04 | Everyone on the internal team can see where a subscription stands. | Shared persisted state and appropriately authorized list/detail views. |
 
 ## Billing day
@@ -60,7 +62,7 @@ Brightloop sells business software monthly or yearly, add-ons, customer support 
 | PAY-01 | Record payments arriving through different methods/days, with method, amount, date and note, against the correct invoice. | Multiple partial payments and correct invoice allocation; no real gateway is specified as mandatory. |
 | PAY-02 | Show paid versus outstanding invoices so overdue amounts can be followed up. | Outstanding equals invoice total minus valid recorded payments; partial payment does not imply Paid. |
 | FIN-01 | One place shows active subscriptions, revenue, payments and overdue invoices with filters and summary view. | Each metric drills into persisted records and respects selected filters. Define billed revenue, collected payments, outstanding and overdue separately. |
-| FIN-02 | Pages should respond in under two seconds with thousands of subscriptions. | Documented dataset, hardware, query scope and measured end-to-end/page timings, including search/filter/pagination; do not claim success before measuring. |
+| FIN-02 | Every page should respond in under two seconds with thousands of subscriptions. | Documented dataset, hardware, query scope and measured end-to-end/page timings, including search/filter/pagination; do not claim success before measuring. |
 
 ## Decisions the brief leaves open
 

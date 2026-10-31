@@ -38,7 +38,7 @@ Read root `AGENTS.md`, [REQUIREMENTS.md](REQUIREMENTS.md), [HACKATHON_CONSTRAINT
 
 **Depends on:** P1 admin boundary. **Coverage:** CAT-01, CAT-02, PLAN-01, PLAN-02, PLAN-03; foundations for BILL-02 and QUOTE-01.
 
-- [ ] Persist product name/type/sales price/cost price and configurable variants. Selecting a variant updates a server-derived price explanation; the Odoo +560 example must be configuration, not a hardcoded brand branch.
+- [ ] Persist product name/type/sales price/cost price/notes and configurable variants. Selecting a variant updates a server-derived price explanation; the Odoo +560 example must be configuration, not a hardcoded brand branch.
 - [ ] Persist plan primary product, price, daily/weekly/monthly/yearly interval, minimum quantity, availability and auto-close/early-close/pause/renew permissions.
 - [ ] Add admin tax configuration and reusable quotation templates with plan/product lines and positive valid-days count. Set up one usable offering end to end, not dozens of unrelated forms.
 - [ ] Supply field errors, loading/empty/error states, readable money/date formatting and a working edit-save-reload cycle. Operational staff can read allowed catalog fields, not configure them.
@@ -50,7 +50,7 @@ Read root `AGENTS.md`, [REQUIREMENTS.md](REQUIREMENTS.md), [HACKATHON_CONSTRAINT
 **Depends on:** P2 and shared calculation/date contracts. **Coverage:** QUOTE-01, SUB-01, SUB-02, SUB-03, SUB-04; rechecks PLAN-02 and AUTH-04.
 
 - [ ] Create two independent quotes from one template; include subscription number/customer/plan/start/expiry/payment terms and product/quantity/unit-price/tax/amount lines. Changes to an instance or later template edits must not mutate other instances.
-- [ ] Implement Draft → Quotation → Confirmed → Active with server transition validation and visible history. Validate quote expiry and plan availability at confirmation; snapshot accepted terms. Future-start confirmations remain Confirmed until a server-owned activation operation runs when due.
+- [ ] Implement Draft → Quotation → Confirmed → Active with server transition validation and visible history; define the final Closed state now and exercise plan-governed transition to Closed in P6. Validate quote expiry and plan availability at confirmation; snapshot accepted terms. Future-start confirmations remain Confirmed until a server-owned activation operation runs when due.
 - [ ] Give staff a searchable list and detail view with shared persisted state. Give each customer a read-only view of their own agreement; reject cross-customer IDs in direct API/URL requests.
 - [ ] Use original calendar anchors for month-end/leap-year periods and aligned exclusive expiry. Explain errors and permitted next actions; payment is not an invented prerequisite to activation.
 
@@ -79,6 +79,8 @@ Read root `AGENTS.md`, [REQUIREMENTS.md](REQUIREMENTS.md), [HACKATHON_CONSTRAINT
 **Gate:** hundreds-record results reconcile; replay creates zero duplicates; one injected failure remains retryable while other records succeed; two workers cannot double bill; print is inspected and actual invoice delivery verified. **Fix failures:** generic success toast over failed rows, untraceable skips, lost backlog, fake send button or a canceled invoice regenerated on replay.
 
 ## P6 — Partial collection and complete service lifecycle
+
+Include the brief’s switchable add-ons using existing optional product lines and the proposed future-boundary policy in DECISIONS. Prove enabling/disabling affects the appropriate future bill without rewriting prior invoices; do not create a separate add-on engine or mid-cycle proration scope.
 
 **Depends on:** P5; lifecycle uses P2/P3 accepted policies. **Coverage:** PAY-01, PAY-02, PLAN-03; completes BILL-04 and exercises BILL-05.
 
