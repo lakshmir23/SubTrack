@@ -1,6 +1,6 @@
 # Coding-agent roadmap — configure → collect → prove
 
-**Status: execution authorized on 31 October 2026. P0 through P2 are verified; P3 is in progress.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
+**Status: execution authorized on 31 October 2026. P0 through P3 are verified; P4 is next.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
 
 ## Read first; establish the real starting point
 
@@ -49,10 +49,10 @@ Read root `AGENTS.md`, [REQUIREMENTS.md](REQUIREMENTS.md), [HACKATHON_CONSTRAINT
 
 **Depends on:** P2 and shared calculation/date contracts. **Coverage:** QUOTE-01, SUB-01, SUB-02, SUB-03, SUB-04; rechecks PLAN-02 and AUTH-04.
 
-- [ ] Create two independent quotes from one template; include subscription number/customer/plan/start/expiry/payment terms and product/quantity/unit-price/tax/amount lines. Changes to an instance or later template edits must not mutate other instances.
-- [ ] Implement Draft → Quotation → Confirmed → Active with server transition validation and visible history; define the final Closed state now and exercise plan-governed transition to Closed in P6. Validate quote expiry and plan availability at confirmation; snapshot accepted terms. Future-start confirmations remain Confirmed until a server-owned activation operation runs when due.
-- [ ] Give staff a searchable list and detail view with shared persisted state. Give each customer a read-only view of their own agreement; reject cross-customer IDs in direct API/URL requests.
-- [ ] Use original calendar anchors for month-end/leap-year periods and aligned exclusive expiry. Explain errors and permitted next actions; payment is not an invented prerequisite to activation.
+- [x] Create two independent quotes from one template; include subscription number/customer/plan/start/expiry/payment terms and product/quantity/unit-price/tax/amount lines. Changes to an instance or later template edits must not mutate other instances.
+- [x] Implement Draft → Quotation → Confirmed → Active with server transition validation and visible history; define the final Closed state now and exercise plan-governed transition to Closed in P6. Validate quote expiry and plan availability at confirmation; snapshot accepted terms. Future-start confirmations remain Confirmed until a server-owned activation operation runs when due.
+- [x] Give staff a searchable list and detail view with shared persisted state. Give each customer a read-only view of their own agreement; reject cross-customer IDs in direct API/URL requests.
+- [x] Use original calendar anchors for month-end/leap-year periods and aligned exclusive expiry. Explain errors and permitted next actions; payment is not an invented prerequisite to activation.
 
 **Gate:** two quotes, one complete state progression and a future-start case survive reload; invalid transitions/expired quotes fail; Jan 31 and leap-day anchors recover correctly. **Fix failures:** browser-only state, catalog edits rewriting accepted terms, or a customer able to submit price/ownership changes.
 
