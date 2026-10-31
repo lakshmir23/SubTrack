@@ -541,6 +541,9 @@ export function ConfirmationDialog({
     if (open && !dialog.current?.open) {
       previousFocus.current = document.activeElement as HTMLElement | null;
       dialog.current?.showModal();
+      dialog.current
+        ?.querySelector<HTMLButtonElement>("[data-dialog-cancel]")
+        ?.focus();
     } else if (!open && dialog.current?.open) {
       dialog.current.close();
       previousFocus.current?.focus();
@@ -562,7 +565,13 @@ export function ConfirmationDialog({
       {children}
       {error && <Feedback tone="error">{error}</Feedback>}
       <div className="dialog-actions">
-        <Button tone="secondary" autoFocus disabled={busy} onClick={onCancel}>
+        <Button
+          tone="secondary"
+          data-dialog-cancel
+          autoFocus
+          disabled={busy}
+          onClick={onCancel}
+        >
           Cancel
         </Button>
         <Button busy={busy} intent={intent} onClick={onConfirm}>

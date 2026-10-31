@@ -200,6 +200,12 @@ export function SubscriptionList() {
         action={
           !customer && (
             <div className="heading-actions">
+              <Link
+                className="button secondary"
+                to="/subscriptions/service-processing"
+              >
+                Process service changes
+              </Link>
               <Button
                 tone="secondary"
                 onClick={() => {
@@ -963,7 +969,7 @@ function SubscriptionEditor({ id }: { id?: string }) {
   );
 }
 
-type Transition = Exclude<SubscriptionAction, "edit">;
+type Transition = Extract<SubscriptionAction, "issue" | "confirm" | "activate">;
 const actionLabels: Record<Transition, string> = {
   issue: "Issue quotation",
   confirm: "Confirm agreement",
@@ -1093,6 +1099,12 @@ export function SubscriptionDetail() {
                 {actionLabels[primary]}
               </Button>
             )}
+            {!primary && data.acceptedTerms && (
+              <Link className="button" to={`/subscriptions/${data.id}/service`}>
+                Manage service
+                <ArrowRight size={17} />
+              </Link>
+            )}
           </div>
         }
       />
@@ -1197,11 +1209,24 @@ export function SubscriptionDetail() {
             estimated
             periodLabel={terms.plan.interval}
             note={
-              data.acceptedTerms
-                ? "Accepted commercial prices are preserved. Tax and discounts are evaluated when each invoice is generated."
-                : data.offeredTerms
-                  ? "Commercial prices and plan policies were frozen when this quotation was issued. Tax is an estimate until billing."
-                  : "Prices were calculated when this draft was last saved. Editing and saving refreshes the catalog estimate."
+              data.acceptedTerms ? (
+                <>
+                  Accepted commercial prices are preserved
+                  {terms.lines.some((line) => !line.isPrimary)
+                    ? " as a full-selection baseline"
+                    : ""}
+                  .{" "}
+                  <Link to={`/subscriptions/${data.id}/service`}>
+                    Service schedule
+                  </Link>{" "}
+                  shows enabled lines and the next unprocessed accepted base.
+                  Tax and discounts are evaluated at generation.
+                </>
+              ) : data.offeredTerms ? (
+                "Commercial prices and plan policies were frozen when this quotation was issued. Tax is an estimate until billing."
+              ) : (
+                "Prices were calculated when this draft was last saved. Editing and saving refreshes the catalog estimate."
+              )
             }
           />
         </section>

@@ -7,6 +7,8 @@ import {
 import { ForgotPassword, Login, ResetPassword, Signup } from "./Auth";
 import { SessionProvider } from "./session";
 import { RouteFocus } from "./ui";
+import { PaymentEditorRoute } from "./Payments";
+import { ServiceDetailRoute, ServiceProcessing } from "./Lifecycle";
 import {
   SubscriptionList,
   SubscriptionDetail,
@@ -72,6 +74,10 @@ const router = createBrowserRouter([
               { path: "/workspace", element: <Workspace /> },
               { path: "/subscriptions", element: <SubscriptionList /> },
               { path: "/subscriptions/:id", element: <SubscriptionDetail /> },
+              {
+                path: "/subscriptions/:id/service",
+                element: <ServiceDetailRoute />,
+              },
               { path: "/billing/invoices", element: <InvoiceList /> },
               {
                 path: "/billing",
@@ -84,6 +90,14 @@ const router = createBrowserRouter([
                   { path: "/billing/workbench", element: <BillingWorkbench /> },
                   { path: "/billing/runs", element: <BillingRunList /> },
                   { path: "/billing/runs/:id", element: <BillingRunDetail /> },
+                  {
+                    path: "/billing/invoices/:id/payments/new",
+                    element: <PaymentEditorRoute />,
+                  },
+                  {
+                    path: "/subscriptions/service-processing",
+                    element: <ServiceProcessing />,
+                  },
                   {
                     path: "/billing/invoices/:id/replace",
                     element: <InvoiceReplacementRoute />,

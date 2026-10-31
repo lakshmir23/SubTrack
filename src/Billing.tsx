@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { BillingNavigation } from "./BillingNavigation";
 import { InvoiceDeliveryPanel } from "./InvoiceOutput";
+import { InvoicePaymentHistory } from "./Payments";
 import type { Page, User } from "../shared/contracts";
 import type { Product } from "../shared/catalog";
 import {
@@ -33,6 +34,8 @@ import {
   type InvoicePreview,
   type InvoiceStatus,
   type InvoiceSummary,
+  type InvoicePreviewResponse,
+  type InvoiceGenerationResponse,
 } from "../shared/billing";
 import type {
   Subscription,
@@ -522,7 +525,7 @@ export function InvoiceGenerator() {
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const period =
     params.get("periodStart") || subscription.data?.nextBillingDate || "";
-  const [preview, setPreview] = useState<InvoicePreview | null>(null),
+  const [preview, setPreview] = useState<InvoicePreviewResponse | null>(null),
     [previewError, setPreviewError] = useState("");
   const [previewBusy, setPreviewBusy] = useState(false),
     [previewRevision, setPreviewRevision] = useState(0);
@@ -539,11 +542,14 @@ export function InvoiceGenerator() {
     setPreviewBusy(true);
     setPreview(null);
     setPreviewError("");
-    request<InvoicePreview>(`/api/subscriptions/${id}/invoices/preview`, {
-      method: "POST",
-      body: { expectedPeriodStart: period },
-      signal: controller.signal,
-    })
+    request<InvoicePreviewResponse>(
+      `/api/subscriptions/${id}/invoices/preview`,
+      {
+        method: "POST",
+        body: { expectedPeriodStart: period },
+        signal: controller.signal,
+      },
+    )
       .then((value) => {
         if (!controller.signal.aborted) setPreview(value);
       })
@@ -561,13 +567,22 @@ export function InvoiceGenerator() {
     setBusy(true);
     setError("");
     try {
-      const invoice = await request<Invoice>(
+      const invoice = await request<InvoiceGenerationResponse>(
         `/api/subscriptions/${id}/invoices`,
         {
           method: "POST",
           body: { expectedPeriodStart: preview.periodStart, idempotencyKey },
         },
       );
+      if ("outcome" in invoice) {
+        navigate(`/subscriptions/${id}`, {
+          replace: true,
+          state: {
+            message: `Non-billable period recorded: ${formatBusinessDate(invoice.periodStart)} to ${formatBusinessDate(invoice.periodEnd)} (exclusive). ${invoice.reason}`,
+          },
+        });
+        return;
+      }
       navigate(invoicePath(invoice.id), {
         replace: true,
         state: {
@@ -618,7 +633,45 @@ export function InvoiceGenerator() {
       {previewBusy ? (
         <Loading>Calculating the due invoice…</Loading>
       ) : (
-        preview && (
+        preview &&
+        ("outcome" in preview ? (
+          <section className="panel nonbillable-review">
+            <h2>Non-billable period</h2>
+            <p>
+              {formatBusinessDate(preview.periodStart)} to{" "}
+              {formatBusinessDate(preview.periodEnd)} · exclusive end
+            </p>
+            <Feedback>{preview.reason}</Feedback>
+            <p className="field-help">
+              This records an explicit non-billable outcome and advances only
+              this period. No invoice is created and earlier debt remains owed.
+            </p>
+            <Button
+              onClick={() => {
+                setError("");
+                setConfirm(true);
+              }}
+            >
+              Record non-billable period
+            </Button>
+            <ConfirmationDialog
+              open={confirm}
+              title="Record this non-billable period?"
+              description={preview.reason}
+              confirmLabel="Record non-billable period"
+              busy={busy}
+              error={error}
+              onCancel={() => setConfirm(false)}
+              onConfirm={() => void generate()}
+            >
+              <p className="footnote">
+                Period {formatBusinessDate(preview.periodStart)} to{" "}
+                {formatBusinessDate(preview.periodEnd)}, exclusive. No invoice,
+                payment or historical financial snapshot is changed.
+              </p>
+            </ConfirmationDialog>
+          </section>
+        ) : (
           <>
             {preview.existingInvoiceId && (
               <Feedback>
@@ -715,7 +768,7 @@ export function InvoiceGenerator() {
               )}
             </ConfirmationDialog>
           </>
-        )
+        ))
       )}
     </>
   );
@@ -830,6 +883,15 @@ export function InvoiceDetail() {
                 Confirm invoice
               </Button>
             )}
+            {internal && invoice.allowedActions.includes("recordPayment") && (
+              <Link
+                className="button"
+                to={`${invoicePath(invoice.id)}/payments/new`}
+              >
+                Record payment
+                <ArrowRight size={17} />
+              </Link>
+            )}
           </div>
         }
       />
@@ -852,9 +914,13 @@ export function InvoiceDetail() {
                 ? "Zero amount due"
                 : invoice.status === "Paid"
                   ? "Settled"
-                  : invoice.overdue
-                    ? "Outstanding · overdue"
-                    : "Confirmed · collectible"}
+                  : invoice.amountPaid > 0
+                    ? invoice.overdue
+                      ? "Partially paid · overdue"
+                      : "Partially paid · balance outstanding"
+                    : invoice.overdue
+                      ? "Outstanding · overdue"
+                      : "Confirmed · collectible"}
         </strong>
       </div>
       {invoice.currentInvoiceId !== invoice.id && (
@@ -991,6 +1057,7 @@ export function InvoiceDetail() {
           <h2>Frozen invoice amounts</h2>
           <InvoiceBreakdown invoice={invoice} />
         </section>
+        <InvoicePaymentHistory key={invoice.id} invoice={invoice} />
         <section className="panel agreement-history">
           <h2>Activity</h2>
           <ol>

@@ -2747,6 +2747,333 @@ tbody tr:last-child td {
     padding: 22px;
   }
 }
+.payment-editor-layout,
+.service-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 30px;
+  align-items: start;
+}
+.payment-editor-layout form h2 {
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+.payment-editor-layout form > .field-help {
+  margin-bottom: 25px;
+}
+.payment-balance {
+  padding: 15px 0 0;
+}
+.payment-balance h2 {
+  font-size: 18px;
+  margin-bottom: 25px;
+}
+.payment-balance dl {
+  font-size: 13px;
+}
+.payment-balance dl > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  padding: 12px 0;
+}
+.payment-balance dt {
+  color: var(--color-secondary);
+}
+.payment-balance dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.payment-balance dd small {
+  display: block;
+  font-size: 11px;
+  margin-top: 5px;
+}
+.payment-balance .grand-total {
+  border-top: 2px solid var(--color-ink);
+  font:
+    700 20px Manrope,
+    sans-serif;
+  margin-top: 12px;
+  padding-top: 20px;
+}
+.payment-balance .grand-total dt {
+  color: var(--color-ink);
+}
+.review-note {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.invoice-payments {
+  border-top: 1px solid var(--color-border);
+  padding-top: 25px;
+}
+.invoice-payments .section-heading {
+  align-items: flex-start;
+  gap: 18px;
+}
+.invoice-payments h2 {
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+.invoice-payments .section-heading p {
+  font-size: 12px;
+  color: var(--color-secondary);
+  margin: 0;
+}
+.invoice-payments .section-heading .button {
+  font-size: 11px;
+}
+.payment-history-list article {
+  border-bottom: 1px solid var(--color-border);
+  padding: 18px 0;
+}
+.payment-history-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 9px 17px;
+  font-size: 12px;
+}
+.payment-history-heading strong {
+  font:
+    700 20px Manrope,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.payment-history-heading span:last-child {
+  margin-left: auto;
+  font-size: 11px;
+}
+.payment-history-list article > p {
+  color: var(--color-secondary);
+  font-size: 10px;
+  margin: 9px 0 0;
+}
+.payment-note {
+  font-size: 12px;
+  margin-top: 15px;
+}
+.payment-note > span {
+  color: var(--color-secondary);
+  font-size: 10px;
+}
+.payment-note p {
+  margin: 5px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.service-context {
+  display: flex;
+  gap: 15px 24px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 12px;
+  margin: 0 0 28px;
+  color: var(--color-secondary);
+}
+.service-scheduled {
+  border-left: 2px solid var(--color-primary);
+  padding: 5px 0 5px 20px;
+  margin: 0 0 30px;
+}
+.service-scheduled h2 {
+  font-size: 16px;
+  margin: 0 0 13px;
+}
+.service-scheduled ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.service-scheduled li {
+  margin: 12px 0;
+}
+.service-scheduled li strong {
+  font-size: 13px;
+  font-weight: 500;
+  display: block;
+}
+.service-scheduled li span {
+  display: block;
+  font-size: 11px;
+  color: var(--color-secondary);
+  margin-top: 5px;
+}
+.service-change h2,
+.service-period h2 {
+  font-size: 18px;
+  margin-bottom: 24px;
+}
+.service-change form > .button {
+  margin-top: 13px;
+  font-size: 13px;
+}
+.service-policy {
+  font-size: 12px;
+  margin-top: 30px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 22px;
+}
+.service-policy summary,
+.addon-intervals summary {
+  color: var(--color-primary);
+  cursor: pointer;
+  font-weight: 500;
+}
+.service-policy dl > div {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.service-policy dt {
+  font-weight: 500;
+}
+.service-policy dd {
+  margin: 7px 0 0;
+  color: var(--color-secondary);
+  font-size: 11px;
+}
+.service-period-lines {
+  margin: 20px 0;
+  font-size: 12px;
+}
+.service-period-lines > div {
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.service-period-lines dt small {
+  display: block;
+  color: var(--color-secondary);
+  font-size: 10px;
+  margin-top: 5px;
+}
+.service-period-lines dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.service-period-lines .grand-total {
+  border-top: 2px solid var(--color-ink);
+  border-bottom: 0;
+  margin-top: 12px;
+  padding-top: 20px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.service-addons {
+  margin-top: 35px;
+}
+.service-addons .section-heading h2 {
+  font-size: 18px;
+  margin: 0;
+}
+.service-addons .section-heading > span {
+  font-size: 11px;
+  color: var(--color-secondary);
+}
+.service-addons article {
+  display: flex;
+  gap: 25px;
+  justify-content: space-between;
+  align-items: start;
+  padding: 25px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.service-addons h3 {
+  font-size: 15px;
+  margin-bottom: 9px;
+}
+.service-addons article > .button {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.service-addons article p {
+  font-size: 12px;
+  color: var(--color-secondary);
+  margin: 10px 0;
+}
+.service-addons article .scheduled-line {
+  color: var(--color-primary);
+}
+.addon-intervals {
+  font-size: 11px;
+  margin-top: 18px;
+}
+.addon-intervals li {
+  padding: 4px 0;
+  color: var(--color-secondary);
+}
+.service-history {
+  margin-top: 35px;
+}
+.service-history li small {
+  display: block;
+}
+.service-processing-form {
+  display: flex;
+  gap: 25px;
+  align-items: start;
+  max-width: 600px;
+  border-block: 1px solid var(--color-border);
+  padding: 25px 0;
+  margin-bottom: 30px;
+}
+.service-processing-form .field {
+  width: 180px;
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+.service-processing-form > .button {
+  font-size: 12px;
+  margin-top: 27px;
+}
+.nonbillable-review {
+  max-width: 750px;
+}
+.nonbillable-review h2 {
+  font-size: 22px;
+  margin-bottom: 15px;
+}
+.nonbillable-review > p {
+  font-size: 13px;
+}
+@media (max-width: 1100px) {
+  .payment-editor-layout,
+  .service-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 25px;
+  }
+  .payment-balance {
+    padding-top: 5px;
+  }
+}
+@media (max-width: 600px) {
+  .service-addons article {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .service-processing-form {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .service-processing-form > .button {
+    margin-top: 0;
+  }
+  .payment-history-heading span:last-child {
+    margin-left: 0;
+  }
+  .service-context {
+    gap: 12px 18px;
+  }
+}
 .queue-context {
   display: flex;
   flex-wrap: wrap;

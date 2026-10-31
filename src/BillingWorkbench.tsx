@@ -329,7 +329,7 @@ export function BillingWorkbench() {
                   <th scope="col">Period</th>
                   <th scope="col">State / reason</th>
                   <th scope="col" className="money-cell">
-                    Accepted subtotal
+                    Active accepted base
                   </th>
                 </tr>
               </thead>
@@ -359,7 +359,9 @@ export function BillingWorkbench() {
                         className={`status ${item.outcome === "failed" ? "danger" : item.outcome === "canceled" ? "warning" : "info"}`}
                       >
                         {item.outcome === "due"
-                          ? "Due"
+                          ? item.billable
+                            ? "Due"
+                            : "Non-billable period"
                           : item.outcome === "failed"
                             ? "Failed · retryable"
                             : "Canceled"}
@@ -376,7 +378,10 @@ export function BillingWorkbench() {
                         </Link>
                       )}
                     </td>
-                    <td data-label="Accepted subtotal" className="money-cell">
+                    <td
+                      data-label="Active accepted base"
+                      className="money-cell"
+                    >
                       {formatMoney(item.acceptedSubtotal)}
                     </td>
                   </tr>
@@ -395,9 +400,10 @@ export function BillingWorkbench() {
       </section>
       <p className="footnote">
         The due queue shows the oldest unprocessed period per subscription, not
-        every owed period. Subtotals exclude generation-date discounts and tax.
-        A canceled invoice occupies its period until an explicit replacement;
-        routine runs cannot rebill it.
+        every owed period. Active accepted bases exclude generation-date
+        discounts and tax; non-billable periods show zero and still need a saved
+        outcome. A canceled invoice occupies its period until an explicit
+        replacement; routine runs cannot rebill it.
       </p>
       <ConfirmationDialog
         open={confirm}
