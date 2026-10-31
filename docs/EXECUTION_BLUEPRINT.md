@@ -1,6 +1,6 @@
 # Brightloop execution blueprint
 
-> **Planning, not implementation.** The user explicitly reaffirmed “No code” on 31 October 2026. This document is a handoff for the team's later implementation. No feature, test, benchmark or delivery below is claimed complete. The supplied problem statement—not a guessed judging rubric—is the acceptance contract. See [requirements](REQUIREMENTS.md), [domain policies](DOMAIN_AND_EDGE_CASES.md) and [proof script](DEMO_AND_PROOF.md).
+> **Implementation blueprint, with historical planning preserved.** This was prepared during the documentation-only handoff. The team's newer instruction on 31 October 2026 authorized execution through ROADMAP.md. The steps below describe obligations; actual completed tests, delivery and gate results are recorded in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md). The supplied problem statement is the acceptance contract. See [requirements](REQUIREMENTS.md), [domain policies](DOMAIN_AND_EDGE_CASES.md) and [proof script](DEMO_AND_PROOF.md).
 
 ## 1. The winning proposition to make demonstrable
 

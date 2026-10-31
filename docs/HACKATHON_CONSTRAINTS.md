@@ -23,7 +23,7 @@ Dynamic data does not automatically require external internet APIs or WebSockets
 
 ## Scope and honesty
 
-Current activity is research and documentation only. No application implementation has been authorized in this workstream yet. The selected topic is **Subscription Management System**. The full four-page Brightloop Software brief has now been supplied; [REQUIREMENTS.md](REQUIREMENTS.md) is the authoritative domain checklist. The screenshot says problem statements are updated at 9 am and only the team leader selects/updates the choice. Do not change the team's selection.
+The original handoff was research and documentation only. The team's newer instruction on 31 October 2026 explicitly authorized implementation through the roadmap; current executed results are recorded in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md). The selected topic remains **Subscription Management System**. The full four-page Brightloop Software brief has been supplied; [REQUIREMENTS.md](REQUIREMENTS.md) is the authoritative domain checklist. The screenshot says problem statements are updated at 9 am and only the team leader selects/updates the choice. Do not change the team's selection.
 
 The current event page describes an eight-hour virtual round and a separate 24-hour final. Confirm the team's actual timezone, deadline and submission instructions from its event materials. Historical Odoo rubrics and finalist feature lists are context, not current requirements. No numeric scoring weights have been verified for this round.
 

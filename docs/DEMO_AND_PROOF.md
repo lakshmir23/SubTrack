@@ -2,7 +2,7 @@
 
 **Revised October 31, 2026 against the user's four-page problem-statement screenshot.** This replaces the earlier speculative proration demo. The required story is Brightloop's complete subscription month: configure, quote, activate, batch bill, apply discounts and taxes, record payments, and report the balance.
 
-**Evidence status:** Documentation only. No implementation, delivery, benchmark, or passed test is claimed here. Every proposed check starts as **Not verified**.
+**Evidence status:** This document defines the reproducible fixture and proof obligations. Execution is now authorized; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records observed results gate by gate. A procedure below is not itself a passing result, and unexecuted witnesses remain **Not verified**.
 
 ## The demo promise
 
