@@ -1,4 +1,5 @@
-import { test, expect, type Page as BrowserPage } from "@playwright/test";
+import { type Page as BrowserPage } from "@playwright/test";
+import { test, expect } from './test';
 import { DatabaseSync } from "node:sqlite";
 
 const demoPassword = "Brightloop!2026";

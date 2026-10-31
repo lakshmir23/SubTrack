@@ -1,9 +1,8 @@
 import {
-  test,
-  expect,
   type APIRequestContext,
   type Page,
 } from "@playwright/test";
+import { test, expect } from './test';
 import type { Plan, Product, QuotationTemplate } from "../../shared/catalog";
 import type { Subscription } from "../../shared/subscriptions";
 
