@@ -19,6 +19,12 @@
   --color-surface: #fff;
   --color-subtle: #e9f0f7;
   --color-border: #d5dfe8;
+  --color-control-border: #788b9d;
+  --color-selection: #d5e5f5;
+  --color-input-hover: #234a73;
+  --color-requirement-pending: #7e8d9b;
+  --color-trail-line: #afc2d6;
+  --color-trail-node: #d7e4f0;
   --color-success: #17654e;
   --color-success-soft: #e7f3ed;
   --color-danger: #aa3441;
@@ -81,7 +87,7 @@ a:hover {
 }
 ::selection {
   color: var(--color-ink);
-  background: #d5e5f5;
+  background: var(--color-selection);
 }
 ::-webkit-scrollbar {
   width: 10px;
@@ -418,7 +424,7 @@ p {
 .field input {
   width: 100%;
   height: 46px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-control-border);
   border-radius: var(--radius);
   background: var(--color-surface);
   padding: 10px 13px;
@@ -426,7 +432,7 @@ p {
   caret-color: var(--color-primary);
 }
 .field input:hover {
-  border-color: #8ba0b4;
+  border-color: var(--color-input-hover);
 }
 .field input:focus {
   border-color: var(--color-focus);
@@ -489,7 +495,7 @@ p {
   align-items: center;
 }
 .password-requirements li svg {
-  color: #7e8d9b;
+  color: var(--color-requirement-pending);
 }
 .password-requirements li.met,
 .password-requirements li.met svg {
@@ -548,7 +554,7 @@ p {
   left: 16px;
   bottom: 0;
   width: 1px;
-  background: #afc2d6;
+  background: var(--color-trail-line);
 }
 .agreement-trail li > span {
   display: grid;
@@ -557,7 +563,7 @@ p {
   height: 34px;
   border-radius: 50%;
   color: var(--color-primary);
-  background: #d7e4f0;
+  background: var(--color-trail-node);
   flex-shrink: 0;
 }
 .agreement-trail strong,
@@ -1014,7 +1020,7 @@ p {
 .search-field {
   display: flex;
   align-items: center;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-control-border);
   border-radius: 8px;
   padding-left: 12px;
   color: var(--color-secondary);

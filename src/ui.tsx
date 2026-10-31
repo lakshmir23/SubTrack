@@ -11,6 +11,7 @@ import {
 import {
   Check,
   CircleCheck,
+  Circle,
   Eye,
   EyeOff,
   Info,
@@ -199,7 +200,11 @@ export function PasswordRequirements({ value }: { value: string }) {
     <ul className="password-requirements" aria-label="Password requirements">
       {requirements.map(([met, text]) => (
         <li key={text} className={met ? "met" : ""}>
-          <Check size={13} aria-hidden="true" />
+          {met ? (
+            <Check size={13} aria-hidden="true" />
+          ) : (
+            <Circle size={13} aria-hidden="true" />
+          )}
           <span>{text}</span>
           <span className="sr-only">{met ? " included" : " required"}</span>
         </li>
