@@ -253,11 +253,15 @@ export function billingWorkbenchRoutes(db: DatabaseSync, clock: () => Date, work
       const dueWhere = `s.accepted_terms_json IS NOT NULL AND s.next_billing_date<=? AND s.next_billing_date<s.expiry_date${common}`;
       const dueSubscriptions = Number(db.prepare(`SELECT count(*) AS count FROM subscriptions s WHERE ${dueWhere}`).get(now, ...params)?.count);
       const failedPeriods = Number(db.prepare(`SELECT count(*) AS count FROM logical_charges c JOIN subscriptions s ON s.id=c.subscription_id WHERE c.outcome='failed'${common}`).get(...params)?.count);
-      const canceledInvoices = Number(db.prepare(`SELECT count(*) AS count FROM logical_charges c JOIN subscriptions s ON s.id=c.subscription_id JOIN invoices i ON i.id=c.current_invoice_id WHERE i.status='Canceled'${common}`).get(...params)?.count);
+      const canceledInvoices = Number(db.prepare(`SELECT count(*) AS count FROM invoices i JOIN logical_charges c ON c.id=i.logical_charge_id AND c.current_invoice_id=i.id JOIN subscriptions s ON s.id=c.subscription_id WHERE i.status='Canceled'${common}`).get(...params)?.count);
       const notDueSubscriptions = Number(db.prepare(`SELECT count(*) AS count FROM subscriptions s WHERE s.accepted_terms_json IS NOT NULL AND s.next_billing_date>? AND s.next_billing_date<s.expiry_date${common}`).get(now, ...params)?.count);
+      // Select narrow exception identities through existing outcome/status indexes.
+      // UNION retains the old OR semantics even if a row matches both branches.
+      const exceptionIds = `SELECT id FROM logical_charges WHERE outcome='failed'
+        UNION SELECT c.id FROM invoices i JOIN logical_charges c ON c.id=i.logical_charge_id AND c.current_invoice_id=i.id WHERE i.status='Canceled'`;
       const source = input.view === 'due'
         ? `FROM subscriptions s LEFT JOIN logical_charges c ON c.subscription_id=s.id AND c.period_start=s.next_billing_date AND c.kind='recurring' LEFT JOIN invoices i ON i.id=c.current_invoice_id WHERE ${dueWhere}`
-        : `FROM logical_charges c JOIN subscriptions s ON s.id=c.subscription_id LEFT JOIN invoices i ON i.id=c.current_invoice_id WHERE (c.outcome='failed' OR i.status='Canceled')${common}`;
+        : `FROM logical_charges c JOIN subscriptions s ON s.id=c.subscription_id LEFT JOIN invoices i ON i.id=c.current_invoice_id WHERE c.id IN (${exceptionIds})${common}`;
       const values = input.view === 'due' ? [now, ...params] : params;
       const total = Number(db.prepare(`SELECT count(*) AS count ${source}`).get(...values)?.count); const page = Math.min(input.page, Math.max(1, Math.ceil(total / input.pageSize)));
       const rows = db.prepare(`SELECT s.*,c.id AS charge_id,c.reason AS charge_reason,c.period_start AS charge_start,c.period_end AS charge_end,c.outcome AS charge_outcome,i.id AS invoice_id,i.number AS invoice_number,i.status AS invoice_status ${source} ORDER BY ${input.view === 'due' ? 's.next_billing_date' : 'c.period_start'},s.id LIMIT ? OFFSET ?`).all(...values, input.pageSize, (page - 1) * input.pageSize) as unknown as (Candidate & { customer_id: string; charge_id: string | null; charge_reason: string | null; charge_start: string | null; charge_end: string | null; charge_outcome: string | null; invoice_id: string | null; invoice_number: string | null; invoice_status: string | null })[];
