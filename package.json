@@ -22,7 +22,8 @@
     "verify:email": "tsx server/verify-email.ts --send-reset",
     "verify:invoice": "tsx server/verify-invoice.ts --send-invoice",
     "verify:print": "tsx server/verify-print.ts",
-    "benchmark": "tsx server/benchmark.ts"
+    "benchmark": "tsx server/benchmark.ts",
+    "benchmark:seed": "tsx server/benchmark-fixture.ts"
   },
   "overrides": { "minimatch": "^11.0.1" },
   "dependencies": {

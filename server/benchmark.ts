@@ -1,8 +1,8 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { arch, cpus, freemem, platform, release, totalmem } from 'node:os';
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
 import { DatabaseSync } from 'node:sqlite';
 import { chromium, request, type Browser, type BrowserContext, type Page } from '@playwright/test';
@@ -51,6 +51,7 @@ const metadata = {
   origin, viewport, network: 'HTTP loopback; headless Chromium; no network or CPU throttling', samples,
   fixture: { ...manifest, accounts: Object.fromEntries(Object.entries(manifest.accounts).map(([role, account]) => [role, { id: account.id, email: account.email }])) },
   databaseBytes: statSync(runtimePath).size, startSnapshot: snapshot(runtimePath),
+  productionAssets: ['index.html', ...readdirSync(resolve('dist/client/assets')).filter(name => /\.(?:js|css)$/.test(name)).map(name => `assets/${name}`)].map(name => ({ name, bytes: statSync(resolve('dist/client', name)).size, sha256: createHash('sha256').update(readFileSync(resolve('dist/client', name))).digest('hex') })),
   protocol: {
     warm: 'Hard navigation in reused role context, cached assets after one unrecorded preparation. Timer begins before goto and ends after destination data/controls, fonts.ready and two animation frames.',
     cold: 'One navigation per destination in a new browser context with only authenticated cookies copied. Browser HTTP cache empty; server and OS filesystem caches are not flushed.',
