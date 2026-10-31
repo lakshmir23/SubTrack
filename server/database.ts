@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 export function openDatabase(path: string): DatabaseSync {
   if (path !== ':memory:') mkdirSync(dirname(resolve(path)), { recursive: true });
   const db = new DatabaseSync(path);
-  db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000; PRAGMA synchronous = FULL;');
+  db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 1000; PRAGMA synchronous = FULL;');
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL

@@ -7,6 +7,7 @@ export class DomainError extends Error {
 export const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, _next) => {
   let domain: DomainError;
   if (error instanceof DomainError) domain = error;
+  else if (typeof error === 'object' && error !== null && 'errcode' in error && [5, 6].includes(Number(error.errcode))) domain = new DomainError(503, 'DATABASE_BUSY', 'Another operation is updating these records. Your changes were not saved. Wait a moment, then try again.');
   else if (error instanceof ZodError) {
     const fields: Record<string, string> = {};
     for (const issue of error.issues) { const key = issue.path.join('.'); if (key && !fields[key]) fields[key] = issue.message; }
