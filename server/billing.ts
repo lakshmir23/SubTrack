@@ -274,7 +274,7 @@ export function confirmInvoice(db: DatabaseSync, invoiceId: string, version: num
     const status = row.total === 0 ? 'Paid' : 'Confirmed';
     db.prepare('UPDATE invoices SET status=?,confirmed_at=?,settled_at=?,settlement_reason=?,version=version+1 WHERE id=?')
       .run(status, now.toISOString(), status === 'Paid' ? now.toISOString() : null, status === 'Paid' ? 'zero amount due' : null, invoiceId);
-    invoiceHistory(db, invoiceId, actorId, 'confirmed', 'Draft', status, now, 'Invoice confirmed at its saved financial snapshot; the reserved discount application was consumed once.', version);
+    invoiceHistory(db, invoiceId, actorId, 'confirmed', 'Draft', status, now, 'Invoice confirmed at its saved financial snapshot. Any reserved discount application was consumed once.', version);
     if (status === 'Paid') invoiceHistory(db, invoiceId, actorId, 'settled', 'Paid', 'Paid', now, 'Settled because zero amount is due. No payment was created.');
   });
 }
@@ -287,7 +287,7 @@ export function cancelInvoice(db: DatabaseSync, invoiceId: string, version: numb
     if (!['Draft', 'Confirmed'].includes(row.status) || row.payment_count > 0 || row.amount_paid > 0) throw new DomainError(409, 'CANNOT_CANCEL', 'Cancel only a Draft or Confirmed invoice with no payment ever recorded. Paid invoices cannot be canceled.');
     if (row.status === 'Draft') db.prepare("UPDATE discount_applications SET state='released',released_at=? WHERE invoice_id=? AND state='reserved'").run(now.toISOString(), invoiceId);
     db.prepare("UPDATE invoices SET status='Canceled',canceled_at=?,version=version+1 WHERE id=?").run(now.toISOString(), invoiceId);
-    invoiceHistory(db, invoiceId, actorId, 'canceled', row.status, 'Canceled', now, row.status === 'Draft' ? 'Draft canceled; its reserved discount use was released. The logical period remains occupied.' : 'Unpaid Confirmed invoice canceled. Its consumed discount use is retained and the logical period remains occupied.', version);
+    invoiceHistory(db, invoiceId, actorId, 'canceled', row.status, 'Canceled', now, row.status === 'Draft' ? 'Draft canceled. Any reserved discount use was released; the logical period remains occupied.' : 'Unpaid Confirmed invoice canceled. Any consumed discount use is retained; the logical period remains occupied.', version);
   });
 }
 
