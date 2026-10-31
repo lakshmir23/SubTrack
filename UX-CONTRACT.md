@@ -21,14 +21,18 @@ SubTrack serves Brightloop administrators, internal staff and customer portal us
 
 ## Canonical UI Map
 
-| Capability | Canonical owner                                             | Source of truth | Allowed variants       | Verification              |
-| ---------- | ----------------------------------------------------------- | --------------- | ---------------------- | ------------------------- |
-| Form       | `src/ui.tsx` Field, PasswordField, Feedback; shared schemas | This contract   | auth / create          | E2E validation and focus  |
-| Scrollbar  | `src/styles.css` global baseline                            | DESIGN.md       | global                 | computed style            |
-| Toast      | `src/ui.tsx` Feedback, inline live region                   | This contract   | success / info / error | E2E status text           |
-| CRUD       | `src/App.tsx` routes and `src/api.ts`                       | API contract    | return / stay          | E2E full create/read path |
+| Capability     | Canonical owner                                             | Source of truth | Allowed variants                        | Verification              |
+| -------------- | ----------------------------------------------------------- | --------------- | --------------------------------------- | ------------------------- |
+| Form           | `src/ui.tsx` Field, PasswordField, Feedback; shared schemas | This contract   | auth / create                           | E2E validation and focus  |
+| Scrollbar      | `src/styles.css` global baseline                            | DESIGN.md       | global                                  | computed style            |
+| Toast          | `src/ui.tsx` Feedback, inline live region                   | This contract   | success / info / error                  | E2E status text           |
+| CRUD           | `src/App.tsx` routes and `src/api.ts`                       | API contract    | return / stay                           | E2E full create/read path |
+| Select/Listbox | `src/ui.tsx` SelectField; `src/Catalog.tsx` RecordSelect    | This contract   | native OS popup; bounded remote options | keyboard/native popup/E2E |
+| Date           | `src/ui.tsx` Field with type=date                           | This contract   | native browser/OS calendar              | typed date + keyboard/E2E |
 
-Table selection, select/listbox and date input are not applicable to P0/P1. Adding them later requires a canonical owner first.
+Table selection is not applicable. Native select and date popup geometry, locale and interaction are deliberately platform-owned; the application owns labels, values, validation, focus and responsive trigger geometry. Catalog selectors load at most 100 options, expose a searchable option source beyond that count and retain the selected record by ID.
+
+P2 configuration is staff read-only and admin writable, as defined by D-09. Product cost fields are absent for staff; customer serializers also exclude internal notes. Forms use the shared catalog schemas and exact decimal-to-minor-unit helper. Create/edit returns to the owning list with prior list filters when supplied. A failed or version-conflicting save preserves all entered values and offers review of the saved record. The unsaved-change guard protects that navigation. No automatic retry of configuration writes occurs. Variant identities remain retained; existing variants are deactivated rather than deleted.
 
 ## Dataset navigation
 

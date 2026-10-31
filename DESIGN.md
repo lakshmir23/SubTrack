@@ -118,7 +118,7 @@ Sidebar links use quiet blue selected surfaces and exact destination labels. Rol
 
 ### Forms and overlays
 
-Shared Field and PasswordField own label/error association, invalid state and show/hide. Product forms use noValidate, schema validation, first-invalid focus and preserved input. A shared pending state prevents double-submit. Passwords remain masked by default; passwords and tokens never enter persistent client storage. Search includes a clear button, URL state, 300ms debounce and stale-request cancellation. No select or calendar is needed in P0/P1. No browser dialogs are allowed.
+Shared Field, PasswordField, SelectField and TextareaField own label/error association, invalid state and show/hide. Product forms use noValidate, schema validation, first-invalid focus and preserved input. A shared pending state prevents double-submit. Passwords remain masked by default; passwords and tokens never enter persistent client storage. Search includes a clear button, URL state, 300ms debounce and stale-request cancellation. Native select and date popups are platform-owned by explicit choice; their triggers use the same control boundary, font and focus tokens as text fields. Notes provide a deliberate expansion control and never a resize handle. No browser dialogs are allowed.
 
 ### Iconography
 

@@ -17,6 +17,7 @@ import {
   Plus,
   RefreshCw,
   ShieldCheck,
+  Settings2,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -151,6 +152,12 @@ export function WorkspaceShell() {
               Customers
             </NavLink>
           )}
+          {user.role !== "customer" && (
+            <NavLink to="/configuration">
+              <Settings2 size={19} />
+              Configuration
+            </NavLink>
+          )}
           {user.role === "admin" && (
             <>
               <NavLink to="/staff">
@@ -220,12 +227,18 @@ export function WorkspaceShell() {
     </div>
   );
 }
-function useResource<T>(path: string) {
+export function useResource<T>(path: string | null) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(true);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
+    if (!path) {
+      setData(null);
+      setError("");
+      setBusy(false);
+      return;
+    }
     const controller = new AbortController();
     setBusy(true);
     setError("");
@@ -409,7 +422,7 @@ export function Workspace() {
     </>
   );
 }
-function useListQuery() {
+export function useListQuery() {
   const [params, setParams] = useSearchParams();
   const query = params.get("q") || "";
   const pageValue = Number(params.get("page") || "1");

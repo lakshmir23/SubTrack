@@ -3,7 +3,15 @@
   "sourceRoots": ["src"],
   "locale": "en-IN",
   "canonicalMap": "UX-CONTRACT.md",
-  "requiredCapabilities": ["Form", "Scrollbar", "Toast", "CRUD"],
+  "requiredCapabilities": [
+    "Form",
+    "Scrollbar",
+    "Toast",
+    "CRUD",
+    "Select/Listbox",
+    "Date"
+  ],
+  "ownership": { "Select/Listbox": "native", "Date": "native" },
   "requiredCommands": ["typecheck", "test", "build", "e2e"],
   "commands": {
     "typecheck": "npm run typecheck",

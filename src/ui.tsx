@@ -6,6 +6,8 @@ import {
   useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
   type ReactNode,
 } from "react";
 import {
@@ -141,6 +143,127 @@ export function Field({
     </div>
   );
 }
+export function SelectField({
+  label,
+  error,
+  help,
+  id,
+  children,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement> & {
+  label: string;
+  error?: string;
+  help?: string;
+  children: ReactNode;
+}) {
+  const generatedId = useId();
+  const fieldId = id || generatedId;
+  const description = [
+    help ? `${fieldId}-help` : "",
+    error ? `${fieldId}-error` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return (
+    <div className="field">
+      <label htmlFor={fieldId}>{label}</label>
+      <select
+        id={fieldId}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={description || undefined}
+        {...props}
+      >
+        {children}
+      </select>
+      {help && (
+        <span className="field-help" id={`${fieldId}-help`}>
+          {help}
+        </span>
+      )}
+      <span className="field-error" id={`${fieldId}-error`}>
+        {error || "\u00a0"}
+      </span>
+    </div>
+  );
+}
+export function TextareaField({
+  label,
+  error,
+  help,
+  id,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  label: string;
+  error?: string;
+  help?: string;
+}) {
+  const generatedId = useId();
+  const fieldId = id || generatedId;
+  const [expanded, setExpanded] = useState(false);
+  const description = [
+    help ? `${fieldId}-help` : "",
+    error ? `${fieldId}-error` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return (
+    <div className="field">
+      <div className="field-label-row">
+        <label htmlFor={fieldId}>{label}</label>
+        <button
+          type="button"
+          className="text-button"
+          onClick={() => setExpanded((value) => !value)}
+          aria-expanded={expanded}
+          aria-controls={fieldId}
+        >
+          {expanded ? "Compact notes" : "Expand notes"}
+        </button>
+      </div>
+      <textarea
+        id={fieldId}
+        rows={expanded ? 12 : 5}
+        className="resize-none"
+        aria-invalid={error ? true : undefined}
+        aria-describedby={description || undefined}
+        {...props}
+      />
+      {help && (
+        <span className="field-help" id={`${fieldId}-help`}>
+          {help}
+        </span>
+      )}
+      <span className="field-error" id={`${fieldId}-error`}>
+        {error || "\u00a0"}
+      </span>
+    </div>
+  );
+}
+export function CheckboxField({
+  label,
+  help,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
+  label: string;
+  help?: string;
+}) {
+  const generatedId = useId();
+  const fieldId = props.id || generatedId;
+  return (
+    <div className="checkbox-field">
+      <input
+        {...props}
+        id={fieldId}
+        type="checkbox"
+        aria-describedby={help ? `${fieldId}-help` : undefined}
+      />
+      <div>
+        <label htmlFor={fieldId}>{label}</label>
+        {help && <span id={`${fieldId}-help`}>{help}</span>}
+      </div>
+    </div>
+  );
+}
 export function PasswordField({
   label = "Password",
   error,
@@ -256,11 +379,15 @@ export function EmptyState({
   );
 }
 export function SearchField({
+  label = "Search by name or email",
+  placeholder = "Search by name or email",
   value,
   onChange,
   onCommit,
   onComposition,
 }: {
+  label?: string;
+  placeholder?: string;
   value: string;
   onChange: (value: string) => void;
   onCommit: () => void;
@@ -272,10 +399,10 @@ export function SearchField({
       <Search size={18} aria-hidden="true" />
       <input
         ref={ref}
-        aria-label="Search by name or email"
+        aria-label={label}
         type="search"
         maxLength={100}
-        placeholder="Search by name or email"
+        placeholder={placeholder}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onCompositionStart={() => onComposition(true)}

@@ -23,6 +23,7 @@ import {
   signupSchema,
 } from "../shared/validation";
 import type { SessionResponse } from "../shared/contracts";
+import { parseAmount } from "../shared/money";
 import { errorMessage, request, RequestError } from "./api";
 import {
   Brand,
@@ -44,8 +45,18 @@ export function validateForm(
   if (result.success) return null;
   const fields: Record<string, string> = {};
   for (const issue of result.error.issues) {
-    const key = String(issue.path[0] || "form");
-    if (!fields[key]) fields[key] = issue.message;
+    const key = issue.path.length ? issue.path.map(String).join(".") : "form";
+    let message = issue.message;
+    const input = form.querySelector<HTMLInputElement>(`[name="${key}"]`);
+    if (issue.code === "invalid_type" && input?.inputMode === "decimal") {
+      try {
+        parseAmount(input.value, input.dataset.signed === "true");
+      } catch (reason) {
+        message = errorMessage(reason);
+      }
+    } else if (issue.code === "invalid_type" && input?.inputMode === "numeric")
+      message = "Enter a whole number.";
+    if (!fields[key]) fields[key] = message;
   }
   window.setTimeout(
     () =>
