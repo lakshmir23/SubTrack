@@ -60,8 +60,8 @@ export interface Subscription extends SubscriptionSummary {
   history: SubscriptionHistory[]; allowedActions: SubscriptionAction[]; activationBlockedReason: string | null;
 }
 export interface SubscriptionProcessDueResult {
-  activated: number; alreadyActive: number; failed: number; remaining: number;
-  items: { id: string; number: string; outcome: 'activated' | 'alreadyActive' | 'failed'; message: string }[];
+  activated: number; alreadyActive: number; failed: number; remaining: number; blocked: number;
+  items: { id: string; number: string; outcome: 'activated' | 'alreadyActive' | 'failed' | 'blocked'; message: string }[];
 }
 
 // UI uses termPeriods; an explicit expiryDate is accepted only as an alternative and must align
