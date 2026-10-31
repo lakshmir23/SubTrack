@@ -1,6 +1,6 @@
 # Coding-agent roadmap — configure → collect → prove
 
-**Status: execution authorized on 31 October 2026. P0 through P6 are verified; P7 is in progress.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
+**Status: execution authorized on 31 October 2026. P0 through P7 are verified; P8 is next.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
 
 ## Read first; establish the real starting point
 
@@ -94,10 +94,10 @@ Include the brief’s switchable add-ons using existing optional product lines a
 
 **Depends on:** P6 persisted records. **Coverage:** FIN-01; complete AUTH-04 and PAY-02 witnesses.
 
-- [ ] Build finance summary and filtered/paginated detail for active subscriptions, billed revenue, payments, outstanding and overdue. Separate invoice-issue-date and payment-event-date filters; current balances are not historical as-of accounting.
-- [ ] Aggregate across the entire filtered dataset, not the visible page; avoid invoice-line/payment join multiplication. Drill-through preserves the filter and reconciles to summary values.
-- [ ] Finish customer own-subscription/invoice/payment-status views, permitted lifecycle actions and own print/download. Test cross-customer list/detail/action/download routes; remove cost prices and internal payment notes from payloads, not just screens.
-- [ ] Audit every destination for consistent spacing/navigation/statuses, keyboard focus, labels, disabled-action explanations, mobile layouts, loading/empty/error/retry states and duplicate-submit feedback. Refresh persisted totals after writes.
+- [x] Build finance summary and filtered/paginated detail for active subscriptions, billed revenue, payments, outstanding and overdue. Separate invoice-issue-date and payment-event-date filters; current balances are not historical as-of accounting.
+- [x] Aggregate across the entire filtered dataset, not the visible page; avoid invoice-line/payment join multiplication. Drill-through preserves the filter and reconciles to summary values.
+- [x] Finish customer own-subscription/invoice/payment-status views, permitted lifecycle actions and own print/download. Test cross-customer list/detail/action/download routes; remove cost prices and internal payment notes from payloads, not just screens.
+- [x] Audit every destination for consistent spacing/navigation/statuses, keyboard focus, labels, disabled-action explanations, mobile layouts, loading/empty/error/retry states and duplicate-submit feedback. Refresh persisted totals after writes.
 
 **Gate:** the two November demo invoices total **4,188.80**; with explicit November issue/payment filters, after A settles collections are **3,088.80** and B outstanding **1,100**. On the isolated Nov 9 fixture B is overdue; C is not due and its preceding paid October period remains in history. Filters and drill-through agree. **Fix failures:** fabricated charts, mislabeled revenue, portal data leaks or stale balances requiring manual page repair.
 
