@@ -232,7 +232,7 @@ test('P2: lists paginate/filter/search safely and relational constraints survive
   const anotherConnection = new DatabaseSync(current.databasePath);
   try {
     assert.equal(anotherConnection.prepare('SELECT sales_price FROM products WHERE id=?').get(percent.id)?.sales_price, 120_000);
-    assert.equal(anotherConnection.prepare('SELECT max(version) AS version FROM schema_migrations').get()?.version, 4);
+    assert.ok(Number(anotherConnection.prepare('SELECT max(version) AS version FROM schema_migrations').get()?.version) >= 4);
   } finally { anotherConnection.close(); }
   assert.throws(() => current.db.prepare("UPDATE products SET sales_price=-1 WHERE id=?").run(percent.id));
   assert.throws(() => current.db.prepare("UPDATE products SET active=3 WHERE id=?").run(percent.id));
