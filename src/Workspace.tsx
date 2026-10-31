@@ -10,7 +10,6 @@ import {
   ArrowRight,
   Building2,
   Database,
-  KeyRound,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -18,6 +17,7 @@ import {
   RefreshCw,
   ShieldCheck,
   Settings2,
+  FileText,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -145,6 +145,10 @@ export function WorkspaceShell() {
           <NavLink to="/workspace" end>
             <LayoutDashboard size={19} />
             Workspace
+          </NavLink>
+          <NavLink to="/subscriptions">
+            <FileText size={19} />
+            Subscriptions
           </NavLink>
           {user.role !== "customer" && (
             <NavLink to="/customers">
@@ -296,33 +300,24 @@ export function Workspace() {
                   <ShieldCheck size={26} strokeWidth={1.6} />
                 </span>
                 <h2>
-                  {user?.role === "admin"
-                    ? "The right access. A shared starting point."
-                    : user?.role === "staff"
-                      ? "The team is connected."
-                      : "Your account is ready."}
+                  {user?.role === "customer"
+                    ? "Your agreements, together."
+                    : "Every agreement has a next step."}
                 </h2>
                 <p>
-                  {user?.role === "admin"
-                    ? "Manage your internal team and keep customer access separate. Every account has a defined role."
-                    : user?.role === "staff"
-                      ? "Find customer accounts in your shared workspace. Configuration and team access stay with your administrator."
-                      : "You’re signed in to your own Brightloop account. Internal team records are kept separate from your customer access."}
+                  {user?.role === "customer"
+                    ? "Review the subscriptions linked to your Brightloop account, including their service dates and agreed prices."
+                    : "Prepare a quotation, review the commercial terms and follow each agreement into active service."}
                 </p>
-                {user?.role === "admin" ? (
-                  <Link className="button" to="/staff/new">
+                {user?.role !== "customer" ? (
+                  <Link className="button" to="/subscriptions/new">
                     <Plus size={18} />
-                    Add staff member
-                  </Link>
-                ) : user?.role === "staff" ? (
-                  <Link className="button" to="/customers">
-                    View customers
-                    <ArrowRight size={18} />
+                    New subscription
                   </Link>
                 ) : (
-                  <Link className="button secondary" to="/forgot-password">
-                    <KeyRound size={18} />
-                    Request password reset
+                  <Link className="button" to="/subscriptions">
+                    View subscriptions
+                    <ArrowRight size={18} />
                   </Link>
                 )}
               </div>
@@ -433,9 +428,16 @@ export function useListQuery() {
     setDraft(query);
   }, [query]);
   function commit(value = draft) {
-    const next = new URLSearchParams();
-    if (value.trim()) next.set("q", value.trim());
-    setParams(next, { replace: true });
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (value.trim()) next.set("q", value.trim());
+        else next.delete("q");
+        next.delete("page");
+        return next;
+      },
+      { replace: true },
+    );
   }
   useEffect(() => {
     if (composing || draft.trim() === query) return;
@@ -877,7 +879,7 @@ export function SessionBoundary({ children }: { children: ReactNode }) {
     );
   return children;
 }
-function formatDate(value: string, time = false) {
+export function formatDate(value: string, time = false) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Unavailable";
   return new Intl.DateTimeFormat("en-IN", {
@@ -890,6 +892,6 @@ function formatDate(value: string, time = false) {
       : {}),
   }).format(date);
 }
-function formatBusinessDate(value: string) {
+export function formatBusinessDate(value: string) {
   return formatDate(`${value}T12:00:00+05:30`);
 }

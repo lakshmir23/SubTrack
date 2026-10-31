@@ -8,6 +8,11 @@ import { ForgotPassword, Login, ResetPassword, Signup } from "./Auth";
 import { SessionProvider } from "./session";
 import { RouteFocus } from "./ui";
 import {
+  SubscriptionList,
+  SubscriptionDetail,
+  SubscriptionEditorRoute,
+} from "./Subscriptions";
+import {
   CatalogLayout,
   CatalogList,
   CatalogDetail,
@@ -51,9 +56,19 @@ const router = createBrowserRouter([
             element: <WorkspaceShell />,
             children: [
               { path: "/workspace", element: <Workspace /> },
+              { path: "/subscriptions", element: <SubscriptionList /> },
+              { path: "/subscriptions/:id", element: <SubscriptionDetail /> },
               {
                 element: <RequireSession roles={["admin", "staff"]} />,
                 children: [
+                  {
+                    path: "/subscriptions/new",
+                    element: <SubscriptionEditorRoute />,
+                  },
+                  {
+                    path: "/subscriptions/:id/edit",
+                    element: <SubscriptionEditorRoute />,
+                  },
                   {
                     path: "/customers",
                     element: <PeopleList key="customers" kind="customers" />,

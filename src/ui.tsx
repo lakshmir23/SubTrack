@@ -339,15 +339,23 @@ export function PageHeading({
   title,
   description,
   action,
+  autoFocus = false,
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
+  autoFocus?: boolean;
 }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  useLayoutEffect(() => {
+    if (autoFocus) heading.current?.focus({ preventScroll: true });
+  }, [autoFocus]);
   return (
     <div className="page-heading">
       <div>
-        <h1 tabIndex={-1}>{title}</h1>
+        <h1 ref={heading} tabIndex={-1}>
+          {title}
+        </h1>
         {description && <p className="muted">{description}</p>}
       </div>
       {action}
@@ -481,6 +489,66 @@ export function RouteFocus() {
       ?.focus({ preventScroll: true });
   }, [pathname]);
   return null;
+}
+export function ConfirmationDialog({
+  open,
+  title,
+  description,
+  confirmLabel,
+  busy,
+  error,
+  onCancel,
+  onConfirm,
+  children,
+}: {
+  open: boolean;
+  title: string;
+  description: ReactNode;
+  confirmLabel: string;
+  busy: boolean;
+  error?: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+  children?: ReactNode;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
+  const titleId = useId(),
+    descriptionId = useId();
+  useEffect(() => {
+    if (open && !dialog.current?.open) {
+      previousFocus.current = document.activeElement as HTMLElement | null;
+      dialog.current?.showModal();
+    } else if (!open && dialog.current?.open) {
+      dialog.current.close();
+      previousFocus.current?.focus();
+    }
+  }, [open]);
+  return (
+    <dialog
+      ref={dialog}
+      className="confirmation-dialog"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+      onCancel={(event) => {
+        event.preventDefault();
+        if (!busy) onCancel();
+      }}
+    >
+      <h2 id={titleId}>{title}</h2>
+      <p id={descriptionId}>{description}</p>
+      {children}
+      {error && <Feedback tone="error">{error}</Feedback>}
+      <div className="dialog-actions">
+        <Button tone="secondary" autoFocus disabled={busy} onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button busy={busy} onClick={onConfirm}>
+          {confirmLabel}
+        </Button>
+      </div>
+    </dialog>
+  );
 }
 export function useUnsavedChanges(dirty: boolean) {
   const allow = useRef(false);

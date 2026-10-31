@@ -100,7 +100,7 @@ const intervalLabels = {
   yearly: "Yearly",
 };
 const listPath = (kind: Kind) => `/configuration/${kind}`;
-type LineForm = {
+export type LineForm = {
   productId: string;
   variantId: string | null;
   quantity: string;
@@ -122,12 +122,12 @@ function money(value: string, field: string, signed = false) {
     return Number.NaN;
   }
 }
-function whole(value: string, field: string) {
+export function whole(value: string, field: string) {
   void field;
   if (!/^\d+$/.test(value)) return Number.NaN;
   return Number(value);
 }
-function lineInputs(lines: LineForm[]): CatalogLineInput[] {
+export function lineInputs(lines: LineForm[]): CatalogLineInput[] {
   return lines.map((line, index) => ({
     ...line,
     quantity: whole(line.quantity, `lines.${index}.quantity`),
@@ -390,7 +390,7 @@ export function CatalogList({ kind }: { kind: Kind }) {
   );
 }
 
-function RecordSelect<T extends { id: string; name: string }>({
+export function RecordSelect<T extends { id: string; name: string }>({
   resource,
   label,
   name,
@@ -398,14 +398,20 @@ function RecordSelect<T extends { id: string; name: string }>({
   onChange,
   error,
   disabled = false,
+  selectedLabel,
+  help,
+  emptyLabel,
 }: {
-  resource: "products" | "plans";
+  resource: "products" | "plans" | "customers" | "quotation-templates";
   label: string;
   name: string;
   value: string;
   onChange: (id: string, record?: T) => void;
   error?: string;
   disabled?: boolean;
+  selectedLabel?: string;
+  help?: string;
+  emptyLabel?: string;
 }) {
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
@@ -416,11 +422,13 @@ function RecordSelect<T extends { id: string; name: string }>({
     return () => clearTimeout(timer);
   }, [search, composing]);
   const list = useResource<Page<T>>(
-    `/api/${resource}?active=true&q=${encodeURIComponent(query)}&pageSize=100`,
+    `/api/${resource}?${resource === "customers" ? "" : "active=true&"}q=${encodeURIComponent(query)}&pageSize=100`,
   );
   const found = list.data?.items.find((item) => item.id === value);
   const selected = useResource<T>(
-    value && list.data && !found ? `/api/${resource}/${value}` : null,
+    value && list.data && !found && resource !== "customers"
+      ? `/api/${resource}/${value}`
+      : null,
   );
   const options = list.data?.items || [];
   return (
@@ -443,21 +451,34 @@ function RecordSelect<T extends { id: string; name: string }>({
           list.busy
             ? "Loading available records…"
             : disabled
-              ? "The primary product is set by the selected plan."
-              : undefined
+              ? help || "The primary product is set by the selected plan."
+              : help
         }
       >
         <option value="">
-          Choose {resource === "plans" ? "a plan" : "a product"}
+          {emptyLabel || (
+            <>
+              Choose{" "}
+              {resource === "plans"
+                ? "a plan"
+                : resource === "customers"
+                  ? "a customer"
+                  : resource === "quotation-templates"
+                    ? "a template"
+                    : "a product"}
+            </>
+          )}
         </option>
         {value && !found && (
           <option value={value}>
-            {selected.data?.name || "Selected record"}
+            {selected.data?.name || selectedLabel || "Selected record"}
           </option>
         )}
         {options.map((item) => (
           <option key={item.id} value={item.id}>
-            {item.name}
+            {resource === "customers" && "email" in item
+              ? `${item.name} · ${String(item.email)}`
+              : item.name}
           </option>
         ))}
       </SelectField>
@@ -1269,7 +1290,7 @@ function TaxForm({ id }: { id?: string }) {
   );
 }
 
-function LineEditor({
+export function LineEditor({
   lines,
   onChange,
   fields,
@@ -1613,6 +1634,20 @@ export function CatalogDetail({ kind }: { kind: Kind }) {
         ),
       )}
       <section className="panel catalog-detail">
+        {kind === "quotation-templates" && template.active && (
+          <div className="template-use">
+            <Link
+              className="button"
+              to={`/subscriptions/new?templateId=${template.id}`}
+            >
+              <FileText size={17} />
+              Use template
+            </Link>
+            <span>
+              Creates an independent draft; the template stays reusable.
+            </span>
+          </div>
+        )}
         <dl className="catalog-detail-grid">
           {kind === "products" ? (
             <>
@@ -1770,6 +1805,98 @@ function TemplateLine({ line }: { line: CatalogLineInput }) {
   );
 }
 
+export type AmountBreakdownData = Pick<
+  CatalogPreview,
+  "lines" | "subtotal" | "tax" | "total" | "priceExplanation"
+> & { businessDate?: string };
+export function AmountBreakdown({
+  value,
+  estimated = false,
+  note,
+  periodLabel,
+}: {
+  value: AmountBreakdownData;
+  estimated?: boolean;
+  note?: ReactNode;
+  periodLabel?: string;
+}) {
+  return (
+    <>
+      {estimated && (
+        <p className="pricing-period-scope">
+          One {periodLabel || "recurring"} billing period
+        </p>
+      )}
+      {value.priceExplanation && (
+        <p className="calculation-explanation">{value.priceExplanation}</p>
+      )}
+      {value.lines.map((line, index) => (
+        <div className="calculation-line" key={index}>
+          <strong>{line.productName}</strong>
+          {line.variantName && (
+            <span className="muted">{line.variantName}</span>
+          )}
+          <dl>
+            <div>
+              <dt>
+                {line.isPrimary
+                  ? "Plan base per unit"
+                  : "Catalog base per unit"}
+              </dt>
+              <dd>{formatMoney(line.baseUnitPrice)}</dd>
+            </div>
+            <div>
+              <dt>Variant adjustment per unit</dt>
+              <dd>
+                {line.variantAdjustment >= 0 ? "+" : ""}
+                {formatMoney(line.variantAdjustment)}
+              </dd>
+            </div>
+            <div>
+              <dt>Unit price × {line.quantity}</dt>
+              <dd>
+                {formatMoney(line.unitPrice)} × {line.quantity}
+              </dd>
+            </div>
+            <div>
+              <dt>Line subtotal</dt>
+              <dd>{formatMoney(line.subtotal)}</dd>
+            </div>
+            <div>
+              <dt>
+                {line.taxName || (estimated ? "Estimated tax" : "Tax")} (
+                {amountInput(line.taxRateBps)}%)
+              </dt>
+              <dd>{formatMoney(line.tax)}</dd>
+            </div>
+          </dl>
+        </div>
+      ))}
+      <dl className="calculation-totals">
+        <div>
+          <dt>Subtotal</dt>
+          <dd>{formatMoney(value.subtotal)}</dd>
+        </div>
+        <div>
+          <dt>{estimated ? "Estimated tax" : "Tax"}</dt>
+          <dd>{formatMoney(value.tax)}</dd>
+        </div>
+        <div className="grand-total">
+          <dt>{estimated ? "Estimated period total" : "Total"}</dt>
+          <dd>{formatMoney(value.total)}</dd>
+        </div>
+      </dl>
+      <p className="footnote">
+        {note || (
+          <>
+            Current catalog · {value.businessDate} · INR. Discounts are
+            evaluated when an invoice is generated.
+          </>
+        )}
+      </p>
+    </>
+  );
+}
 export function CatalogPricePreview() {
   const [planId, setPlanId] = useState("");
   const [lines, setLines] = useState<LineForm[]>([]);
@@ -1932,69 +2059,7 @@ export function CatalogPricePreview() {
             </EmptyState>
           ) : (
             <>
-              <p className="calculation-explanation">
-                {preview.priceExplanation}
-              </p>
-              {preview.lines.map((line, index) => (
-                <div className="calculation-line" key={index}>
-                  <strong>{line.productName}</strong>
-                  {line.variantName && (
-                    <span className="muted">{line.variantName}</span>
-                  )}
-                  <dl>
-                    <div>
-                      <dt>
-                        {line.isPrimary
-                          ? "Plan base per unit"
-                          : "Catalog base per unit"}
-                      </dt>
-                      <dd>{formatMoney(line.baseUnitPrice)}</dd>
-                    </div>
-                    <div>
-                      <dt>Variant adjustment per unit</dt>
-                      <dd>
-                        {line.variantAdjustment >= 0 ? "+" : ""}
-                        {formatMoney(line.variantAdjustment)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Unit price × {line.quantity}</dt>
-                      <dd>
-                        {formatMoney(line.unitPrice)} × {line.quantity}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Line subtotal</dt>
-                      <dd>{formatMoney(line.subtotal)}</dd>
-                    </div>
-                    <div>
-                      <dt>
-                        {line.taxName || "Tax"} ({amountInput(line.taxRateBps)}
-                        %)
-                      </dt>
-                      <dd>{formatMoney(line.tax)}</dd>
-                    </div>
-                  </dl>
-                </div>
-              ))}
-              <dl className="calculation-totals">
-                <div>
-                  <dt>Subtotal</dt>
-                  <dd>{formatMoney(preview.subtotal)}</dd>
-                </div>
-                <div>
-                  <dt>Tax</dt>
-                  <dd>{formatMoney(preview.tax)}</dd>
-                </div>
-                <div className="grand-total">
-                  <dt>Total</dt>
-                  <dd>{formatMoney(preview.total)}</dd>
-                </div>
-              </dl>
-              <p className="footnote">
-                Current catalog · {preview.businessDate} · INR. Discounts are
-                evaluated when an invoice is generated.
-              </p>
+              <AmountBreakdown value={preview} />
             </>
           )}
         </section>
