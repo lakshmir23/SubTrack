@@ -19,7 +19,13 @@ import {
   InvoiceList,
   InvoiceDetail,
   InvoiceGenerator,
+  InvoiceReplacementRoute,
 } from "./Billing";
+import {
+  BillingWorkbench,
+  BillingRunList,
+  BillingRunDetail,
+} from "./BillingWorkbench";
 import {
   CatalogLayout,
   CatalogList,
@@ -67,10 +73,21 @@ const router = createBrowserRouter([
               { path: "/subscriptions", element: <SubscriptionList /> },
               { path: "/subscriptions/:id", element: <SubscriptionDetail /> },
               { path: "/billing/invoices", element: <InvoiceList /> },
+              {
+                path: "/billing",
+                element: <Navigate to="/billing/invoices" replace />,
+              },
               { path: "/billing/invoices/:id", element: <InvoiceDetail /> },
               {
                 element: <RequireSession roles={["admin", "staff"]} />,
                 children: [
+                  { path: "/billing/workbench", element: <BillingWorkbench /> },
+                  { path: "/billing/runs", element: <BillingRunList /> },
+                  { path: "/billing/runs/:id", element: <BillingRunDetail /> },
+                  {
+                    path: "/billing/invoices/:id/replace",
+                    element: <InvoiceReplacementRoute />,
+                  },
                   {
                     path: "/billing/subscriptions/:id/generate",
                     element: <InvoiceGenerator />,

@@ -19,7 +19,10 @@ import {
   ShieldCheck,
   Trash2,
   XCircle,
+  Printer,
 } from "lucide-react";
+import { BillingNavigation } from "./BillingNavigation";
+import { InvoiceDeliveryPanel } from "./InvoiceOutput";
 import type { Page, User } from "../shared/contracts";
 import type { Product } from "../shared/catalog";
 import {
@@ -35,6 +38,7 @@ import type {
   Subscription,
   SubscriptionSummary,
 } from "../shared/subscriptions";
+import type { InvoiceReplacementPreview } from "../shared/billing-workbench";
 import { amountInput, formatMoney, parseAmount } from "../shared/money";
 import { errorMessage, request } from "./api";
 import {
@@ -235,6 +239,7 @@ export function InvoiceList() {
           </Button>
         }
       />
+      <BillingNavigation />
       <section className="list-panel" aria-label="Invoice records">
         <div className="list-toolbar subscription-filters">
           <SearchField
@@ -798,6 +803,15 @@ export function InvoiceDetail() {
         description={`${invoice.customerName} · ${invoice.subscriptionNumber}`}
         action={
           <div className="heading-actions">
+            <a
+              className="button secondary"
+              href={`/api/invoices/${invoice.id}/print`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Printer size={17} />
+              Open print view<span className="sr-only"> (new tab)</span>
+            </a>
             <Button
               tone="secondary"
               onClick={resource.reload}
@@ -843,6 +857,40 @@ export function InvoiceDetail() {
                     : "Confirmed · collectible"}
         </strong>
       </div>
+      {invoice.currentInvoiceId !== invoice.id && (
+        <Feedback>
+          This is an earlier revision.{" "}
+          <Link to={invoicePath(invoice.currentInvoiceId)}>
+            Open current invoice {invoice.currentInvoiceNumber}
+          </Link>
+          .
+        </Feedback>
+      )}
+      {invoice.predecessorId && (
+        <p className="footnote">
+          Revision {invoice.revisionNumber} · Replaces{" "}
+          <Link to={invoicePath(invoice.predecessorId)}>
+            the preceding canceled invoice
+          </Link>
+          . One logical charge is retained for this period.
+        </p>
+      )}
+      {internal && invoice.allowedActions.includes("replace") && (
+        <div className="replacement-notice">
+          <strong>This canceled period remains occupied.</strong>
+          <p>
+            Routine billing will not regenerate it. Review a linked replacement
+            using current tax and discount eligibility.
+          </p>
+          <Link
+            className="button secondary"
+            to={`${invoicePath(invoice.id)}/replace`}
+          >
+            Review replacement
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+      )}
       {zeroPaid && (
         <Feedback tone="success">
           Zero amount due. This invoice settled when it was confirmed; no
@@ -960,6 +1008,7 @@ export function InvoiceDetail() {
           </ol>
         </section>
       </div>
+      {internal && <InvoiceDeliveryPanel key={invoice.id} invoice={invoice} />}
       <ConfirmationDialog
         open={!!action}
         title={
@@ -1156,6 +1205,259 @@ export function DiscountList() {
           busy={resource.busy}
         />
       </section>
+    </>
+  );
+}
+
+export function InvoiceReplacementRoute() {
+  const { id } = useParams();
+  return <InvoiceReplacement key={id} id={id!} />;
+}
+function InvoiceReplacement({ id }: { id: string }) {
+  const source = useResource<Invoice>(`/api/invoices/${id}`);
+  const navigate = useNavigate();
+  const [preview, setPreview] = useState<InvoiceReplacementPreview | null>(
+      null,
+    ),
+    [previewError, setPreviewError] = useState("");
+  const [previewBusy, setPreviewBusy] = useState(false),
+    [revision, setRevision] = useState(0),
+    [confirm, setConfirm] = useState(false),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  const [key] = useState(() => crypto.randomUUID());
+  const pending = useRef(false);
+  useEffect(() => {
+    document.title = "Review replacement · SubTrack";
+  }, []);
+  useEffect(() => {
+    if (!source.data?.allowedActions.includes("replace")) return;
+    const controller = new AbortController();
+    setPreviewBusy(true);
+    setPreview(null);
+    setPreviewError("");
+    request<InvoiceReplacementPreview>(
+      `/api/invoices/${id}/replacement/preview`,
+      {
+        method: "POST",
+        body: { version: source.data.version },
+        signal: controller.signal,
+      },
+    )
+      .then((value) => {
+        if (!controller.signal.aborted) setPreview(value);
+      })
+      .catch((reason) => {
+        if (!controller.signal.aborted) setPreviewError(errorMessage(reason));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setPreviewBusy(false);
+      });
+    return () => controller.abort();
+  }, [source.data, id, revision]);
+  async function replace() {
+    if (!preview || pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const invoice = await request<Invoice>(`/api/invoices/${id}/replace`, {
+        method: "POST",
+        body: {
+          version: preview.predecessorVersion,
+          previewHash: preview.previewHash,
+          idempotencyKey: key,
+        },
+      });
+      navigate(invoicePath(invoice.id), {
+        replace: true,
+        state: {
+          message: `${invoice.number} is a linked replacement Draft. Review its frozen amounts before confirmation.`,
+        },
+      });
+    } catch (reason) {
+      setError(errorMessage(reason));
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
+  if (source.busy) return <Loading>Loading the canceled invoice…</Loading>;
+  if (!source.data || source.error)
+    return (
+      <>
+        <PageHeading title="Replacement couldn’t load." />
+        <Feedback tone="error">
+          {source.error || "This invoice is unavailable."}
+        </Feedback>
+        <Link to={invoicePath(id)}>Back to invoice</Link>
+        <Button tone="secondary" onClick={source.reload}>
+          Retry
+        </Button>
+      </>
+    );
+  const invoice = source.data;
+  return (
+    <>
+      <Link className="back-link" to={invoicePath(id)}>
+        <ArrowLeft size={16} />
+        Back to {invoice.number}
+      </Link>
+      <PageHeading
+        title="Review replacement"
+        autoFocus
+        description={`A linked successor for ${invoice.number}. The canceled revision remains in its audit history.`}
+      />
+      {!invoice.allowedActions.includes("replace") ? (
+        <Feedback>
+          This revision cannot be replaced. Only the current canceled invoice
+          with no payment ever recorded is eligible.{" "}
+          <Link to={invoicePath(invoice.currentInvoiceId)}>
+            Open current invoice {invoice.currentInvoiceNumber}
+          </Link>
+          .
+        </Feedback>
+      ) : (
+        <>
+          <div className="replacement-notice">
+            <strong>Review the recalculated amount.</strong>
+            <p>
+              Accepted unit prices and quantities stay the same. Tax and
+              discount eligibility are evaluated again; a previously consumed
+              discount use is not restored.
+            </p>
+          </div>
+          {previewError && (
+            <Feedback tone="error">
+              {previewError}{" "}
+              <button
+                className="text-button"
+                onClick={() => {
+                  source.reload();
+                  setRevision((value) => value + 1);
+                }}
+              >
+                Refresh replacement preview
+              </button>
+            </Feedback>
+          )}
+          {previewBusy ? (
+            <Loading>Calculating a replacement preview…</Loading>
+          ) : (
+            preview && (
+              <>
+                <div className="replacement-comparison">
+                  <div>
+                    <span>Canceled historical total</span>
+                    <strong>{formatMoney(invoice.total)}</strong>
+                    <small>{invoice.number} · not collectible</small>
+                  </div>
+                  <ArrowRight aria-hidden="true" size={22} />
+                  <div>
+                    <span>Replacement Draft total</span>
+                    <strong>{formatMoney(preview.total)}</strong>
+                    <small>Awaiting confirmation · not collectible</small>
+                  </div>
+                </div>
+                <div className="agreement-layout">
+                  <section className="panel invoice-period">
+                    <h2>Same logical charge. A new revision.</h2>
+                    <dl className="catalog-detail-grid">
+                      <div>
+                        <dt>Customer</dt>
+                        <dd>
+                          {preview.customerName}
+                          <small>{preview.customerEmail}</small>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Subscription</dt>
+                        <dd>
+                          <Link to={`/subscriptions/${preview.subscriptionId}`}>
+                            {preview.subscriptionNumber}
+                          </Link>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Period starts</dt>
+                        <dd>{formatBusinessDate(preview.periodStart)}</dd>
+                      </div>
+                      <div>
+                        <dt>Period ends (exclusive)</dt>
+                        <dd>{formatBusinessDate(preview.periodEnd)}</dd>
+                      </div>
+                      <div>
+                        <dt>New issue date</dt>
+                        <dd>{formatBusinessDate(preview.issueDate)}</dd>
+                      </div>
+                      <div>
+                        <dt>New due date</dt>
+                        <dd>{formatBusinessDate(preview.dueDate)}</dd>
+                      </div>
+                    </dl>
+                    <DiscountReasons invoice={preview} />
+                    <Button
+                      onClick={() => {
+                        setError("");
+                        setConfirm(true);
+                      }}
+                    >
+                      Create replacement draft
+                      <ArrowRight size={17} />
+                    </Button>
+                  </section>
+                  <section className="panel calculation-panel">
+                    <h2>Replacement invoice preview</h2>
+                    <InvoiceBreakdown invoice={preview} />
+                  </section>
+                </div>
+                <ConfirmationDialog
+                  open={confirm}
+                  title="Create this replacement?"
+                  description={`Create one linked Draft after ${invoice.number}, for the same period. The canceled revision remains historical. Confirmation is still required before collection.`}
+                  confirmLabel="Create replacement draft"
+                  busy={busy}
+                  error={error}
+                  onCancel={() => setConfirm(false)}
+                  onConfirm={() => void replace()}
+                >
+                  <dl className="confirmation-summary">
+                    <div>
+                      <dt>Previous historical total</dt>
+                      <dd>{formatMoney(invoice.total)}</dd>
+                    </div>
+                    <div>
+                      <dt>Replacement Draft total</dt>
+                      <dd>{formatMoney(preview.total)}</dd>
+                    </div>
+                  </dl>
+                  {error && (
+                    <p className="footnote">
+                      <Link
+                        to={`/billing/invoices?subscriptionId=${invoice.subscriptionId}`}
+                      >
+                        Check saved revisions
+                      </Link>{" "}
+                      before retrying an uncertain response.{" "}
+                      <button
+                        className="text-button"
+                        onClick={() => {
+                          setConfirm(false);
+                          source.reload();
+                          setRevision((value) => value + 1);
+                        }}
+                      >
+                        Refresh preview
+                      </button>{" "}
+                      if the financial calculation changed.
+                    </p>
+                  )}
+                </ConfirmationDialog>
+              </>
+            )
+          )}
+        </>
+      )}
     </>
   );
 }

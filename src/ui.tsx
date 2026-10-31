@@ -24,6 +24,24 @@ import {
 } from "lucide-react";
 import { Link, useBlocker, useLocation } from "react-router-dom";
 import { passwordChecks } from "../shared/validation";
+import type { Delivery } from "../shared/contracts";
+
+export const deliveryStatusLabels: Record<Delivery["status"], string> = {
+  generated: "Generated / queued",
+  sending: "Sending",
+  accepted: "Accepted by SMTP",
+  failed: "Failed",
+  unknown: "Delivery uncertain",
+};
+export function DeliveryStatus({ status }: { status: Delivery["status"] }) {
+  return (
+    <span
+      className={`status ${status === "failed" ? "danger" : status === "unknown" ? "warning" : status === "accepted" ? "success" : "info"}`}
+    >
+      {deliveryStatusLabels[status]}
+    </span>
+  );
+}
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (

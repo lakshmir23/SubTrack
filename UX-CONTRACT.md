@@ -42,6 +42,8 @@ Staff/customer/delivery lists are server-paginated, 20 rows per page, with count
 
 ## Flow ledger
 
+P5 billing queue rows represent the oldest unprocessed period per subscription; the exceptions view names failed periods and canceled current invoices. The bounded-run form explicitly distinguishes all due subscriptions from the current page's subscription IDs, independent of search filters. The shared run schema validates a 1–500 period limit. Saved asynchronous runs poll real counters, use a period-limit progress indicator rather than a fabricated completion percentage, retain paginated/filterable outcomes, and expose failed-only retry as a separate reviewed run. Remaining backlog is labelled as a subscription count. Run and retry submission keys remain stable across an uncertain response. Replacement review shows the canceled historical amount beside the new Draft amount, binds the server preview hash and requires refreshed review when financial eligibility changes. Superseded revisions link to the current invoice. These workflows reuse the shared confirmation, feedback, list, search, pagination and exact currency owners.
+
 | Operation       | Pending                        | Success destination and feedback   | Failure recovery                               | Focus                                         | Source        |
 | --------------- | ------------------------------ | ---------------------------------- | ---------------------------------------------- | --------------------------------------------- | ------------- |
 | Signup/login    | fixed-size busy primary action | Role's workspace                   | retain fields and inline error                 | title on navigation; invalid field on failure | AUTH-01/02/04 |
@@ -58,6 +60,8 @@ Every route sets document.title and has one h1. App-owned 403/404 states disting
 ## Feedback and preservation
 
 Feedback is inline and accessible (`role=status` for success/info, `role=alert` for errors), stable and specific. No native alert/confirm/prompt. There are no destructive modals in P1. Entered form values remain on a failed save. For authentication fields no local/session storage is used. Safe nonsecret input can remain in React state while a form remains mounted. Form navigation links preserve no passwords. Explicit navigation away from changed forms asks through an app-owned dialog when implemented; a beforeunload guard protects a real unload only.
+
+Delivery badges use `src/ui.tsx` DeliveryStatus and its canonical labels: Generated / queued, Sending, Accepted by SMTP, Failed and Delivery uncertain. Generation is not delivery; SMTP acceptance is not evidence of inbox arrival. An uncertain result never implies a safe automatic resend. The application owns invoice-send review and safe recovery; the mail mechanism owns the persisted handoff result. Print documents open on an authenticated same-origin route; the browser owns its native print/save dialog after an explicit user action, as a deliberate exception to app-owned review dialogs.
 
 ## Async and resilience
 

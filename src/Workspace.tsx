@@ -45,6 +45,7 @@ import { useSession } from "./session";
 import {
   Brand,
   Button,
+  DeliveryStatus,
   EmptyState,
   Feedback,
   Field,
@@ -171,7 +172,9 @@ export function WorkspaceShell() {
             <FileText size={19} />
             Subscriptions
           </NavLink>
-          <NavLink to="/billing/invoices">
+          <NavLink
+            to={user.role === "customer" ? "/billing/invoices" : "/billing"}
+          >
             <ReceiptText size={19} />
             {user.role === "customer" ? "Invoices" : "Billing"}
           </NavLink>
@@ -760,13 +763,6 @@ export function Deliveries() {
   useEffect(() => {
     document.title = "Email activity · SubTrack";
   }, []);
-  const statusLabels: Record<Delivery["status"], string> = {
-    generated: "Generated / queued",
-    sending: "Sending",
-    accepted: "Accepted by SMTP",
-    failed: "Failed",
-    unknown: "Delivery uncertain",
-  };
   return (
     <>
       <PageHeading
@@ -801,8 +797,7 @@ export function Deliveries() {
               icon={<Mail size={26} />}
               title="No email activity yet."
             >
-              Password reset requests for registered accounts appear here when a
-              message is generated.
+              Generated account and invoice messages appear here.
             </EmptyState>
           ) : (
             <table>
@@ -828,11 +823,7 @@ export function Deliveries() {
                     </td>
                     <td data-label="Recipient">{delivery.recipient}</td>
                     <td data-label="Status">
-                      <span
-                        className={`status ${delivery.status === "failed" ? "danger" : delivery.status === "accepted" ? "success" : "warning"}`}
-                      >
-                        {statusLabels[delivery.status]}
-                      </span>
+                      <DeliveryStatus status={delivery.status} />
                     </td>
                     <td data-label="Created" className="date-cell">
                       {formatDate(delivery.createdAt, true)}
