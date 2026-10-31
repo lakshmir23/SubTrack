@@ -7,7 +7,6 @@ export interface Page<T> { items: T[]; total: number; page: number; pageSize: nu
 export interface WorkspaceSummary {
   organization: string; businessDate: string; timezone: string; currency: string;
   customers: number; staff: number; database: string; mailMode: 'outbox' | 'smtp';
-  implementationGate: 'P1';
 }
 export interface Delivery {
   id: string; recipient: string; subject: string; createdAt: string;

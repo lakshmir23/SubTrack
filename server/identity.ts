@@ -102,7 +102,7 @@ export function identityRoutes(db: DatabaseSync, clock: () => Date, origin: stri
   router.get('/workspace', requireRole(), (_req, res) => {
     const user = res.locals.user as User;
     const counts = user.role === 'customer' ? { customers: 0, staff: 0 } : { customers: Number(db.prepare("SELECT count(*) AS count FROM users WHERE role='customer'").get()?.count), staff: Number(db.prepare("SELECT count(*) AS count FROM users WHERE role='staff'").get()?.count) };
-    res.json({ organization: 'Brightloop Software', businessDate: businessDate(clock()), timezone: 'Asia/Kolkata', currency: 'INR', ...counts, database: 'sqlite', mailMode, implementationGate: 'P1' });
+    res.json({ organization: 'Brightloop Software', businessDate: businessDate(clock()), timezone: 'Asia/Kolkata', currency: 'INR', ...counts, database: 'sqlite', mailMode });
   });
   const directory = (role: 'staff' | 'customer') => (req: Request, res: Response) => {
     const input = listSchema.parse(req.query);
