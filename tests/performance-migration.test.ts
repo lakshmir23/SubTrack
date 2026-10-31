@@ -30,7 +30,8 @@ test('FIN-02: populated version-ten upgrade preserves accepted/invoice/payment f
   try {
     await fixture.app.locals.billingWorker.stop(); await fixture.app.locals.deliverPending.stop();
     // Reconstruct the real v10 index state in this isolated disposable fixture.
-    db.exec(`DROP INDEX subscriptions_created_page; DROP INDEX invoices_created_page; DELETE FROM schema_migrations WHERE version=11;
+    db.exec(`DROP TABLE ai_quote_reviews; DROP TABLE ai_quote_proposals; DROP TABLE ai_quote_requests;
+      DROP INDEX subscriptions_created_page; DROP INDEX invoices_created_page; DELETE FROM schema_migrations WHERE version IN (11,12);
       CREATE INDEX teammate_invoice_number_index ON invoices(number,id);
       CREATE TRIGGER teammate_invoice_guard BEFORE UPDATE OF number ON invoices BEGIN SELECT RAISE(ABORT,'Teammate history guard'); END;`);
     const beforeInvoices = db.prepare('SELECT * FROM invoices ORDER BY id').all();
@@ -39,7 +40,7 @@ test('FIN-02: populated version-ten upgrade preserves accepted/invoice/payment f
     const beforeTriggers = db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger' ORDER BY name").all();
     const expectedPages = new Map(['subscriptions', 'invoices'].map(table => [table, db.prepare(`SELECT id FROM ${table} ORDER BY created_at DESC,id LIMIT 2 OFFSET 1`).all()]));
     db.close(); db = openDatabase(path);
-    assert.equal(db.prepare('SELECT max(version) AS version FROM schema_migrations').get()?.version, 11);
+    assert.ok(Number(db.prepare('SELECT max(version) AS version FROM schema_migrations').get()?.version) >= 11);
     assert.deepEqual(db.prepare('SELECT * FROM invoices ORDER BY id').all(), beforeInvoices);
     assert.deepEqual(db.prepare('SELECT * FROM subscriptions ORDER BY id').all(), beforeSubscriptions);
     assert.deepEqual(db.prepare('SELECT * FROM payments ORDER BY id').all(), beforePayments);

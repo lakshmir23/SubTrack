@@ -101,7 +101,7 @@ counts = {table: db.execute('select count(*) from ' + table).fetchone()[0] for t
 check(counts == r['metadata']['startSnapshot']['counts'], 'Runtime baseline counts changed during read-only timings')
 check(counts == r['metadata']['endSnapshot']['counts'], 'Recorded final counts differ from independent runtime counts')
 schema = db.execute('select max(version) from schema_migrations').fetchone()[0]
-check(schema == 11, 'Runtime schema is not expected measured-index version11')
+check(schema >= 11, 'Runtime schema predates required measured-index migration 11')
 fk = [dict(x) for x in db.execute('pragma foreign_key_check')]
 integrity = db.execute('pragma integrity_check').fetchone()[0]
 check(not fk and integrity == 'ok', 'Final runtime relational integrity failed')
