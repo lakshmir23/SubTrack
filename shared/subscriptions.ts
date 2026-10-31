@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { catalogDateSchema, catalogLineInputSchema, type PlanInput, type ProductInput } from './catalog.js';
+import type { AiQuoteReview } from './ai-quote.js';
 
 export const subscriptionStages = ['Draft', 'Quotation', 'Confirmed', 'Active', 'Closed'] as const;
 export const subscriptionServiceStates = ['Running', 'Paused', 'TermEnded', 'Closed'] as const;
@@ -19,8 +20,9 @@ function commercialRules(value: z.infer<typeof commercialObject>, context: z.Ref
   if (!value.templateId && value.validDays === undefined) context.addIssue({ code: 'custom', path: ['validDays'], message: 'Set the quotation’s validity in days.' });
 }
 const commercialObject = z.object(commercialShape).strict();
-export const subscriptionPreviewSchema = commercialObject.superRefine(commercialRules);
-export const subscriptionCreateSchema = commercialObject.extend({ idempotencyKey: id }).superRefine(commercialRules);
+const aiFields = { aiProposalId: id.optional(), reviewHash: z.string().regex(/^[a-f0-9]{64}$/).optional() };
+export const subscriptionPreviewSchema = commercialObject.extend(aiFields).superRefine(commercialRules);
+export const subscriptionCreateSchema = commercialObject.extend({ ...aiFields, idempotencyKey: id }).superRefine(commercialRules);
 export const subscriptionUpdateSchema = commercialObject.extend({ version: z.number().int().positive() }).superRefine(commercialRules);
 export const subscriptionActionSchema = z.object({ version: z.number().int().positive() }).strict();
 export const subscriptionProcessDueSchema = z.object({ limit: z.number().int().min(1).max(500).default(100) }).strict();
@@ -41,6 +43,7 @@ export interface SubscriptionTerms {
   subtotal: number; estimatedTax: number; estimatedTotal: number; taxesAreEstimates: true; priceExplanation: string;
 }
 export interface SubscriptionPreview {
+  aiReview?: AiQuoteReview;
   customerId: string; customerName: string; customerEmail: string; planId: string; templateId: string | null; templateName: string | null;
   startDate: string; expiryDate: string; termPeriods: number; paymentTermDays: number; validDays: number;
   businessDate: string; terms: SubscriptionTerms;

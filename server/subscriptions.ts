@@ -16,6 +16,7 @@ import { DomainError } from './errors.js';
 import { audit, digest, requireRole } from './security.js';
 import { businessDate, addDays, periodBoundary, periodIndex } from './calendar.js';
 import { applyLifecycleDueForSubscription } from './lifecycle.js';
+import { guardAiQuoteReview } from './ai-quote-review.js';
 
 interface SubscriptionRow {
   id: string; number: string; customer_id: string; customer_name: string; customer_email: string; plan_id: string;
@@ -207,7 +208,11 @@ export function subscriptionRoutes(db: DatabaseSync, clock: () => Date): Router 
   const router = Router();
   router.post('/subscriptions/preview', requireRole('admin', 'staff'), (req, res) => {
     const input = subscriptionPreviewSchema.parse(req.body);
-    res.json(transaction(db, () => buildSubscriptionPreview(db, input, clock()), 'read'));
+    res.json(transaction(db, () => {
+      const now = clock(); const preview = buildSubscriptionPreview(db, input, now);
+      const aiReview = guardAiQuoteReview(db, (res.locals.user as User).id, input, preview, now, false);
+      return { ...preview, ...(aiReview ? { aiReview } : {}) };
+    }, input.aiProposalId ? 'write' : 'read'));
   });
   router.post('/subscriptions/process-due', requireRole('admin', 'staff'), (req, res) => {
     const input = subscriptionProcessDueSchema.parse(req.body);
@@ -242,7 +247,7 @@ export function subscriptionRoutes(db: DatabaseSync, clock: () => Date): Router 
   });
   router.post('/subscriptions', requireRole('admin', 'staff'), (req, res) => {
     const input = subscriptionCreateSchema.parse(req.body); const user = res.locals.user as User;
-    const { idempotencyKey, ...commercial } = input;
+    const { idempotencyKey, aiProposalId, reviewHash, ...commercial } = input;
     const payloadHash = digest(canonical(commercial));
     const result = transaction(db, () => {
       const prior = db.prepare('SELECT actor_id,payload_hash,subscription_id FROM subscription_requests WHERE idempotency_key=?').get(idempotencyKey) as { actor_id: string; payload_hash: string; subscription_id: string } | undefined;
@@ -251,6 +256,7 @@ export function subscriptionRoutes(db: DatabaseSync, clock: () => Date): Router 
         return { id: prior.subscription_id, created: false };
       }
       const now = clock(); const preview = buildSubscriptionPreview(db, commercial, now); const id = randomUUID(); const number = nextReference(db, 'subscription', 'SUB');
+      guardAiQuoteReview(db, user.id, { ...commercial, aiProposalId, reviewHash }, preview, now, true);
       db.prepare(`INSERT INTO subscriptions(id,number,customer_id,customer_name,customer_email,plan_id,template_id,template_name,start_date,expiry_date,term_periods,payment_term_days,valid_days,
         stage,service_state,version,terms_json,offered_terms_json,accepted_terms_json,issued_date,valid_until,accepted_at,next_period_index,created_at,updated_at)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'Draft','Running',1,?,NULL,NULL,NULL,NULL,NULL,0,?,?)`)

@@ -15,8 +15,9 @@ import { paymentRoutes } from './payments.js';
 import { lifecycleRoutes } from './lifecycle.js';
 import { financeRoutes } from './finance.js';
 import { businessDate } from './calendar.js';
+import { aiQuoteRoutes, type AiQuoteOptions } from './ai-quote.js';
 
-export interface AppOptions { databasePath: string; clock?: () => Date; appUrl?: string; mailMode?: 'outbox' | 'smtp'; mailConfig?: MailConfig; production?: boolean; billingWorkerOptions?: BillingWorkerOptions; demoLabel?: string }
+export interface AppOptions { databasePath: string; clock?: () => Date; appUrl?: string; mailMode?: 'outbox' | 'smtp'; mailConfig?: MailConfig; production?: boolean; billingWorkerOptions?: BillingWorkerOptions; demoLabel?: string; aiQuote?: AiQuoteOptions }
 export function createApp(options: AppOptions) {
   const app = express();
   const db = openDatabase(options.databasePath);
@@ -58,6 +59,7 @@ export function createApp(options: AppOptions) {
   app.use('/api', paymentRoutes(db, clock));
   app.use('/api', lifecycleRoutes(db, clock));
   app.use('/api', financeRoutes(db, clock));
+  app.use('/api', aiQuoteRoutes(db, clock, options.aiQuote));
   app.use('/api', (_req, res) => res.status(404).json({ error: { code: 'NOT_FOUND', message: 'This operation is not available.', requestId: res.locals.requestId } }));
   app.use(errorHandler);
   return app;
