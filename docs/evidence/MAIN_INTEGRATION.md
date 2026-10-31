@@ -19,3 +19,7 @@ Fetched remote state, then fast-forwarded the clean main worktree and pushed `04
 ## P4: e75c015
 
 Fetched remote state, confirmed main was unchanged, fast-forwarded the clean main worktree and pushed `e75c015973de04c228431ab9e6fd689cd00662ef`. Verified `git ls-remote origin refs/heads/main` equals that commit. The exact tree passed lint/typecheck/102 tests/build and all 16 production-browser journeys, plus independent backend and visual reviews. No force push, squash, conflict resolution or integration edit was needed. Complete gate evidence remains in the implementation ledger; final release regression and large-data timings are still separate P8 work.
+
+## P5: a4a98d7
+
+Fetched current remote state, checked the main worktree was clean, fast-forwarded it and pushed `a4a98d7e7fdeb8f6d80ab925282a982509c26401`. Verified the remote main ref equals this exact commit. The source tree passed aggregate lint/typecheck/125 tests/build and all 19 current production-browser journeys, plus independent transaction/visual reviews. Real controlled invoice inbox receipt and actual PDF rendering are evidenced separately. No integration conflict or source change required retesting a different tree. Main remains a verified checkpoint while P6 proceeds on the feature branch.

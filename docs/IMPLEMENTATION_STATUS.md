@@ -65,6 +65,8 @@ Workbench witnesses include 260 real API-created persisted agreements, bounded 2
 
 Actual invoice SMTP acceptance and actual recipient Inbox-label witness are verified independently. Three actual Chromium PDFs were generated and Poppler-rendered; Draft/Confirmed one-page documents and the 50-line maximum-money case were visually inspected. See `docs/evidence/P5_DELIVERY_AND_PRINT.md`. No real payment was requested or moved. Strict premium audit and official DESIGN lint: zero findings/errors/warnings. Independent eight-capture visual review: ship. Final queue-view clipping and historical backlog labels were corrected before the final browser run. The build's **579.63 kB** minified chunk warning (**166.40 kB gzip**) remains for measured P8 optimization, not a performance pass.
 
-**P6–P8 — Not started.** Complete a persisted, role-authorized workflow with UI and a test at each gate before advancing. Do not equate a saved configuration flag with exercised lifecycle behavior.
+**P6 — In progress.** Existing owners are implementing payments and lifecycle/add-on boundaries in parallel, with separate shared contracts and forward migrations. Connected UI and focused verification remain part of this gate. No positive payment, scheduled lifecycle execution or add-on toggle is claimed complete yet.
+
+**P7–P8 — Not started.** Complete a persisted, role-authorized workflow with UI and a test at each gate before advancing. Do not equate a saved configuration flag with exercised lifecycle behavior.
 
 External evidence still needed: organizer submission instructions and authorized submission status (P8); an asynchronous checklist question is pending. Reset and invoice inbox delivery are verified. The team reported six hours remaining; no exact event cutoff is independently verified. A development outbox proves generation only. User entered approved SMTP settings in ignored `.env`; no contest submission is authorized merely by this ledger.
