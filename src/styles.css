@@ -3047,6 +3047,74 @@ a.finance-metric:hover > span {
   gap: 30px;
   align-items: start;
 }
+.quote-assist {
+  border-block: 1px solid var(--color-border);
+  margin: 4px 0 24px;
+  padding: 16px 0;
+}
+.quote-assist > summary {
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.quote-assist > summary svg {
+  vertical-align: -3px;
+  margin-right: 7px;
+}
+.quote-assist > summary small {
+  display: block;
+  color: var(--color-secondary);
+  font-size: 11px;
+  font-weight: 400;
+  margin: 5px 0 0 21px;
+}
+.quote-assist > .field-help {
+  margin: 16px 0;
+}
+.quote-assist .feedback {
+  margin-block: 16px;
+}
+.quote-suggestion {
+  border-top: 1px solid var(--color-border);
+  margin-top: 22px;
+  padding-top: 20px;
+}
+.quote-suggestion h3 {
+  font-size: 14px;
+}
+.quote-suggestion dl > div {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 12px;
+  margin: 10px 0;
+  font-size: 12px;
+}
+.quote-suggestion dt {
+  color: var(--color-secondary);
+}
+.quote-suggestion dd {
+  margin: 0;
+}
+.quote-suggestion ul {
+  padding-left: 20px;
+  font-size: 12px;
+}
+.quote-suggestion li {
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+.quote-suggestion li span {
+  display: block;
+  color: var(--color-secondary);
+}
+.quote-clarifications h4 {
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.quote-assist-applied {
+  margin-top: 18px;
+}
 .payment-editor-layout form h2 {
   font-size: 18px;
   margin-bottom: 14px;

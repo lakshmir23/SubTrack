@@ -48,6 +48,8 @@ import {
 } from "./Catalog";
 import { useSession } from "./session";
 import { SubscriptionInvoicePanel } from "./Billing";
+import { QuoteAssist } from "./QuoteAssist";
+import type { AiQuoteProposal, AiQuoteReview } from "../shared/ai-quote";
 import {
   formatBusinessDate,
   formatDate,
@@ -56,6 +58,7 @@ import {
 } from "./Workspace";
 import {
   Button,
+  CheckboxField,
   ConfirmationDialog,
   EmptyState,
   Feedback,
@@ -503,7 +506,15 @@ function SubscriptionEditor({ id }: { id?: string }) {
     lines: [],
   };
   const [values, setValues] = useState(initial);
+  const [aiProposalId, setAiProposalId] = useState<string | null>(null);
+  const [aiReviewedHash, setAiReviewedHash] = useState("");
+  const currentCustomer = useRef(values.customerId);
   function patchValues(patch: Partial<DraftFormValues>) {
+    setAiReviewedHash("");
+    if (patch.customerId !== undefined) {
+      currentCustomer.current = patch.customerId;
+      if (patch.customerId !== values.customerId) setAiProposalId(null);
+    }
     setValues((current) => ({ ...current, ...patch }));
   }
   const [baseline, setBaseline] = useState(JSON.stringify(initial));
@@ -525,7 +536,9 @@ function SubscriptionEditor({ id }: { id?: string }) {
   const [saving, setSaving] = useState(false);
   const pending = useRef(false);
   const guard = useUnsavedChanges(JSON.stringify(values) !== baseline);
-  const [preview, setPreview] = useState<SubscriptionPreview | null>(null);
+  const [preview, setPreview] = useState<
+    (SubscriptionPreview & { aiReview?: AiQuoteReview }) | null
+  >(null);
   const [previewError, setPreviewError] = useState("");
   const [previewBusy, setPreviewBusy] = useState(false);
   const [previewStatus, setPreviewStatus] = useState("");
@@ -582,13 +595,17 @@ function SubscriptionEditor({ id }: { id?: string }) {
     }
   }, [initialTemplate.data, id]);
   let serialized = "";
-  const candidate = commercialValues(values);
+  const candidate = {
+    ...commercialValues(values),
+    ...(aiProposalId ? { aiProposalId } : {}),
+  };
   if (subscriptionPreviewSchema.safeParse(candidate).success)
     serialized = JSON.stringify(candidate);
   useEffect(() => {
     setPreview(null);
     setPreviewError("");
     setPreviewStatus("");
+    setAiReviewedHash("");
     if (!serialized || (id && version === null)) {
       setPreviewBusy(false);
       return;
@@ -597,11 +614,14 @@ function SubscriptionEditor({ id }: { id?: string }) {
     setPreviewBusy(true);
     setPreviewStatus("Updating the draft estimate.");
     const timer = window.setTimeout(() => {
-      request<SubscriptionPreview>("/api/subscriptions/preview", {
-        method: "POST",
-        body: JSON.parse(serialized),
-        signal: controller.signal,
-      })
+      request<SubscriptionPreview & { aiReview?: AiQuoteReview }>(
+        "/api/subscriptions/preview",
+        {
+          method: "POST",
+          body: JSON.parse(serialized),
+          signal: controller.signal,
+        },
+      )
         .then((next) => {
           if (!controller.signal.aborted) {
             setPreview(next);
@@ -635,6 +655,40 @@ function SubscriptionEditor({ id }: { id?: string }) {
       : id
         ? `/subscriptions/${id}`
         : "/subscriptions";
+  async function applyAiProposal(result: AiQuoteProposal) {
+    const suggested = result.proposal;
+    const template = suggested.template_id
+      ? await request<QuotationTemplate>(
+          `/api/quotation-templates/${suggested.template_id}`,
+        )
+      : null;
+    if (currentCustomer.current !== result.customerId)
+      throw new Error(
+        "The customer changed. Request a new suggestion for the selected customer.",
+      );
+    setSource(template ? "template" : "plan");
+    setValues((current) => ({
+      ...current,
+      planId: suggested.plan_id || template?.planId || "",
+      templateId: template?.id || null,
+      validDays: template ? String(template.validDays) : current.validDays,
+      startDate: suggested.requested_start_date || current.startDate,
+      lines: suggested.lines.length
+        ? suggested.lines.map((line) => ({
+            productId: line.product_id,
+            variantId: line.variant_id,
+            quantity: String(line.quantity),
+          }))
+        : template?.lines.map((line) => ({
+            ...line,
+            quantity: String(line.quantity),
+          })) || [],
+    }));
+    setAiProposalId(result.id);
+    setAiReviewedHash("");
+    setFields({});
+    setError("");
+  }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending.current) return;
@@ -646,7 +700,10 @@ function SubscriptionEditor({ id }: { id?: string }) {
     }
     const body = id
       ? { ...commercialValues(values), version }
-      : { ...commercialValues(values), idempotencyKey };
+      : {
+          ...commercialValues(values),
+          idempotencyKey,
+        };
     const invalid = validateForm(
       id ? subscriptionUpdateSchema : subscriptionCreateSchema,
       body,
@@ -655,12 +712,34 @@ function SubscriptionEditor({ id }: { id?: string }) {
     setFields(invalid || {});
     setError("");
     if (invalid) return;
+    if (
+      aiProposalId &&
+      (!preview?.aiReview ||
+        previewBusy ||
+        aiReviewedHash !== preview.aiReview.reviewHash)
+    ) {
+      setError(
+        "Review the current calculated estimate and tick its review box before saving this suggested draft.",
+      );
+      form
+        .querySelector<HTMLInputElement>('[name="aiEstimateReviewed"]')
+        ?.focus();
+      return;
+    }
     pending.current = true;
     setSaving(true);
     try {
       const saved = await request<Subscription>(
         `/api/subscriptions${id ? `/${id}` : ""}`,
-        { method: id ? "PUT" : "POST", body },
+        {
+          method: id ? "PUT" : "POST",
+          body: {
+            ...body,
+            ...(aiProposalId
+              ? { aiProposalId, reviewHash: aiReviewedHash }
+              : {}),
+          },
+        },
       );
       guard.allowNavigation();
       navigate(`/subscriptions/${saved.id}`, {
@@ -674,6 +753,10 @@ function SubscriptionEditor({ id }: { id?: string }) {
       });
     } catch (reason) {
       setError(errorMessage(reason));
+      if (aiProposalId) {
+        setAiReviewedHash("");
+        setPreviewRevision((value) => value + 1);
+      }
       applyServerErrors(reason, form, setFields);
     } finally {
       pending.current = false;
@@ -763,6 +846,18 @@ function SubscriptionEditor({ id }: { id?: string }) {
               error={fields.customerId}
               onChange={(customerId) => patchValues({ customerId })}
             />
+            {!id && (
+              <QuoteAssist
+                customerId={values.customerId}
+                appliedProposalId={aiProposalId}
+                onApply={applyAiProposal}
+                onManual={() => {
+                  setAiProposalId(null);
+                  setAiReviewedHash("");
+                  setError("");
+                }}
+              />
+            )}
             <SelectField
               label="Offering source"
               value={source}
@@ -892,6 +987,29 @@ function SubscriptionEditor({ id }: { id?: string }) {
             fields={fields}
             onChange={(lines) => patchValues({ lines })}
           />
+          {aiProposalId && (
+            <CheckboxField
+              name="aiEstimateReviewed"
+              label="I reviewed the current calculated estimate"
+              checked={
+                !!preview?.aiReview &&
+                aiReviewedHash === preview.aiReview.reviewHash
+              }
+              disabled={previewBusy || !preview?.aiReview}
+              help={
+                preview
+                  ? `${formatMoney(preview.terms.estimatedTotal)} per billing period. Tax is an estimate until invoicing; changes require another review.`
+                  : "Complete the ordinary fields to calculate an estimate for review."
+              }
+              onChange={(event) =>
+                setAiReviewedHash(
+                  event.target.checked
+                    ? preview?.aiReview?.reviewHash || ""
+                    : "",
+                )
+              }
+            />
+          )}
           <div className="form-actions">
             <Link className="button secondary" to={back}>
               Cancel
