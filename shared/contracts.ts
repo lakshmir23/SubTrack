@@ -2,6 +2,7 @@ export const roles = ['admin', 'staff', 'customer'] as const;
 export type Role = typeof roles[number];
 export interface User { id: string; name: string; email: string; role: Role; createdAt: string }
 export interface SessionResponse { user: User | null; csrfToken: string | null }
+export interface RuntimeEnvironment { demoLabel: string | null; businessDate: string; timezone: 'Asia/Kolkata' }
 export interface ApiError { error: { code: string; message: string; fields?: Record<string, string>; requestId: string } }
 export interface Page<T> { items: T[]; total: number; page: number; pageSize: number }
 export interface WorkspaceSummary {

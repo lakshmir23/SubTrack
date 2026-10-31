@@ -182,7 +182,7 @@ export function serializeLifecycle(db: DatabaseSync, subscriptionId: string, use
     startDate: row.start_date, expiryDate: row.expiry_date, closureCause: row.closure_cause, policies: accepted.plan,
     allowedActions: (Object.keys(policy.reasons) as LifecycleAction[]).filter(action => !policy.reasons[action]), deniedReasons: policy.reasons, actionEffectiveDates: policy.dates,
     history: history.map(eventDTO), scheduled: history.filter(event => event.status === 'scheduled').map(eventDTO), addons, nextPeriod,
-    estimateExplanation: 'The immutable agreement shows the full accepted selection. The next unprocessed period above uses historical enabled lines and saved prices; taxes and discounts are decided only when its invoice is generated.' };
+    estimateExplanation: 'This period uses the agreed prices for lines included on its billing date. Earlier invoices stay unchanged. Tax and discounts are worked out when an invoice is created.' };
 }
 
 function mutate(db: DatabaseSync, subscriptionId: string, action: LifecycleAction | 'addon', input: { version: number; idempotencyKey: string; periods?: number; enabled?: boolean }, user: User, now: Date, lineId?: string): LifecycleState {

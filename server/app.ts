@@ -13,8 +13,10 @@ import { invoiceOutputRoutes } from './invoice-output.js';
 import { createBillingWorker, billingWorkbenchRoutes, type BillingWorkerOptions } from './billing-workbench.js';
 import { paymentRoutes } from './payments.js';
 import { lifecycleRoutes } from './lifecycle.js';
+import { financeRoutes } from './finance.js';
+import { businessDate } from './calendar.js';
 
-export interface AppOptions { databasePath: string; clock?: () => Date; appUrl?: string; mailMode?: 'outbox' | 'smtp'; mailConfig?: MailConfig; production?: boolean; billingWorkerOptions?: BillingWorkerOptions }
+export interface AppOptions { databasePath: string; clock?: () => Date; appUrl?: string; mailMode?: 'outbox' | 'smtp'; mailConfig?: MailConfig; production?: boolean; billingWorkerOptions?: BillingWorkerOptions; demoLabel?: string }
 export function createApp(options: AppOptions) {
   const app = express();
   const db = openDatabase(options.databasePath);
@@ -44,6 +46,9 @@ export function createApp(options: AppOptions) {
     const schema = db.prepare('SELECT max(version) AS version FROM schema_migrations').get();
     res.json({ status: 'ok', database: 'sqlite', schemaVersion: schema?.version, organization: 'Brightloop Software' });
   });
+  app.get('/api/environment', (_req, res) => {
+    res.json({ demoLabel: options.demoLabel || null, businessDate: businessDate(clock()), timezone: 'Asia/Kolkata' });
+  });
   app.use('/api', identityRoutes(db, clock, origin, mailConfig.mode));
   app.use('/api', catalogRoutes(db, clock));
   app.use('/api', subscriptionRoutes(db, clock));
@@ -52,6 +57,7 @@ export function createApp(options: AppOptions) {
   app.use('/api', billingWorkbenchRoutes(db, clock, app.locals.billingWorker));
   app.use('/api', paymentRoutes(db, clock));
   app.use('/api', lifecycleRoutes(db, clock));
+  app.use('/api', financeRoutes(db, clock));
   app.use('/api', (_req, res) => res.status(404).json({ error: { code: 'NOT_FOUND', message: 'This operation is not available.', requestId: res.locals.requestId } }));
   app.use(errorHandler);
   return app;
