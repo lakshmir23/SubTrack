@@ -169,6 +169,7 @@ The frontend can be hosted on Vercel with an appropriately configured API backen
 
 ## Project map
 
+- [Portal guide](docs/working/PORTAL_GUIDE.md): step-by-step navigation for Admin, Staff and Customer, including prices, dates and common questions.
 - [Requirements](docs/REQUIREMENTS.md), [event constraints](docs/HACKATHON_CONSTRAINTS.md) and [roadmap](docs/ROADMAP.md): scope and gate sequence.
 - [Decisions](docs/DECISIONS.md), [domain rules](docs/DOMAIN_AND_EDGE_CASES.md) and [API contract](docs/API_CONTRACT.md): business behavior and boundaries.
 - [Judge walkthrough](docs/JUDGE_WALKTHROUGH.md) and [proof plan](docs/DEMO_AND_PROOF.md): reproducible demonstration.
