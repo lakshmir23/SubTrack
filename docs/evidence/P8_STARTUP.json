@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "health": {
+    "status": "ok",
+    "database": "sqlite",
+    "schemaVersion": 11,
+    "organization": "Brightloop Software"
+  },
+  "isolatedMainEnvFileAbsent": true,
+  "install": "npm ci",
+  "migration": "npm run db:migrate",
+  "seed": "npm run db:seed twice",
+  "build": "npm run build",
+  "runtime": "normal compiled production index with explicit isolated process environment",
+  "browser": "real form sign-in, protected direct navigation and reload",
+  "database": "C:/Github/odoo-release-verify-b362b75/data/release-startup.sqlite"
+}

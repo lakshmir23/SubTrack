@@ -1,6 +1,6 @@
 # Coding-agent roadmap — configure → collect → prove
 
-**Status: execution authorized on 31 October 2026. P0 through P7 are verified; P8 is in progress.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
+**Status: execution authorized on 31 October 2026. P0 through P8 are verified for the approved repository/local-demo scope.** The original handoff was documentation only. Checked items now refer to observed implementation; [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records exact evidence and unresolved blockers. This roadmap supplies execution order, not permission to change scope or spend on services.
 
 ## Read first; establish the real starting point
 
@@ -105,12 +105,14 @@ Include the brief’s switchable add-ons using existing optional product lines a
 
 **Depends on:** P1–P7; all mandatory features implemented before optional work. **Coverage:** FIN-02 plus regression of every requirement.
 
-- [ ] Run the blueprint's valid synthetic thousands-record dataset/protocol; record dataset counts, commit/environment, cold/warm API and first-usable-page timings for lists/search/filter/detail/due queue/finance. Report median/p95/max and every observed >2-second breach. A p95 target does not replace the brief's under-two-second requirement.
-- [ ] Fix measured N+1, unbounded payload, missing-index and aggregate bottlenecks; rerun affected paths. Measure batch completion separately from page response. Do not invent performance results.
-- [ ] Run authorization, financial arithmetic, date boundaries, failure/retry and concurrency regression; repeat fresh startup/migration/seed from the README. Check for secrets and broken links; preserve genuine teammate Git history.
-- [ ] Rehearse [JUDGE_WALKTHROUGH.md](JUDGE_WALKTHROUGH.md), capture real evidence, verify organizer-required submission assets and actual upload/entry status. Submission permission/terms still apply. Record remaining failures and limitations plainly.
+- [x] Run the blueprint's valid synthetic thousands-record dataset/protocol; record dataset counts, commit/environment, cold/warm API and first-usable-page timings for lists/search/filter/detail/due queue/finance. Report median/p95/max and every observed >2-second breach. A p95 target does not replace the brief's under-two-second requirement. Complete desktop plus affected-repeat evidence and canceled/unrun scopes are explicit in [P8_PERFORMANCE.md](evidence/P8_PERFORMANCE.md).
+- [x] Fix measured N+1, unbounded payload, missing-index and aggregate bottlenecks; rerun affected paths. Measure batch completion separately from page response. Do not invent performance results. Created-order indexes and queue SQL corrections were measured; prior failures remain archived.
+- [x] Run authorization, financial arithmetic, date boundaries, failure/retry and concurrency regression; repeat fresh startup/migration/seed from the README. Check for secrets and broken links; preserve genuine teammate Git history. Post-fix170 tests/26 browser journeys and clean-checkout install/build/migration/repeated seed/actual protected browser startup passed; see [P8_STARTUP.json](evidence/P8_STARTUP.json).
+- [x] Rehearse [JUDGE_WALKTHROUGH.md](JUDGE_WALKTHROUGH.md), capture real evidence, verify organizer-required submission assets and actual upload/entry status. Submission permission/terms still apply. Record remaining failures and limitations plainly. The authorized local demo/repository handoff is prepared; the organizer checklist remains pending, and no upload/entry is claimed or authorized.
 
 **Gate:** the ledger has actual evidence for all 28 IDs, startup is reproducible, every remaining breach is disclosed and submission status is verified rather than inferred from a deployed page. **Fix failures before new features:** no benchmark, untested security boundaries, fake email evidence, missing mandatory actions or a nonworking judge path.
+
+**31 October scope update:** the user requested a faster P8/P9 wrap-up and stopped additional mobile benchmarking. A complete 93-destination desktop run and targeted verification of its corrected queue bottleneck form the accepted performance evidence. The redundant post-fix repeat was interrupted, and unrun mobile/layout/concurrency extensions are disclosed. Post-fix170-test/26-browser regression and the actual fresh-checkout startup passed. The integration owner records the final main checkpoint separately; organizer checklist is still pending under the approved repository/local-demo scope. No contest submission is claimed.
 
 ## Optional P9 — One constrained AI assist, only if time remains
 
