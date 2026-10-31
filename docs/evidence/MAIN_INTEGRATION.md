@@ -23,3 +23,7 @@ Fetched remote state, confirmed main was unchanged, fast-forwarded the clean mai
 ## P5: a4a98d7
 
 Fetched current remote state, checked the main worktree was clean, fast-forwarded it and pushed `a4a98d7e7fdeb8f6d80ab925282a982509c26401`. Verified the remote main ref equals this exact commit. The source tree passed aggregate lint/typecheck/125 tests/build and all 19 current production-browser journeys, plus independent transaction/visual reviews. Real controlled invoice inbox receipt and actual PDF rendering are evidenced separately. No integration conflict or source change required retesting a different tree. Main remains a verified checkpoint while P6 proceeds on the feature branch.
+
+## P6: a6b473c
+
+Fetched remote state, confirmed the separate main worktree was clean, fast-forwarded it and pushed `a6b473cf68c9b7904623c2ee7d40f66b52a515d0`. Verified that exact remote ref. Backend aggregate lint/typecheck/159 tests/build passed; final UI corrections were rebuilt/typechecked/linted, and root's full current browser regression passed 23/23. Independent transaction/migration/privacy review and the normal-server automatic-expiry witness passed. No integration conflict or source edit changed the verified checkpoint. P7 continues on the feature branch.
