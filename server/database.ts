@@ -5,6 +5,8 @@ import { migrateCatalog } from './catalog-schema.js';
 import { migrateSubscriptions } from './subscriptions-schema.js';
 import { migrateBilling } from './billing-schema.js';
 import { migrateBillingWorkbench } from './billing-workbench-schema.js';
+import { migratePayments, migratePaymentFactsGuard } from './payments-schema.js';
+import { migrateLifecycle } from './lifecycle-schema.js';
 
 export function openDatabase(path: string): DatabaseSync {
   if (path !== ':memory:') mkdirSync(dirname(resolve(path)), { recursive: true });
@@ -88,6 +90,9 @@ export function openDatabase(path: string): DatabaseSync {
   migrateSubscriptions(db);
   migrateBilling(db);
   migrateBillingWorkbench(db);
+  migratePayments(db);
+  migrateLifecycle(db);
+  migratePaymentFactsGuard(db);
   return db;
 }
 

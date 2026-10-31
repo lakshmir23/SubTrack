@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { catalogDateSchema } from './catalog.js';
 import { MAX_MINOR } from './money.js';
+import type { NonbillablePeriod } from './lifecycle.js';
 
 const id = z.string().uuid('Select an existing record.');
 const money = z.number().int().min(0).max(MAX_MINOR);
@@ -69,8 +70,10 @@ export interface Invoice extends InvoiceSummary {
   discountApplicationState: 'reserved' | 'consumed' | 'released' | null;
   discountDecisions?: DiscountDecision[]; discountDecisionsTruncated?: boolean;
   history: { id: string; kind: string; actorName: string; at: string; fromStatus: InvoiceStatus | null; toStatus: InvoiceStatus; message: string }[];
-  businessDate: string; allowedActions: ('confirm' | 'cancel' | 'replace')[];
+  businessDate: string; allowedActions: ('confirm' | 'cancel' | 'replace' | 'recordPayment')[];
 }
+export type InvoicePreviewResponse = InvoicePreview | NonbillablePeriod;
+export type InvoiceGenerationResponse = Invoice | NonbillablePeriod;
 
 // All amounts are exact INR minor units. One eligible rule is selected by priority then ID.
 // Percentage is rounded once on the eligible scope, then allocated by largest remainder and
