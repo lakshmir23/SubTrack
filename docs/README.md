@@ -2,6 +2,10 @@
 
 **Updated 31 October 2026 after reading all four supplied problem-statement pages.** This is a documentation-only planning pass. No application implementation or performance result is claimed.
 
+## Coding agent: start here
+
+Read the root [AGENTS.md](../AGENTS.md), then follow [ROADMAP.md](ROADMAP.md) from the actual checkout state. The roadmap orders every mandatory feature, integration and polish gate. The reference documents below explain why and how.
+
 ## Read in this order
 
 1. [Authoritative requirements](REQUIREMENTS.md): every visible requirement, proof expectation and unresolved policy.
