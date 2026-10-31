@@ -102,6 +102,8 @@ Active count and outstanding/overdue balances are **current**, evaluated at serv
 
 Use a labelled isolated synthetic fixture for the November demo and separate valid thousands-row benchmark data. Record counts, hardware/environment, page size, cold/warm response timings and failures. Under-two-second behavior remains a target until measured. Local email outbox proves message generation only, not arrival at the registered address; real delivery or an organizer-approved fallback still needs truthful evidence.
 
+**Demo-fixture clarification:** the November finance witness uses explicit November issue/payment ranges. C starts October 15 with a valid paid October period, preserving its November 15 next bill without a cursor gap. Its prior invoice stays in history outside the selected month. The three-active / two-November-invoice / 4,188.80 billed / 3,088.80 collected / 1,100 outstanding witness is therefore scoped, not a fabricated lifetime total.
+
 ## Team acceptance checklist
 
 - [ ] Team reviewed these defaults; confirmed any organizer clarification takes precedence.

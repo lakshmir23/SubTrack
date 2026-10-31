@@ -99,7 +99,7 @@ Include the brief’s switchable add-ons using existing optional product lines a
 - [ ] Finish customer own-subscription/invoice/payment-status views, permitted lifecycle actions and own print/download. Test cross-customer list/detail/action/download routes; remove cost prices and internal payment notes from payloads, not just screens.
 - [ ] Audit every destination for consistent spacing/navigation/statuses, keyboard focus, labels, disabled-action explanations, mobile layouts, loading/empty/error/retry states and duplicate-submit feedback. Refresh persisted totals after writes.
 
-**Gate:** two demo invoices total **4,188.80**; after A settles, collections **3,088.80** and B outstanding **1,100**. On the isolated Nov 9 fixture B is overdue; C is not due. Filters and drill-through agree. **Fix failures:** fabricated charts, mislabeled revenue, portal data leaks or stale balances requiring manual page repair.
+**Gate:** the two November demo invoices total **4,188.80**; with explicit November issue/payment filters, after A settles collections are **3,088.80** and B outstanding **1,100**. On the isolated Nov 9 fixture B is overdue; C is not due and its preceding paid October period remains in history. Filters and drill-through agree. **Fix failures:** fabricated charts, mislabeled revenue, portal data leaks or stale balances requiring manual page repair.
 
 ## P8 — Thousands-row performance and release proof
 

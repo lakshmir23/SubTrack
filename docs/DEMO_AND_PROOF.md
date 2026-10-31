@@ -18,6 +18,7 @@ These are explicit demo policies, not additional requirements or tax advice:
 
 - Currency is INR for presentation; single currency throughout.
 - Billing date is November 1, 2026, using a clearly labeled synthetic fixture. A and B use seven-day payment terms: invoices issued November 1 are due November 8, with overdue status starting November 9 under this demo policy. The finance snapshot is November 9, before C becomes due on November 15; all three contracts remain unexpired.
+- **Fixture clarification:** C starts October 15 and has a valid October 15–November 15 period with a paid October invoice/payment, so its November 15 next boundary is backed by an actual outcome. Never seed a skipped cursor. The main finance witness explicitly selects November invoice-issue and payment-event dates; C's paid October invoice is outside those ranges. “Two invoices” below means the two November invoices/current billing-run results, not the entire database's lifetime count.
 - Product **Business Software** has base sales price ₹1,000 and cost price ₹400 and notes “Demo recurring software product.” Cost price is internal only.
 - Variant **Odoo** adds ₹560 **per unit**, following the statement's variant example.
 - The monthly plan identifies Business Software as its primary product; plan price ₹1,000 replaces that product’s catalog base unit price. Add the chosen variant per unit; never add a separate plan fee. See [DECISIONS.md](DECISIONS.md). A separate unequal-plan/catalog-price test proves this mapping.
@@ -63,7 +64,7 @@ The batch therefore creates **two invoices totaling ₹4,188.80**. Subscription 
 6. **Replay the same billing run:** It creates **zero new invoices**. A and B are already billed for that period; C remains not due. Total remains ₹4,188.80. Show record-level evidence, not only a success toast.
 7. **Record partial payment:** Add ₹1,000 to A with method, date, and note. A remains Confirmed with **₹2,088.80 outstanding**. Overall outstanding is **₹3,188.80**, including B.
 8. **Complete A's payment:** Record another ₹2,088.80 against A. It becomes Paid; collected total is **₹3,088.80**. B remains outstanding at **₹1,100**.
-9. **Finance drill-down:** At a later synthetic date after B's payment-term due date, show three active subscriptions, two invoices, ₹4,188.80 invoiced, ₹3,088.80 collected, and ₹1,100 outstanding/overdue. A must not appear overdue merely because its original due date has passed.
+9. **Finance drill-down:** At the isolated November 9 date, explicitly select November invoice-issue and payment-event ranges. Show three currently active subscriptions, two November invoices, ₹4,188.80 invoiced, ₹3,088.80 collected, and ₹1,100 outstanding/overdue. C's paid October period remains inspectable outside the month filter. A must not appear overdue merely because its original due date has passed.
 10. **Invoice communication:** Demonstrate print output and the approved send path to a controlled test recipient or disclosed development outbox. Do not claim an outbox preview is delivered email.
 11. **Lifecycle policy:** On separate small fixtures, show plan-permitted pause/renew/early close and an automatic-end case. A disallowed action must be rejected, not merely hidden.
 
