@@ -328,7 +328,7 @@ export function catalogRoutes(db: DatabaseSync, clock: () => Date): Router {
   });
   router.post('/catalog/preview', requireRole('admin', 'staff'), (req, res) => {
     const input = catalogPreviewSchema.parse(req.body);
-    res.json(transaction(db, () => calculateCatalogPreview(db, input.planId, input.lines, clock())));
+    res.json(transaction(db, () => calculateCatalogPreview(db, input.planId, input.lines, clock()), 'read'));
   });
   return router;
 }

@@ -85,8 +85,8 @@ export function openDatabase(path: string): DatabaseSync {
   return db;
 }
 
-export function transaction<T>(db: DatabaseSync, work: () => T): T {
-  db.exec('BEGIN IMMEDIATE');
+export function transaction<T>(db: DatabaseSync, work: () => T, mode: 'write' | 'read' = 'write'): T {
+  db.exec(mode === 'read' ? 'BEGIN' : 'BEGIN IMMEDIATE');
   try { const result = work(); db.exec('COMMIT'); return result; }
   catch (error) { db.exec('ROLLBACK'); throw error; }
 }
