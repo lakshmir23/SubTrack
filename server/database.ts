@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { migrateCatalog } from './catalog-schema.js';
 
 export function openDatabase(path: string): DatabaseSync {
   if (path !== ':memory:') mkdirSync(dirname(resolve(path)), { recursive: true });
@@ -80,6 +81,7 @@ export function openDatabase(path: string): DatabaseSync {
       INSERT INTO schema_migrations VALUES(3,strftime('%Y-%m-%dT%H:%M:%fZ','now'));
     `);
   });
+  migrateCatalog(db);
   return db;
 }
 
