@@ -6,6 +6,10 @@ Build the **Subscription Management System** described in the supplied Odoo Brig
 
 This handoff was prepared as documentation only. A coding agent should implement when assigned implementation by the team. Do not mistake unchecked plans for completed work. Preserve teammates' code and changes; do not restart the project simply because a preferred stack differs.
 
+## The two mandatory baseline sources
+
+The supplied four-page Brightloop problem statement and the supplied Odoo Must have / Nice to have screenshot are the baseline for this entire project. REQUIREMENTS.md maps the first; HACKATHON_CONSTRAINTS.md maps the second. Never trade either baseline away for an enhancement. DECISIONS.md supplies proposed team policies only where the sources are silent. Use docs/BASELINE_AND_ENHANCEMENTS.md to prioritize optional improvements after mandatory coverage; it does not introduce new organizer requirements.
+
 ## Read first; do not skip the specification
 
 1. `docs/REQUIREMENTS.md`: 28 canonical tracking IDs covering the actual four-page brief.
@@ -35,7 +39,7 @@ Unique email; password longer than eight characters with uppercase, lowercase an
 
 ### Configuration and quoting
 
-Products include name, type, sales/cost prices and variant adjustments. Plans include price, daily/weekly/monthly/yearly cadence, minimum quantity, availability and permitted lifecycle actions. Reusable quotation templates carry plan, lines and validity days. Subscription instances have their own number, customer, dates, payment terms and line snapshots, moving through Draft → Quotation → Confirmed → Active.
+Products include name, type, sales/cost prices, notes and variant adjustments. Plans include price, daily/weekly/monthly/yearly cadence, minimum quantity, availability and permitted lifecycle actions. Reusable quotation templates carry plan, lines and validity days. Subscription instances have their own number, customer, dates, payment terms and line snapshots, moving through Draft → Quotation → Confirmed → Active → Closed.
 
 ### Billing and collection
 
@@ -43,7 +47,7 @@ Generate prefilled invoices for all eligible periods. Enforce one logical charge
 
 ### Lifecycle and finance
 
-Implement plan-permitted pause, resume, renewal, early closure and expiry behavior using one documented policy. Finance shows active subscriptions, invoiced revenue, payments, outstanding and overdue amounts with filters and summary. It must remain responsive with thousands of subscriptions; the brief requires under two seconds, which must be measured rather than asserted.
+Implement plan-permitted pause, resume, renewal, early closure and expiry behavior using one documented policy. Finance shows active subscriptions, invoiced revenue, payments, outstanding and overdue amounts with filters and summary. Every application page must remain responsive with thousands of subscriptions; the brief requires under two seconds, which must be measured rather than asserted.
 
 ## Non-negotiable engineering invariants
 
