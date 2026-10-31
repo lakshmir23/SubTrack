@@ -12,6 +12,8 @@ import { requireRole, digest, audit } from './security.js';
 import { businessDate, periodBoundary } from './calendar.js';
 import { nextReference } from './subscriptions.js';
 import { generateInvoice, type GenerationOptions, type GenerationResult } from './billing.js';
+import { evaluateLifecyclePeriod } from './lifecycle.js';
+import { sumMinor } from './money.js';
 
 interface RunRow {
   id: string; number: string; actor_id: string; actor_name: string; idempotency_key: string; payload_hash: string; requested_limit: number;
@@ -261,11 +263,14 @@ export function billingWorkbenchRoutes(db: DatabaseSync, clock: () => Date, work
       const rows = db.prepare(`SELECT s.*,c.id AS charge_id,c.reason AS charge_reason,c.period_start AS charge_start,c.period_end AS charge_end,c.outcome AS charge_outcome,i.id AS invoice_id,i.number AS invoice_number,i.status AS invoice_status ${source} ORDER BY ${input.view === 'due' ? 's.next_billing_date' : 'c.period_start'},s.id LIMIT ? OFFSET ?`).all(...values, input.pageSize, (page - 1) * input.pageSize) as unknown as (Candidate & { customer_id: string; charge_id: string | null; charge_reason: string | null; charge_start: string | null; charge_end: string | null; charge_outcome: string | null; invoice_id: string | null; invoice_number: string | null; invoice_status: string | null })[];
       const items: BillingQueueItem[] = rows.map(row => {
         const terms = JSON.parse(row.accepted_terms_json) as SubscriptionTerms;
+        const periodStart = input.view === 'due' ? row.next_billing_date : row.charge_start!;
+        const periodEnd = input.view === 'due' ? periodBoundary(row.start_date, terms.plan.interval, row.next_period_index + 1) : row.charge_end!;
+        const selection = evaluateLifecyclePeriod(db, row.id, periodStart, periodEnd);
         return { subscriptionId: row.id, subscriptionNumber: row.number, customerId: row.customer_id, customerName: row.customer_name,
-          periodStart: input.view === 'due' ? row.next_billing_date : row.charge_start!, periodEnd: input.view === 'due' ? periodBoundary(row.start_date, terms.plan.interval, row.next_period_index + 1) : row.charge_end!,
+          periodStart, periodEnd,
           outcome: row.invoice_status === 'Canceled' ? 'canceled' : row.charge_outcome === 'failed' ? 'failed' : 'due',
-          reason: row.invoice_status === 'Canceled' ? 'The current invoice was canceled. Use explicit replacement after reviewing a fresh preview.' : row.charge_reason,
-          invoiceId: row.invoice_id, invoiceNumber: row.invoice_number, logicalChargeId: row.charge_id, acceptedSubtotal: terms.subtotal };
+          reason: row.invoice_status === 'Canceled' ? 'The current invoice was canceled. Use explicit replacement after reviewing a fresh preview.' : row.charge_reason || selection.reason,
+          invoiceId: row.invoice_id, invoiceNumber: row.invoice_number, logicalChargeId: row.charge_id, acceptedSubtotal: sumMinor(selection.lines.map(line => line.subtotal)), billable: selection.billable };
       });
       const result: BillingQueue = { items, total, page, pageSize: input.pageSize, businessDate: now, summary: { dueSubscriptions, failedPeriods, canceledInvoices, notDueSubscriptions } }; return result;
     }, 'read'));

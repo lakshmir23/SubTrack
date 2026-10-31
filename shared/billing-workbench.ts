@@ -16,7 +16,7 @@ export type BillingRunInput = z.infer<typeof billingRunInputSchema>;
 export interface BillingQueueItem {
   subscriptionId: string; subscriptionNumber: string; customerId: string; customerName: string;
   periodStart: string; periodEnd: string; outcome: 'due' | 'failed' | 'canceled'; reason: string | null;
-  invoiceId: string | null; invoiceNumber: string | null; logicalChargeId: string | null; acceptedSubtotal: number;
+  invoiceId: string | null; invoiceNumber: string | null; logicalChargeId: string | null; acceptedSubtotal: number; billable: boolean;
 }
 export interface BillingQueue {
   items: BillingQueueItem[]; total: number; page: number; pageSize: number; businessDate: string;
