@@ -31,3 +31,8 @@ Fetched remote state, confirmed the separate main worktree was clean, fast-forwa
 ## P7: abaf9f0
 
 Fetched remote state, confirmed the separate main worktree was clean, fast-forwarded it and pushed `abaf9f097baa695028469546debe7e19750ee274`. Verified the exact remote main ref. Aggregate lint/typecheck/167 tests/build passed; final bounded UI changes were rebuilt/typechecked/linted and root's full production-browser regression passed 26/26 in 43.8 seconds. Independent finance/privacy and six-capture visual reviews passed. The merge changed no source beyond the verified tree. P8 performance and final repository/local-demo handoff follow; organizer submission checklist remains pending.
+
+
+## P8: a6d4da8
+
+Fetched remote state, fast-forwarded the clean main worktree and pushed `a6d4da8216f8186445e747b6eb77f2ea4b4f25a0`; the remote ref matched. Complete desktop baseline, corrected affected-route measurements, independent data audit, 170 tests/26 browser journeys and actual clean-checkout startup passed within the documented evidence scope. Failed and interrupted runs remain archived. User canceled further mobile benchmarking. P9 source was left uncommitted during this P8 integration and followed only after separate key/budget approval.
